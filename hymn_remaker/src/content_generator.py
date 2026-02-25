@@ -2,6 +2,7 @@ import os
 import openai
 import logging
 import json
+from .utils import retry_request
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ class ContentGenerator:
         if self.api_key:
             self.client = openai.OpenAI(api_key=self.api_key)
 
+    @retry_request(max_retries=3, delay=2, backoff=2)
     def generate_metadata(self, hymn_name, style="Deep House"):
         """
         Generate title, description, and tags using GPT-4.
@@ -44,26 +46,22 @@ class ContentGenerator:
             f"3. tags: A list of 10 relevant tags."
         )
 
-        try:
-            logger.info(f"Generating metadata for '{hymn_name}'...")
-            response = self.client.chat.completions.create(
-                model="gpt-4-turbo",  # Using a model that supports JSON mode
-                messages=[
-                    {"role": "system", "content": "You are a creative content strategist for a music channel. You must respond in valid JSON."},
-                    {"role": "user", "content": prompt}
-                ],
-                response_format={ "type": "json_object" }
-            )
+        logger.info(f"Generating metadata for '{hymn_name}'...")
+        response = self.client.chat.completions.create(
+            model="gpt-4-turbo",  # Using a model that supports JSON mode
+            messages=[
+                {"role": "system", "content": "You are a creative content strategist for a music channel. You must respond in valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={ "type": "json_object" }
+        )
 
-            content = response.choices[0].message.content
-            metadata = json.loads(content)
-            logger.info("Metadata generated successfully.")
-            return metadata
+        content = response.choices[0].message.content
+        metadata = json.loads(content)
+        logger.info("Metadata generated successfully.")
+        return metadata
 
-        except Exception as e:
-            logger.error(f"Failed to generate metadata: {e}")
-            raise
-
+    @retry_request(max_retries=3, delay=2, backoff=2)
     def generate_art(self, prompt):
         """
         Generate album art using DALL-E 3.
@@ -74,23 +72,18 @@ class ContentGenerator:
         Returns:
             str: URL of the generated image.
         """
-        try:
-            logger.info(f"Generating album art for prompt: '{prompt}'...")
-            response = self.client.images.generate(
-                model="dall-e-3",
-                prompt=prompt,
-                size="1024x1024",
-                quality="standard",
-                n=1,
-            )
+        logger.info(f"Generating album art for prompt: '{prompt}'...")
+        response = self.client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
 
-            image_url = response.data[0].url
-            logger.info(f"Album art generated: {image_url}")
-            return image_url
-
-        except Exception as e:
-            logger.error(f"Failed to generate art: {e}")
-            raise
+        image_url = response.data[0].url
+        logger.info(f"Album art generated: {image_url}")
+        return image_url
 
 if __name__ == "__main__":
     if os.environ.get("OPENAI_API_KEY"):

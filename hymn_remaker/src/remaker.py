@@ -1,6 +1,7 @@
 import os
 import replicate
 import logging
+from .utils import retry_request
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ class MusicRemaker:
         if self.api_token:
             os.environ["REPLICATE_API_TOKEN"] = self.api_token
 
+    @retry_request(max_retries=3, delay=2, backoff=2)
     def remake(self, audio_path, prompt, duration=30):
         """
         Generate a remake of the input audio using MusicGen via Replicate.
@@ -38,31 +40,26 @@ class MusicRemaker:
 
         logger.info(f"Remaking {audio_path} with prompt: '{prompt}'...")
 
-        try:
-            # Using meta/musicgen-melody which is good for conditioning on input melody
-            # The model hash might change, so checking replicate's latest
-            # This is musicgen-melody
-            model = "meta/musicgen:671ac904629c9798ddc38d7747750e2f54e63d179aa2e84786d1a2d6cc7809a6"
+        # Using meta/musicgen-melody which is good for conditioning on input melody
+        # The model hash might change, so checking replicate's latest
+        # This is musicgen-melody
+        model = "meta/musicgen:671ac904629c9798ddc38d7747750e2f54e63d179aa2e84786d1a2d6cc7809a6"
 
-            # Replicate expects a file object for input
-            with open(audio_path, "rb") as audio_file:
-                output = replicate.run(
-                    model,
-                    input={
-                        "prompt": prompt,
-                        "input_audio": audio_file,
-                        "duration": duration,
-                        "model_version": "melody", # Specific for melody conditioning
-                        "normalization_strategy": "peak"
-                    }
-                )
+        # Replicate expects a file object for input
+        with open(audio_path, "rb") as audio_file:
+            output = replicate.run(
+                model,
+                input={
+                    "prompt": prompt,
+                    "input_audio": audio_file,
+                    "duration": duration,
+                    "model_version": "melody", # Specific for melody conditioning
+                    "normalization_strategy": "peak"
+                }
+            )
 
-            logger.info(f"Generation complete. Output: {output}")
-            return output
-
-        except Exception as e:
-            logger.error(f"Failed to generate music: {e}")
-            raise
+        logger.info(f"Generation complete. Output: {output}")
+        return output
 
 if __name__ == "__main__":
     if os.environ.get("REPLICATE_API_TOKEN"):
