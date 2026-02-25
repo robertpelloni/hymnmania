@@ -1,0 +1,206 @@
+import os
+import subprocess
+import logging
+import json
+import time
+import requests
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Scopes required for YouTube Data API
+SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+
+class VideoProducer:
+    def __init__(self, client_secrets_file=None):
+        """
+        Initialize the VideoProducer.
+
+        Args:
+            client_secrets_file (str): Path to client_secrets.json.
+                                       Defaults to GOOGLE_CLIENT_SECRETS_FILE env var or 'client_secrets.json'.
+        """
+        self.client_secrets_file = (
+            client_secrets_file or
+            os.environ.get("GOOGLE_CLIENT_SECRETS_FILE") or
+            "client_secrets.json"
+        )
+        self.youtube = None
+
+    def create_video(self, audio_path, image_url, output_path):
+        """
+        Create an MP4 video from an audio file and an image URL using ffmpeg.
+
+        Args:
+            audio_path (str): Path to the input audio file.
+            image_url (str): URL of the album art image.
+            output_path (str): Path to the output video file.
+        """
+        logger.info(f"Creating video from {audio_path} and {image_url}...")
+
+        # 1. Download the image to a temporary file
+        temp_image_path = "temp_art.png"
+        try:
+            response = requests.get(image_url)
+            response.raise_for_status()
+            with open(temp_image_path, 'wb') as f:
+                f.write(response.content)
+
+            # 2. Use ffmpeg to combine image and audio
+            # Loop image, use audio, shortest duration (audio length), aac audio codec, libx264 video codec
+            # tuning for still image
+            cmd = [
+                "ffmpeg",
+                "-y", # Overwrite output
+                "-loop", "1",
+                "-i", temp_image_path,
+                "-i", audio_path,
+                "-c:v", "libx264",
+                "-tune", "stillimage",
+                "-c:a", "aac",
+                "-b:a", "192k",
+                "-pix_fmt", "yuv420p",
+                "-shortest",
+                output_path
+            ]
+
+            logger.info(f"Running ffmpeg: {' '.join(cmd)}")
+            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            logger.info(f"Video created at {output_path}")
+
+        except subprocess.CalledProcessError as e:
+            logger.error(f"FFmpeg failed: {e.stderr.decode()}")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to create video: {e}")
+            raise
+        finally:
+            if os.path.exists(temp_image_path):
+                os.remove(temp_image_path)
+
+    def _get_authenticated_service(self):
+        """Authenticate and return the YouTube API service."""
+        creds = None
+        # The file token.json stores the user's access and refresh tokens, and is
+        # created automatically when the authorization flow completes for the first
+        # time.
+        token_path = "token.json"
+        if os.path.exists(token_path):
+            creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                if not os.path.exists(self.client_secrets_file):
+                     raise FileNotFoundError(f"Client secrets file not found at {self.client_secrets_file}. Cannot authenticate.")
+
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    self.client_secrets_file, SCOPES
+                )
+                creds = flow.run_local_server(port=0)
+
+            # Save the credentials for the next run
+            with open(token_path, "w") as token:
+                token.write(creds.to_json())
+
+        return build("youtube", "v3", credentials=creds)
+
+    def upload_to_youtube(self, video_path, metadata):
+        """
+        Upload the video to YouTube.
+
+        Args:
+            video_path (str): Path to the video file.
+            metadata (dict): Metadata dictionary (title, description, tags).
+
+        Returns:
+            str: ID of the uploaded video.
+        """
+        logger.info(f"Uploading {video_path} to YouTube...")
+
+        if not self.youtube:
+            self.youtube = self._get_authenticated_service()
+
+        body = {
+            "snippet": {
+                "title": metadata.get("title", "My New Song"),
+                "description": metadata.get("description", "Generated by AI"),
+                "tags": metadata.get("tags", []),
+                "categoryId": "10" # Music
+            },
+            "status": {
+                "privacyStatus": "private" # Default to private for safety
+            }
+        }
+
+        media = MediaFileUpload(video_path, chunksize=-1, resumable=True)
+
+        request = self.youtube.videos().insert(
+            part="snippet,status",
+            body=body,
+            media_body=media
+        )
+
+        response = None
+        while response is None:
+            status, response = request.next_chunk()
+            if status:
+                logger.info(f"Uploaded {int(status.progress() * 100)}%")
+
+        logger.info(f"Upload complete! Video ID: {response['id']}")
+        return response['id']
+
+if __name__ == "__main__":
+    # Test video creation (requires dummy audio)
+    producer = VideoProducer()
+
+    # We need a dummy audio file for testing video creation
+    test_audio = "hymn_remaker/output/test_hymn.wav" # created in step 2
+
+    # Check if we have internet access or need to use a local file for testing
+    test_image_url = "https://via.placeholder.com/1024.png"
+
+    # For testing in an environment without internet/dummy purposes, we can write a local file
+    # and bypass the download step if the URL is "file://..." or just handle it in the test block
+    # But to keep the class clean, let's just mock the download if it's a local file path
+
+    test_output = "hymn_remaker/output/test_video.mp4"
+
+    if os.path.exists(test_audio):
+        try:
+            producer.create_video(test_audio, test_image_url, test_output)
+        except Exception as e:
+            logger.warning(f"Standard test failed (likely network): {e}")
+            logger.info("Attempting local test...")
+            # Create a dummy image
+            from PIL import Image
+            local_img = "hymn_remaker/output/test_art.png"
+            Image.new('RGB', (1024, 1024), color='red').save(local_img)
+
+            # Monkey patch requests.get to return file content
+            class MockResponse:
+                def __init__(self, content):
+                    self.content = content
+                def raise_for_status(self):
+                    pass
+
+            original_get = requests.get
+            def mock_get(url):
+                if url == "local_test_url":
+                    with open(local_img, "rb") as f:
+                        return MockResponse(f.read())
+                return original_get(url)
+
+            requests.get = mock_get
+            producer.create_video(test_audio, "local_test_url", test_output)
+            requests.get = original_get
+
+    else:
+        print(f"Test audio {test_audio} not found. Run step 2 first.")

@@ -1,0 +1,35 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypotheses
+
+# Local configuration
+.env
+client_secrets.json
+token.json
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Generated files
+hymn_remaker/output/
+temp_art.png
