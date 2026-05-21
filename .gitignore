@@ -49,3 +49,9 @@ suno_error.png
 suno_fail.png
 suno_stealth_*.png
 suno_payload_capture.json
+# AI tool artifacts
+.borg_startup_marker
+.pi/
+.jules/
+metamcp.db
+*.db
