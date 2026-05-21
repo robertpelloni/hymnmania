@@ -66,6 +66,7 @@ def main():
         renderer = MidiRenderer(soundfont_path=args.soundfont)
         remaker = MusicRemaker()
         suno_remaker = SunoRemaker(session_token=args.suno_session)
+        print(f"DEBUG: UDIO_OAUTH_TOKEN len={len(os.environ.get('UDIO_OAUTH_TOKEN', ''))}")
         udio_remaker = UdioRemaker(oauth_token=args.udio_token)
         content_gen = ContentGenerator()
         video_producer = VideoProducer()
@@ -261,11 +262,14 @@ def process_single_midi(
             update_status(f"Skipping render for {filename}, {base_audio_path} exists.", 30)
 
           # 2. Generate Remake (Udio AI -> Suno AI -> Replicate MusicGen -> Base Audio Fallback)
+        print(f"DEBUG: Entering remake block for {filename}. skip_remake={skip_remake}")
         remake_audio_path = os.path.join(output_dir, f"{name_no_ext}_remake.wav")
+        print(f"DEBUG: remake_audio_path={remake_audio_path}, exists={os.path.exists(remake_audio_path)}")
         if not skip_remake or not os.path.exists(remake_audio_path):
             remake_success = False
 
             # --- Priority 0: Udio AI ---
+            print(f"DEBUG: Checking Udio: priority={remake_priority}, available={udio_remaker.is_available() if udio_remaker else 'N/A'}")
             if remake_priority == "udio" and udio_remaker and udio_remaker.is_available():
                 update_status(f"Step 2/4: Remaking Audio via Udio AI ({filename})...", 40)
                 try:

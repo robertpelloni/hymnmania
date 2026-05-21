@@ -49,25 +49,22 @@ class UdioRemaker:
         # If wav_path influence is supported in the future, we'd upload it here.
         result = self.api.generate(prompt=prompt, style=style, title=title)
         
-        song_id = None
-        if isinstance(result, list) and len(result) > 0:
-            song_id = result[0].get("id")
-        elif isinstance(result, dict):
-            song_id = result.get("id") or result.get("song_id")
+        track_ids = result.get("track_ids")
             
-        if not song_id:
-            raise RuntimeError(f"Failed to get song ID from Udio response: {result}")
+        if not track_ids:
+            raise RuntimeError(f"Failed to get track IDs from Udio response: {result}")
 
-        logger.info(f"Udio generation started: {song_id}. Polling for completion...")
+        logger.info(f"Udio generation started for tracks: {track_ids}. Polling for completion...")
 
         # 2. Poll for completion
-        audio_url = self.api.poll_until_ready(song_id)
+        audio_url = self.api.poll_until_ready(track_ids)
         
         if not audio_url:
-            raise RuntimeError(f"No audio URL returned for song {song_id}")
+            raise RuntimeError(f"No audio URL returned for tracks {track_ids}")
 
         # 3. Download the result
-        output_filename = f"udio_{song_id}.wav"
+        track_id = track_ids[0]
+        output_filename = f"udio_{track_id}.wav"
         output_path = os.path.join(settings.OUTPUT_DIR, output_filename)
         
         logger.info(f"Downloading Udio result from {audio_url}...")
