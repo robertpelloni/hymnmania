@@ -18,9 +18,10 @@ logger = logging.getLogger(__name__)
 class UdioRemaker:
     """Generate remakes of hymn audio using Udio AI."""
 
-    def __init__(self, oauth_token=None):
-        self.api = UdioAPIClient(oauth_token=oauth_token)
+    def __init__(self, oauth_token=None, cookie_string=None):
+        self.api = UdioAPIClient(oauth_token=oauth_token, cookie_string=cookie_string)
         self.oauth_token = self.api.oauth_token
+        self.cookie_string = self.api.cookie_string
 
     def is_available(self):
         """Check if Udio API is configured and token is valid."""

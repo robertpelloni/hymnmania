@@ -26,32 +26,46 @@ class UdioAPIClient:
     and completion polling.
     """
 
-    def __init__(self, oauth_token=None):
+    def __init__(self, oauth_token=None, cookie_string=None):
         self.oauth_token = oauth_token or os.environ.get("UDIO_OAUTH_TOKEN", "")
+        self.cookie_string = cookie_string or os.environ.get("UDIO_COOKIE_STRING", "")
         self.base_url = os.environ.get("UDIO_BASE_URL", UDIO_BASE_URL)
 
-        if not self.oauth_token:
-            logger.warning("UDIO_OAUTH_TOKEN not set. UdioAPIClient will not function.")
+        if not self.oauth_token and not self.cookie_string:
+            logger.warning("Neither UDIO_OAUTH_TOKEN nor UDIO_COOKIE_STRING set. UdioAPIClient will not function.")
         else:
             logger.info("UdioAPIClient initialized")
 
     def _get_headers(self, get_request=False):
-        """Build request headers with auth token."""
-        return {
-            "Authorization": f"Bearer {self.oauth_token}",
+        """Build request headers."""
+        headers = {
+            "Accept": "application/json, text/plain, */*",
             "Content-Type": "application/json",
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/131.0.0.0 Safari/537.36"
-            ),
             "Origin": self.base_url,
-            "Referer": f"{self.base_url}/",
+            "Referer": f"{self.base_url}/create",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
         }
+        
+        if self.cookie_string:
+            headers["Cookie"] = self.cookie_string
+        elif self.oauth_token:
+            headers["Authorization"] = f"Bearer {self.oauth_token}"
+            headers["Cookie"] = f"sb-api-auth-token={self.oauth_token}"
+            
+        if not get_request:
+            headers.update({
+                "sec-ch-ua": '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"Windows"',
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+            })
+        return headers
 
     def is_available(self):
         """Check if Udio API is configured and token is valid."""
-        if not self.oauth_token:
+        if not self.oauth_token and not self.cookie_string:
             return False
         try:
             headers = self._get_headers(get_request=True)
