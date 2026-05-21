@@ -66,7 +66,6 @@ def main():
         renderer = MidiRenderer(soundfont_path=args.soundfont)
         remaker = MusicRemaker()
         suno_remaker = SunoRemaker(session_token=args.suno_session)
-        print(f"DEBUG: UDIO_OAUTH_TOKEN len={len(os.environ.get('UDIO_OAUTH_TOKEN', ''))}")
         udio_remaker = UdioRemaker(oauth_token=args.udio_token)
         content_gen = ContentGenerator()
         video_producer = VideoProducer()

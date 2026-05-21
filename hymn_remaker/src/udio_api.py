@@ -62,10 +62,8 @@ class UdioAPIClient:
                 headers=headers,
                 timeout=10,
             )
-            print(f"DEBUG: Udio is_available status={resp.status_code} url={url}")
             return resp.status_code == 200
-        except Exception as e:
-            print(f"DEBUG: Udio is_available exception={e}")
+        except Exception:
             return False
 
     def generate(self, prompt, style=None, title=None, custom_mode=True):
