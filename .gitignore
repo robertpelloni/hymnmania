@@ -55,3 +55,9 @@ suno_payload_capture.json
 .jules/
 metamcp.db
 *.db
+# Security: auth tokens and decryption artifacts
+*.bin
+__hssrc.bin
+decrypt_files.py
+sb-ssr-production-auth-token.*
+ssr_bucket.*
