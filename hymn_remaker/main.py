@@ -27,13 +27,15 @@ from hymn_remaker.src.utils import process_audio
 # Load environment variables
 load_dotenv()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-    ]
-)
+# Force root logger level and handler configuration to ensure all module logs print
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+for h in root_logger.handlers[:]:
+    root_logger.removeHandler(h)
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+root_logger.addHandler(handler)
+
 logger = logging.getLogger("HymnRemaker")
 
 
@@ -245,6 +247,10 @@ def process_single_midi(
                 pre_extracted_metadata = mxl_parser.process(midi_path, target_midi_path)
             else:
                 logger.warning("MusicXML parser not available, skipping XML parsing.")
+        elif filename.lower().endswith(".mid"):
+            update_status(f"Step 0/4: Parsing MIDI metadata and lyrics ({filename})...", 15)
+            from hymn_remaker.src.midi_analyzer import MidiAnalyzer
+            pre_extracted_metadata = MidiAnalyzer.extract_all_metadata(midi_path)
 
         # 1. Render MIDI to Audio (WAV)
         update_status(f"Step 1/4: Rendering MIDI ({filename})...", 20)
@@ -271,10 +277,19 @@ def process_single_midi(
             # --- Priority 0: Udio AI ---
             print(f"DEBUG: Checking Udio: priority={remake_priority}, available={udio_remaker.is_available() if udio_remaker else 'N/A'}")
             if remake_priority == "udio" and udio_remaker and udio_remaker.is_available():
-                update_status(f"Step 2/4: Remaking Audio via Udio AI ({filename})...", 40)
                 try:
-                    tempo_enforced_style = f"{style}, {target_bpm:.1f} BPM"
-                    udio_result = udio_remaker.remake(base_audio_path, tempo_enforced_style)
+                    clean_title = (pre_extracted_metadata.get("title") or name_no_ext.replace('_', ' ').replace('-', ' ')).title()
+                    composer = pre_extracted_metadata.get("composer") or "Traditional"
+                    
+                    # Rich prompt integrating metadata, original MIDI inspiration, and custom remix styles
+                    rich_prompt = f"A modern {style} remix of '{clean_title}' by {composer}. Inspired by the original MIDI melody as reference media. Beautiful melodic synth, progressive structure, {target_bpm:.1f} BPM."
+                    logger.info(f"Submitting rich Udio prompt: {rich_prompt}")
+                    
+                    udio_result = udio_remaker.remake(
+                        base_audio_path, 
+                        rich_prompt, 
+                        title=f"{clean_title} ({style} Remix)"
+                    )
                     if udio_result and os.path.exists(udio_result):
                         if udio_result != remake_audio_path:
                             import shutil

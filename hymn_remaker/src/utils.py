@@ -3,6 +3,13 @@ import os
 import time
 from functools import wraps
 from pydub import AudioSegment
+from hymn_remaker import settings
+
+if os.name == "nt":
+    bin_dir = os.path.dirname(settings.FFMPEG_BIN)
+    if os.path.exists(bin_dir):
+        os.environ["PATH"] = bin_dir + os.path.pathsep + os.environ.get("PATH", "")
+
 import subprocess
 
 logger = logging.getLogger(__name__)

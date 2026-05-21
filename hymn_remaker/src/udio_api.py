@@ -124,7 +124,7 @@ class UdioAPIClient:
         return response.json()
 
     def get_song_status(self, track_ids):
-        """Get the status of specific tracks.
+        """Get the status of specific tracks by querying recent songs.
 
         Args:
             track_ids (list): List of track IDs.
@@ -133,11 +133,14 @@ class UdioAPIClient:
             dict: Song data including status and audio URL.
         """
         headers = self._get_headers(get_request=True)
-        url = f"{self.base_url}/api/songs?songIds={','.join(track_ids)}"
+        url = f"{self.base_url}/api/songs/me?pageSize=20"
         
         response = requests.get(url, headers=headers, timeout=15)
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            songs_list = data.get("data", [])
+            matched_songs = [s for s in songs_list if s.get("id") in track_ids]
+            return {"songs": matched_songs}
         return None
 
     def poll_until_ready(self, track_ids, interval=None, timeout=None):
@@ -158,10 +161,14 @@ class UdioAPIClient:
         while time.time() - start_time < timeout:
             status_data = self.get_song_status(track_ids)
             if status_data and "songs" in status_data:
-                all_finished = all(song.get("finished") for song in status_data["songs"])
-                if all_finished:
-                    # Return the path/url of the first song
-                    return status_data["songs"][0].get("song_path")
+                matched_songs = status_data["songs"]
+                if matched_songs:
+                    all_finished = all(song.get("finished") for song in matched_songs)
+                    if all_finished:
+                        # Return the path/url of the first song with a non-null song_path
+                        ready_songs = [s for s in matched_songs if s.get("song_path")]
+                        if ready_songs:
+                            return ready_songs[0].get("song_path")
             
             time.sleep(interval)
         
