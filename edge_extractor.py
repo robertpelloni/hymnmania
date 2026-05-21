@@ -12,23 +12,27 @@ def get_master_key():
         local_state = json.load(f)
     
     encrypted_key = base64.b64decode(local_state["os_crypt"]["encrypted_key"])
-    # Remove DPAPI prefix
+    # Remove DPAPI prefix 'DPAPI'
     encrypted_key = encrypted_key[5:]
     master_key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
     return master_key
 
-def decrypt_payload(cipher, payload):
-    return cipher.decrypt(payload)
-
 def decrypt_cookie(value, master_key):
     try:
-        iv = value[3:15]
-        payload = value[15:]
-        cipher = AES.new(master_key, AES.MODE_GCM, iv)
-        decrypted_value = decrypt_payload(cipher, payload)[:-16].decode()
-        return decrypted_value
+        if value[:3] == b'v10' or value[:3] == b'v11':
+            iv = value[3:15]
+            payload = value[15:]
+            cipher = AES.new(master_key, AES.MODE_GCM, iv)
+            decrypted_binary = cipher.decrypt(payload)[:-16]
+            try:
+                return decrypted_binary.decode('utf-8')
+            except:
+                return f"HEX:{decrypted_binary.hex()}"
+        else:
+            # Fallback to old DPAPI
+            return win32crypt.CryptUnprotectData(value, None, None, None, 0)[1].decode()
     except Exception as e:
-        return f"Error: {e}"
+        return f"ERROR:{e}"
 
 def extract_udio_token():
     temp_path = "edge_cookies_manual.db"
@@ -60,10 +64,14 @@ def extract_udio_token():
     combined_b64 = ""
     for name, encrypted_value in rows:
         decrypted = decrypt_cookie(encrypted_value, master_key)
+        print(f"DEBUG: Decrypted {name} length: {len(decrypted)}")
         if decrypted.startswith("base64-"):
-            combined_b64 += decrypted[7:]
+            part = decrypted[7:]
+            combined_b64 += part
+            print(f"DEBUG: Added base64 part: {part[:20]}...")
         else:
             combined_b64 += decrypted
+            print(f"DEBUG: Added raw part: {decrypted[:20]}...")
 
     conn.close()
     
