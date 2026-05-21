@@ -14,6 +14,7 @@ from hymn_remaker import settings
 from hymn_remaker.src.midi_renderer import MidiRenderer
 from hymn_remaker.src.remaker import MusicRemaker
 from hymn_remaker.src.suno_remaker import SunoRemaker
+from hymn_remaker.src.udio_remaker import UdioRemaker
 from hymn_remaker.src.content_generator import ContentGenerator
 from hymn_remaker.src.video_uploader import VideoProducer
 from hymn_remaker.src.tts_generator import TTSGenerator
@@ -45,8 +46,9 @@ def main():
     parser.add_argument("--upload", action="store_true", help="Upload to YouTube after generation")
     parser.add_argument("--skip-render", action="store_true", help="Skip MIDI rendering if WAV exists")
     parser.add_argument("--skip-remake", action="store_true", help="Skip music generation if output audio exists")
-    parser.add_argument("--remake-priority", default=settings.REMAKE_PRIORITY, choices=["suno", "replicate"], help="AI service priority for Step 2 remake (default: suno)")
+    parser.add_argument("--remake-priority", default=settings.REMAKE_PRIORITY, choices=["udio", "suno", "replicate"], help="AI service priority for Step 2 remake (default: suno)")
     parser.add_argument("--suno-session", default=None, help="Suno AI session token (overrides SUNO_SESSION_TOKEN env var)")
+    parser.add_argument("--udio-token", default=None, help="Udio AI OAuth token (overrides UDIO_OAUTH_TOKEN env var)")
     parser.add_argument("--convert-mp3", action="store_true", help="Batch convert all base WAV files to MP3 and exit")
     parser.add_argument("--voice-id", default=settings.DEFAULT_ELEVENLABS_VOICE_ID, help="ElevenLabs Voice ID")
     parser.add_argument("--model", default=settings.DEFAULT_ELEVENLABS_MODEL, help="ElevenLabs Model")
@@ -64,6 +66,7 @@ def main():
         renderer = MidiRenderer(soundfont_path=args.soundfont)
         remaker = MusicRemaker()
         suno_remaker = SunoRemaker(session_token=args.suno_session)
+        udio_remaker = UdioRemaker(oauth_token=args.udio_token)
         content_gen = ContentGenerator()
         video_producer = VideoProducer()
         mxl_parser = MusicXMLParser()
@@ -104,7 +107,8 @@ def main():
                     video_format=args.video_format,
                     create_shorts=args.create_shorts,
                     enable_visualizer=args.visualizer,
-                    visualizer_mode=args.visualizer_mode
+                    visualizer_mode=args.visualizer_mode,
+                    udio_remaker=udio_remaker
                 ): midi_path
                 for midi_path in midi_file_list
             }
@@ -203,7 +207,8 @@ def process_single_midi(
     sub_box=True,
     enable_visualizer=False,
     visualizer_mode="cline",
-    interactive_callback=None):
+    interactive_callback=None,
+    udio_remaker=None):
 
     base_audio_path = remake_audio_path = metadata_path = vocal_track_path = None
     try:
@@ -255,13 +260,31 @@ def process_single_midi(
         else:
             update_status(f"Skipping render for {filename}, {base_audio_path} exists.", 30)
 
-          # 2. Generate Remake (Suno AI -> Replicate MusicGen -> Base Audio Fallback)
+          # 2. Generate Remake (Udio AI -> Suno AI -> Replicate MusicGen -> Base Audio Fallback)
         remake_audio_path = os.path.join(output_dir, f"{name_no_ext}_remake.wav")
         if not skip_remake or not os.path.exists(remake_audio_path):
             remake_success = False
 
+            # --- Priority 0: Udio AI ---
+            if remake_priority == "udio" and udio_remaker and udio_remaker.is_available():
+                update_status(f"Step 2/4: Remaking Audio via Udio AI ({filename})...", 40)
+                try:
+                    tempo_enforced_style = f"{style}, {target_bpm:.1f} BPM"
+                    udio_result = udio_remaker.remake(base_audio_path, tempo_enforced_style)
+                    if udio_result and os.path.exists(udio_result):
+                        if udio_result != remake_audio_path:
+                            import shutil
+                            shutil.move(udio_result, remake_audio_path)
+                        update_status(f"Udio AI remake complete for {filename}", 55)
+                        process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms)
+                        remake_success = True
+                        logger.info(f"Udio AI remake succeeded for {filename}")
+                except Exception as udio_err:
+                    logger.warning(f"Udio AI failed for {filename}: {udio_err}")
+                    update_status(f"Udio AI error for {filename}, trying fallback...", 42)
+
             # --- Priority 1: Suno AI (audio influence -> Deep House) ---
-            if remake_priority == "suno" and suno_remaker and suno_remaker.is_available():
+            if not remake_success and (remake_priority == "suno" or remake_priority == "udio") and suno_remaker and suno_remaker.is_available():
                 update_status(f"Step 2/4: Remaking Audio via Suno AI ({filename})...", 40)
                 try:
                     tempo_enforced_style = f"{style}, {target_bpm:.1f} BPM"

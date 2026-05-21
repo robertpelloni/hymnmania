@@ -8,6 +8,8 @@ from hymn_remaker.main import process_single_midi
 from hymn_remaker.src.db import get_history, init_db
 from hymn_remaker.src.midi_renderer import MidiRenderer
 from hymn_remaker.src.remaker import MusicRemaker
+from hymn_remaker.src.suno_remaker import SunoRemaker
+from hymn_remaker.src.udio_remaker import UdioRemaker
 from hymn_remaker.src.content_generator import ContentGenerator
 from hymn_remaker.src.video_uploader import VideoProducer
 from hymn_remaker.src.tts_generator import TTSGenerator
@@ -35,6 +37,8 @@ def get_modules():
             _modules = {
                 "renderer": MidiRenderer(),
                 "remaker": MusicRemaker(),
+                "suno_remaker": SunoRemaker(),
+                "udio_remaker": UdioRemaker(),
                 "content_gen": ContentGenerator(),
                 "video_producer": VideoProducer(),
                 "tts_generator": TTSGenerator(),
@@ -53,6 +57,7 @@ async def generate_hymn(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     style: str = Form("Deep House, high quality, electronic"),
+    remake_priority: str = Form("udio"),
     generate_vocals: bool = Form(False),
     normalize_audio: bool = Form(True),
     fade_in_ms: int = Form(0),
@@ -85,6 +90,9 @@ async def generate_hymn(
         upload=False,
         renderer=mods["renderer"],
         remaker=mods["remaker"],
+        suno_remaker=mods["suno_remaker"],
+        udio_remaker=mods["udio_remaker"],
+        remake_priority=remake_priority,
         content_gen=mods["content_gen"],
         video_producer=mods["video_producer"],
         mxl_parser=mods["mxl_parser"],
@@ -103,6 +111,7 @@ async def generate_hymn(
         "message": f"File {file.filename} is being processed in the background.",
         "configuration": {
             "style": style,
+            "remake_priority": remake_priority,
             "generate_vocals": generate_vocals,
         }
     })

@@ -53,10 +53,16 @@ SUNO_BASE_URL = os.environ.get("SUNO_BASE_URL", "https://studio-api.suno.ai")
 SUNO_POLL_INTERVAL = int(os.environ.get("SUNO_POLL_INTERVAL", "5"))
 SUNO_POLL_TIMEOUT = int(os.environ.get("SUNO_POLL_TIMEOUT", "300"))
 
+# --- Udio AI Music API ---
+UDIO_OAUTH_TOKEN = os.environ.get("UDIO_OAUTH_TOKEN", "")
+UDIO_BASE_URL = os.environ.get("UDIO_BASE_URL", "https://www.udio.com")
+UDIO_POLL_INTERVAL = int(os.environ.get("UDIO_POLL_INTERVAL", "5"))
+UDIO_POLL_TIMEOUT = int(os.environ.get("UDIO_POLL_TIMEOUT", "300"))
+
 # --- MP3 Conversion ---
 DEFAULT_MP3_BITRATE = "192k"
 
 # --- Remake Priority ---
 # Which AI service to use first for Step 2 (remake)
-# Options: "suno", "replicate"
+# Options: "udio", "suno", "replicate"
 REMAKE_PRIORITY = os.environ.get("REMAKE_PRIORITY", "suno")
