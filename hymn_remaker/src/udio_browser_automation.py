@@ -147,7 +147,7 @@ class UdioBrowserAutomation:
                 pass
         raise TimeoutError(f"No response for CDP {method} (id {msg_id}) in time.")
 
-    def trigger_generation(self, prompt, audio_path=None):
+    def trigger_generation(self, prompt, audio_path=None, variance=0.85, negative_prompt="organ, classical, baroque, church organ, cathedral"):
         """Drive Edge to paste the prompt and click the Create button, optionally uploading reference audio."""
         tab = self._get_active_tab()
         if not tab:
@@ -244,15 +244,38 @@ class UdioBrowserAutomation:
             else:
                 logger.info(f"Remix option card clicked successfully: {remix_result.get('clicked')}")
                 
-            time.sleep(2)
+            logger.info("Waiting 4 seconds for Remix settings and inputs to render...")
+            time.sleep(4)
         elif audio_path:
             logger.warning(f"Reference audio path does not exist: {audio_path}")
 
-        # Assemble JS snippet to enter prompt and click create/remix
+        # Assemble JS snippet to enter prompt, set Variance, Style Reduction, and click create/remix
         escaped_prompt = prompt.replace('"', '\\"').replace('\n', ' ')
+        escaped_neg = negative_prompt.replace('"', '\\"').replace('\n', ' ')
+        
         js_snippet = f"""
         (function() {{
-            // 1. Find prompt input
+            // 1. Set Variance slider if present
+            let varianceSlider = document.querySelector('input[type="range"][min="0.1"][max="1"]');
+            if (varianceSlider) {{
+                const proto = window.HTMLInputElement.prototype;
+                const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+                setter.call(varianceSlider, "{variance}");
+                varianceSlider.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                varianceSlider.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            }}
+
+            // 2. Set Style Reduction (negative prompt) if present
+            let negInput = document.querySelector('input[placeholder*="avoid"]') || document.querySelector('input[cmdk-input=""]');
+            if (negInput) {{
+                const proto = window.HTMLInputElement.prototype;
+                const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+                setter.call(negInput, "{escaped_neg}");
+                negInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                negInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            }}
+
+            // 3. Find prompt input
             let els = Array.from(document.querySelectorAll('textarea, input[type="text"]'));
             let promptInput = null;
             for (let el of els) {{
@@ -269,14 +292,14 @@ class UdioBrowserAutomation:
                 return {{ success: false, error: "Prompt input field not found" }};
             }}
 
-            // 2. Set prompt value with React support
+            // 4. Set prompt value with React support
             const prototype = promptInput.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
             const nativeSetter = Object.getOwnPropertyDescriptor(prototype, 'value').set;
             nativeSetter.call(promptInput, "{escaped_prompt}");
             promptInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
             promptInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
 
-            // 3. Find Create/Remix button
+            // 5. Find Create/Remix button
             let buttons = Array.from(document.querySelectorAll('button'));
             let createBtn = null;
             for (let btn of buttons) {{
@@ -301,7 +324,7 @@ class UdioBrowserAutomation:
                 return {{ success: false, error: "Create/Generate/Remix button not found" }};
             }}
 
-            // 4. Click the button
+            // 6. Click the button
             createBtn.click();
             createBtn.dispatchEvent(new MouseEvent('click', {{ bubbles: true, cancelable: true, view: window }}));
 

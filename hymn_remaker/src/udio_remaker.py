@@ -56,7 +56,7 @@ class UdioRemaker:
             raise RuntimeError(f"ffmpeg compression failed: {result.stderr[-500:]}")
         return mp3_path
 
-    def remake(self, wav_path, prompt, duration=30, style=None, title=None):
+    def remake(self, wav_path, prompt, duration=30, style=None, title=None, variance=0.85, negative_prompt="organ, classical, baroque, church organ, cathedral"):
         """Generate a remake of a hymn using Udio AI.
 
         Automatically uses Edge CDP Browser automation if available to bypass anti-bot,
@@ -68,6 +68,8 @@ class UdioRemaker:
             duration (int): Target duration in seconds.
             style (str): Style tags.
             title (str): Song title.
+            variance (float): Remix variance strength.
+            negative_prompt (str): Styles/instruments to avoid.
 
         Returns:
             str: Path to the downloaded WAV file.
@@ -100,8 +102,13 @@ class UdioRemaker:
                 if resp.status_code == 200:
                     existing_ids = {song["id"] for song in resp.json().get("data", [])}
                 
-                # 2. Trigger the generation inside Edge tab (with reference MP3 upload)
-                self.browser.trigger_generation(full_prompt, audio_path=mp3_path or wav_path)
+                # 2. Trigger the generation inside Edge tab (with reference MP3 upload and styling options)
+                self.browser.trigger_generation(
+                    full_prompt, 
+                    audio_path=mp3_path or wav_path,
+                    variance=variance,
+                    negative_prompt=negative_prompt
+                )
                 browser_active = True
                 
                 # 3. Poll songs list to detect the new generating track IDs

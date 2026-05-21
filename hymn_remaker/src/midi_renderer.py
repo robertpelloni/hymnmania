@@ -96,6 +96,32 @@ class MidiRenderer:
             logger.warning(f"Failed to calculate MIDI duration: {e}. Defaulting to 120 seconds.")
             return 120.0
 
+    def stretch_midi(self, input_path, output_path, target_duration=28.0):
+        """
+        Scale the tempo/ticks of a MIDI file so that it plays within target_duration.
+        """
+        try:
+            mid = mido.MidiFile(input_path)
+            original_duration = mid.length
+            if original_duration <= 0:
+                logger.warning("MIDI duration is 0 or negative. Cannot stretch.")
+                return False
+                
+            scale_factor = target_duration / original_duration
+            logger.info(f"Stretching MIDI {input_path} from {original_duration:.2f}s to {target_duration:.2f}s (factor: {scale_factor:.4f})")
+            
+            for track in mid.tracks:
+                for msg in track:
+                    if not msg.is_meta or msg.type != 'set_tempo':
+                        msg.time = int(round(msg.time * scale_factor))
+                        
+            mid.save(output_path)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to stretch MIDI: {e}")
+            return False
+
+
     def get_midi_bpm(self, midi_path):
         """
         Extract the initial BPM from a MIDI file.
