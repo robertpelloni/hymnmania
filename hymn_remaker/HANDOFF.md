@@ -1,5 +1,5 @@
 # HANDOFF.md: Project Architecture, History, and Next Steps
-**Version:** 1.4.0
+**Version:** 1.6.0
 **Date:** 2024-05-22
 
 ## Overview & State
@@ -31,8 +31,11 @@ A local `history.db` SQLite database is maintained.
 ## Next Steps for Incoming Model (Gemini/Claude/GPT)
 Based on the `ROADMAP.md` and `IDEAS.md`, the pipeline is extremely robust and fully loaded with Cloud integration, Database management, and Dynamic AI prompting.
 
+In this recent cycle, I implemented the `status_callback` deep within `tts_generator.py` to allow line-by-line logging and progress updates to bubble up to the Streamlit UI, replacing the old block update. I also removed an obsolete `midi2audio` dependency and resolved a `datetime.utcnow()` deprecation warning in `webhook_notifier.py`. `src/midi_renderer.py` natively relies on `subprocess.run` to call `fluidsynth` directly, so `midi2audio` was correctly and safely removed. All tests pass locally and the `pytest` suite correctly validates the new parameter passing.
+
 The next recommended frontier is:
 1. **Frontend Refactoring:** Porting `app.py` away from Streamlit into a Next.js / React application, while exposing the python logic through a `FastAPI` backend.
 2. **Suno.ai / Udio TTS Integration:** Attempting to pivot from ElevenLabs (spoken word/choral TTS) into true generated "singing" by exploring unofficial/official APIs for Suno.ai or Udio.
+3. **Submodules Dashboard**: Adding a dashboard tracking version compatibility to `app.py`.
 
 Godspeed. The party never stops.
