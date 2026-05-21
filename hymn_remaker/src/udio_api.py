@@ -46,11 +46,14 @@ class UdioAPIClient:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
         }
         
-        if self.cookie_string:
-            headers["Cookie"] = self.cookie_string
-        elif self.oauth_token:
+        if self.oauth_token:
             headers["Authorization"] = f"Bearer {self.oauth_token}"
-            headers["Cookie"] = f"sb-api-auth-token={self.oauth_token}"
+            if self.cookie_string:
+                headers["Cookie"] = self.cookie_string
+            else:
+                headers["Cookie"] = f"sb-api-auth-token={self.oauth_token}"
+        elif self.cookie_string:
+            headers["Cookie"] = self.cookie_string
             
         if not get_request:
             headers.update({
