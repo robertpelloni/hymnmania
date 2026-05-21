@@ -8,3 +8,7 @@
 
 **Intended Workflow:**
 Upload `.mid` files -> Configure preset styling -> Output High-Quality 4K video mixed with 0dBFS normalized audio, auto-subbed lyrics, and singing/spoken word generation from ElevenLabs.
+
+**Future Direction:**
+- Port the UI away from Streamlit to a Next.js / React application.
+- Expose the Python pipeline logic through a robust FastAPI backend.
