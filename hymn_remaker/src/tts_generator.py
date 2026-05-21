@@ -37,7 +37,7 @@ class TTSGenerator:
         return shifted_sound
 
     @retry_request(max_retries=3, delay=2, backoff=2)
-    def generate_vocals(self, lyrics, output_path, voice_id="21m00Tcm4TlvDq8ikWAM", model="eleven_multilingual_v2", **kwargs):
+    def generate_vocals(self, lyrics, output_path, voice_id="21m00Tcm4TlvDq8ikWAM", model="eleven_multilingual_v2", status_callback=None, **kwargs):
         """
         Generate a single synchronized vocal track from a list of lyrics and timestamps.
 
@@ -46,6 +46,7 @@ class TTSGenerator:
             output_path (str): Path to save the combined vocal track.
             voice_id (str): ID of the voice to use (default is "Rachel").
             model (str): ElevenLabs model to use.
+            status_callback (callable): Optional callback for progress updates.
 
         Returns:
             str: Path to the generated audio file.
@@ -69,13 +70,21 @@ class TTSGenerator:
         primary_voice = voice_ids[0]
         harmony_voices = voice_ids[1:] if len(voice_ids) > 1 else []
 
+        total_lines = len(lyrics)
+
         for i, line in enumerate(lyrics):
             text = line.get('text', '').strip()
             if not text:
                 continue
 
             start_ms = int(float(line.get('start', i * 5)) * 1000)
-            logger.info(f"Generating primary TTS for line {i+1}: '{text}' at {start_ms}ms using {primary_voice}")
+            msg = f"Synthesizing Vocal Line {i+1}/{total_lines}: '{text}'"
+            logger.info(f"{msg} at {start_ms}ms using {primary_voice}")
+
+            if status_callback:
+                # Progress calculation: range from 80 to 90
+                prog = 80 + int((i / total_lines) * 10)
+                status_callback(msg, prog)
 
             # Generate the audio clip for primary voice
             audio_generator = self.client.generate(

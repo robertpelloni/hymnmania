@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2024-05-22
+### Added
+- **Granular TTS Progress Logging Implementation**: Fully implemented the `status_callback` deep into the ElevenLabs iterative loop inside `tts_generator.py`. The pipeline now accurately updates the UI progress text per lyric line during generation (e.g., "Synthesizing Vocal Line 3/10").
+
 ## [1.5.0] - 2024-05-22
 ### Added
 - **System Dashboard Tab**: Added a third tab to the Streamlit UI called "⚙️ System Dashboard". It queries the OS to track versions of `ffmpeg`, `fluidsynth`, Python dependencies in `requirements.txt`, and displays a project directory map. This is incredibly useful for users deploying via Docker to ensure their system binaries are correctly hooked up.
