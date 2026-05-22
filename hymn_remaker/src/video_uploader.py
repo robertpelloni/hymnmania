@@ -264,7 +264,7 @@ class VideoProducer:
                     y_pos = "(H-h)/2" # Center vertically
 
                     if visualizer_mode == "avectorscope":
-                        vis_filter = f"[1:a]avectorscope=s={h_viz}x{h_viz}:draw=line:color=white[wave];[v_base][wave]overlay=x=(W-w)/2:y={y_pos}:format=yuv420[v_pre]"
+                        vis_filter = f"[1:a]avectorscope=s={h_viz}x{h_viz}:draw=line[wave];[v_base][wave]overlay=x=(W-w)/2:y={y_pos}:format=yuv420[v_pre]"
                     else:
                         vis_filter = f"[1:a]showwaves=s={w_viz}x{h_viz}:mode={visualizer_mode}:colors=white@0.5[wave];[v_base][wave]overlay=x=0:y={y_pos}:format=yuv420[v_pre]"
                     
