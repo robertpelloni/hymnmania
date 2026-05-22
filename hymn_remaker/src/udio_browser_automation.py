@@ -184,10 +184,15 @@ class UdioBrowserAutomation:
         inj_js = """
         (function() {
             let els = Array.from(document.querySelectorAll('textarea, input[type="text"]'));
+            // Broad search for any prompt-like input
             let inp = els.find(el => {
                 let p = (el.placeholder || '').toLowerCase();
-                return p.includes('describe') || p.includes('prompt') || p.includes('imagine') || p.includes('track');
+                let v = (el.value || '').toLowerCase();
+                let isVisible = el.offsetParent !== null;
+                return isVisible && (p.includes('describe') || p.includes('prompt') || p.includes('imagine') || p.includes('track') || p === '');
             });
+            
+            if (!inp && els.length > 0) inp = els[0]; // Desperation fallback
             if (!inp) return "no_input";
             
             const setter = Object.getOwnPropertyDescriptor(inp.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype, 'value').set;
@@ -195,12 +200,14 @@ class UdioBrowserAutomation:
             inp.dispatchEvent(new Event('input', { bubbles: true }));
             inp.dispatchEvent(new Event('change', { bubbles: true }));
 
-            let buttons = Array.from(document.querySelectorAll('button, [role="button"]'));
+            let buttons = Array.from(document.querySelectorAll('button, [role="button"], div.cursor-pointer'));
             let btn = buttons.find(b => {
                 let t = (b.textContent || '').toLowerCase().trim();
-                let cls = (typeof b.className === 'string') ? b.className : (b.className?.baseVal || '');
-                return (t === 'create' || t === 'generate' || t === 'remix') && !cls.includes('opacity-50') && b.offsetParent !== null;
+                let isVisible = b.offsetParent !== null;
+                // Don't check className for opacity-50 as Tailwind utilities always include it
+                return isVisible && (t === 'create' || t === 'generate' || t === 'remix') && !b.disabled;
             });
+            
             if (!btn) return "no_button";
             
             btn.click();
