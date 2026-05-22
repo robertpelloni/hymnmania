@@ -63,15 +63,15 @@ def load_modules():
         mxl_parser = MusicXMLParser()
         omr_processor = OMRProcessor()
         stem_separator = StemSeparator()
-        return renderer, remaker, suno_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator
+        return renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator
     except Exception as e:
         import traceback
         st.error(f"Failed to initialize modules: {e}")
         st.code(traceback.format_exc())
-        return None, None, None, None, None, None, None, None, None
+        return None, None, None, None, None, None, None, None, None, None
 
 
-renderer, remaker, suno_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator = load_modules()
+renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator = load_modules()
 
 st.sidebar.header("Environment & API")
 missing_keys = []
@@ -92,6 +92,10 @@ st.sidebar.header("Settings")
 # Style Preset Selection
 preset_styles = [
     settings.DEFAULT_STYLE,
+    "Full-On Psytrance, 145 BPM, driving, psychedelic",
+    "Sonic Vacuum: Dry staccato sine render",
+    "Symbolic Norm: Velocity-flattened grid",
+    "House Quantizer: 124 BPM 4/4 structural snap",
     "Lofi hip hop, chill, relaxing",
     "Synthwave, retro 80s, neon",
     "Epic Orchestral, cinematic, Hans Zimmer",
@@ -106,6 +110,13 @@ else:
 
 output_dir = st.sidebar.text_input("Output Directory", value=settings.OUTPUT_DIR, help="Where the final audio, video, and metadata files will be saved.")
 max_workers = st.sidebar.slider("Concurrent Tasks", min_value=1, max_value=4, value=1, help="Process multiple MIDI files at the same time.")
+
+st.sidebar.markdown("### Experimental Preprocessors")
+with st.sidebar.expander("Udio/Suno Optimizers", expanded=False):
+    sonic_vacuum = st.checkbox("Sonic Vacuum (Dry Render)", value=False, help="Render transient-only audio to prevent soundfont bleed.")
+    symbolic_norm = st.checkbox("Symbolic Norm (Velocity 100)", value=False, help="Strip performance baggage and flatten velocity.")
+    house_quantizer = st.checkbox("House Structural Quantizer", value=False, help="Force snap to 124 BPM electronic grid.")
+    mix_hiphop_vocals = st.text_input("Hip-Hop Vocal Remix (Path/URL)", help="Provide a local path or YouTube URL to an acapella or hip-hop track to remix into the psytrance track.")
 
 st.sidebar.markdown("### Advanced Audio Processing")
 with st.sidebar.expander("Audio Settings", expanded=False):
@@ -176,7 +187,7 @@ udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.35, 0.05, h
 transient = st.sidebar.checkbox("Pure Transient Rendering", value=True, help="Render MIDI as Woodblock pulses to strip stylistic flavor and force AI instruments.")
 
 # Initialize remakers with UI overrides
-suno_remaker = SunoRemaker(session_token=suno_session) if suno_session else suno_remaker
+suno_remaker = SunoRemaker(session_token=settings.SUNO_SESSION_TOKEN) if settings.SUNO_SESSION_TOKEN else suno_remaker
 udio_remaker = UdioRemaker(auth_token=udio_token) if udio_token else udio_remaker
 udio_oauth_remaker = UdioOAuthRemaker(client_id=udio_client_id, client_secret=udio_client_secret) if udio_client_id and udio_client_secret else None
 upload = st.sidebar.checkbox("Upload to YouTube", value=False, help="Automatically upload the finished video to YouTube (requires OAuth credentials setup).")
@@ -327,7 +338,11 @@ with tab1:
                         status_callback=lambda msg, prog: (status_texts[file_path].info(msg), progress_bars[file_path].progress(prog)),
                         interactive_callback=callback,
                         udio_variance=udio_variance,
-                        transient=transient
+                        transient=transient,
+                        sonic_vacuum=sonic_vacuum,
+                        symbolic_norm=symbolic_norm,
+                        house_quantizer=house_quantizer,
+                        hiphop_vocal_path=mix_hiphop_vocals if mix_hiphop_vocals else None
                     )
 
                     status_texts[file_path].success(f"Completed! ✅ ({filename})")

@@ -202,15 +202,46 @@ class MidiRenderer:
             logger.error(f"FluidSynth stderr: {result.stderr}")
             raise RuntimeError(f"FluidSynth CLI failed: {result.stderr[:500]}")
 
+<<<<<<< HEAD
     def render(self, midi_path, output_path, transient_mode=False):
         """
         Render a MIDI file to audio.
+=======
+        if not os.path.exists(output_path):
+            raise RuntimeError(f"FluidSynth completed but output file not found: {output_path}")
+
+        logger.info(f"FluidSynth CLI rendering complete: {output_path}")
+
+    def render(self, midi_path, output_path, transient_only=False):
+        """
+        Render a MIDI file to audio (WAV/MP3/FLAC depending on extension).
+
+        Args:
+            midi_path (str): Path to the input MIDI file.
+            output_path (str): Path to the output audio file.
+            transient_only (bool): If True, use a sharp, staccato sine-wave sound for AI conditioning.
+>>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
         """
         if not os.path.exists(midi_path):
             raise FileNotFoundError(f"MIDI file not found: {midi_path}")
 
+<<<<<<< HEAD
         logger.info(f"Rendering {midi_path} to {output_path} (transient={transient_mode})...")
         
+=======
+        logger.info(f"Rendering {midi_path} to {output_path}...")
+
+        if transient_only:
+            logger.info("Transient-only rendering requested. Routing to SonicVacuum (Staccato Sines).")
+            try:
+                from pipeline.processing.sonic_vacuum import SonicVacuumProcessor
+                vacuum = SonicVacuumProcessor(midi_path)
+                vacuum.render_dry_piano(output_path)
+                return
+            except Exception as e:
+                logger.error(f"SonicVacuum failed: {e}. Falling back to standard render.")
+
+>>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
         try:
             if NATIVE_ENGINE_AVAILABLE:
                 # For transient mode, we stick to CLI for easier MIDI manipulation.

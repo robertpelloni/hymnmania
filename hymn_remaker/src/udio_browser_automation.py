@@ -150,59 +150,69 @@ class UdioBrowserAutomation:
     def _clear_udio_popups(self, ws_url):
         """Detect and clear Udio modals like 'Upload Confirmation'."""
         clear_js = """
-        (function() {
-            console.log('Gemini: Checking for modals...');
-            const results = { checkbox: false, clicked: null };
+        (async function() {
+            const results = { action: null };
             
-            // 1. Check for the 'I understand' checkbox
-            const labels = Array.from(document.querySelectorAll('label, span, div'));
-            const confirmText = labels.find(el => 
-                el.textContent.toLowerCase().includes('understand') || 
-                el.textContent.toLowerCase().includes('attest that you have the right')
-            );
-            
-            if (confirmText) {
-                // Find checkbox in parent or nearby
-                const parent = confirmText.closest('div') || confirmText.parentElement;
-                const checkbox = parent.querySelector('input[type="checkbox"]');
-                if (checkbox && !checkbox.checked) {
-                    checkbox.click();
-                    results.checkbox = true;
+            const robustClick = (el) => {
+                if (!el) return;
+                console.log('Gemini: Clicking', el);
+                el.click();
+                ['mousedown', 'mouseup', 'click'].forEach(v => 
+                    el.dispatchEvent(new MouseEvent(v, { bubbles: true, cancelable: true, view: window }))
+                );
+            };
+
+            // 1. Find and check 'I understand' checkbox
+            const checkbox = document.querySelector('button[role="checkbox"], input[type="checkbox"]');
+            if (checkbox) {
+                const isChecked = checkbox.getAttribute('aria-checked') === 'true' || checkbox.checked;
+                if (!isChecked) {
+                    robustClick(checkbox);
+                    results.action = "checked_box";
+                    await new Promise(r => setTimeout(r, 500));
                 }
             }
 
-            // 2. Click the 'Remix' button inside the modal if it exists, otherwise 'Confirm/Understand'
-            const buttons = Array.from(document.querySelectorAll('button, [role="button"]'));
-            
-            // Prefer 'Remix' button first if it's a selection modal
-            let targetBtn = buttons.find(b => {
+            // 2. Find and click 'I understand and confirm' OR 'Confirm'
+            const buttons = Array.from(document.querySelectorAll('button, [role="button"], div.cursor-pointer'));
+            const confirmBtn = buttons.find(b => {
                 const txt = b.textContent.toLowerCase();
-                return txt === 'remix' && !b.className.includes('bg-remix-foreground');
+                return txt.includes('understand and confirm') || (txt === 'confirm' && b.className.includes('bg-white'));
             });
-            
-            if (!targetBtn) {
-                targetBtn = buttons.find(b => {
-                    const txt = b.textContent.toLowerCase();
-                    return txt.includes('confirm') || txt.includes('understand');
-                });
+
+            if (confirmBtn && !confirmBtn.className.includes('opacity-50')) {
+                robustClick(confirmBtn);
+                results.action = (results.action ? results.action + "+" : "") + "clicked_confirm";
+                await new Promise(r => setTimeout(r, 1000));
+                return results;
             }
 
-            if (targetBtn) {
-                targetBtn.click();
-                targetBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-                results.clicked = targetBtn.textContent.trim();
+            // 3. Find and click 'Remix' mode button (the large card in the modal)
+            const remixCard = buttons.find(b => {
+                const txt = b.textContent.trim();
+                return txt === 'Remix' && b.className.includes('border') && !b.className.includes('bg-remix');
+            });
+
+            if (remixCard && !remixCard.className.includes('opacity-50')) {
+                robustClick(remixCard);
+                results.action = (results.action ? results.action + "+" : "") + "selected_remix_mode";
                 return results;
             }
             
             return results;
         })()
         """
-        logger.info("Scanning for Udio modals...")
-        res = self.execute_js(ws_url, clear_js)
-        if res and (res.get('checkbox') or res.get('clicked')):
-            logger.info(f"Modal interaction: {res}")
-            return True
-        return False
+        # Try clearing sequence 8 times
+        max_attempts = 8
+        logger.info("Running robust Udio modal clearing sequence...")
+        for i in range(max_attempts):
+            res = self.execute_js(ws_url, clear_js)
+            if res and res.get('action'):
+                logger.info(f"  Action (attempt {i+1}): {res['action']}")
+                time.sleep(2)
+            else:
+                time.sleep(1)
+        return True
 
     def trigger_generation(self, prompt, audio_path=None, variance=0.85, negative_prompt="organ, classical, baroque, church organ, cathedral"):
         """Drive Edge to paste the prompt and click the Create button, optionally uploading reference audio."""
@@ -224,15 +234,9 @@ class UdioBrowserAutomation:
             ws = None
             try:
                 ws = websocket.create_connection(ws_url, suppress_origin=True, timeout=5)
-                
-                # Enable DOM
                 self._send_cdp_cmd(ws, 10, "DOM.enable")
-                
-                # Get document root
                 doc_resp = self._send_cdp_cmd(ws, 11, "DOM.getDocument")
                 root_node_id = doc_resp['result']['root']['nodeId']
-                
-                # Query file input
                 node_resp = self._send_cdp_cmd(ws, 12, "DOM.querySelector", {
                     "nodeId": root_node_id,
                     "selector": "input[type='file']"
@@ -240,8 +244,6 @@ class UdioBrowserAutomation:
                 if 'error' in node_resp or not node_resp.get('result', {}).get('nodeId'):
                     raise RuntimeError(f"Could not locate file input element in DOM: {node_resp}")
                 input_node_id = node_resp['result']['nodeId']
-                
-                # Inject files
                 self._send_cdp_cmd(ws, 13, "DOM.setFileInputFiles", {
                     "files": [abs_audio_path],
                     "nodeId": input_node_id
@@ -251,65 +253,21 @@ class UdioBrowserAutomation:
                 logger.warning(f"Failed to set file input via CDP: {e}")
             finally:
                 if ws:
-                    try:
-                        ws.close()
-                    except Exception:
-                        pass
+                    try: ws.close()
+                    except: pass
             
             # Wait for upload popover options or confirmation modals to render
-            logger.info("Waiting for page to react to file upload...")
-            time.sleep(3)
+            logger.info("Waiting for Udio to process upload and show modal...")
+            time.sleep(5) # Give it more time
 
-            # Check for and clear any 'Upload Confirmation' modals
+            # Check for and clear any 'Upload Confirmation' modals + Select Remix
+            # We call this multiple times because there are often TWO modals (Confirm then Select Mode)
             self._clear_udio_popups(ws_url)
-            
-            # Click Remix option button
-            click_remix_js = """
-            (function() {
-                let buttons = Array.from(document.querySelectorAll('button, [role="button"]'));
-                let remixOptionBtn = null;
-                for (let el of buttons) {
-                    let txt = (el.textContent || '').trim().toLowerCase();
-                    if (txt === 'remix') {
-                        // The option card has a border and is not the submit button (which has bg-remix-foreground)
-                        if (el.className.includes('border') && !el.className.includes('bg-remix-foreground')) {
-                            remixOptionBtn = el;
-                            break;
-                        }
-                    }
-                }
-                if (!remixOptionBtn) {
-                    // Fallback to find any remix button that is not the submit button
-                    for (let el of buttons) {
-                        let txt = (el.textContent || '').trim().toLowerCase();
-                        if (txt === 'remix' && !el.className.includes('bg-remix-foreground')) {
-                            remixOptionBtn = el;
-                            break;
-                        }
-                    }
-                }
-                if (remixOptionBtn) {
-                    remixOptionBtn.click();
-                    remixOptionBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-                    return { success: true, clicked: remixOptionBtn.outerHTML.substring(0, 120) };
-                }
-                return { success: false, error: "Remix option card button not found" };
-            })()
-            """
-            logger.info("Clicking the Remix popover option card...")
-            remix_result = self.execute_js(ws_url, click_remix_js)
-            if not remix_result or not remix_result.get('success'):
-                err = remix_result.get('error', 'Unknown option click failure') if remix_result else 'Execution returned null'
-                logger.warning(f"Could not click Remix option automatically: {err}. Proceeding anyway...")
-            else:
-                logger.info(f"Remix option card clicked successfully: {remix_result.get('clicked')}")
-            
-            # Modal can also appear AFTER clicking Remix if not already cleared
             time.sleep(2)
             self._clear_udio_popups(ws_url)
-                
-            logger.info("Waiting 4 seconds for Remix settings and inputs to render...")
-            time.sleep(2)
+            
+            logger.info("Waiting for Remix settings and inputs to render...")
+            time.sleep(3)
         elif audio_path:
             logger.warning(f"Reference audio path does not exist: {audio_path}")
 
@@ -419,7 +377,7 @@ class UdioBrowserAutomation:
         poll_script = """
         (async function() {
             // Find the most recent track row (top of the feed)
-            const tracks = Array.from(document.querySelectorAll('[data-testid*="track-row"], .track-row'));
+            const tracks = Array.from(document.querySelectorAll('[data-testid*="track-row"], .track-row, [data-testid="tracks-panel"] [role="row"]'));
             if (tracks.length === 0) return { status: 'none' };
             
             const latest = tracks[0];
@@ -430,7 +388,6 @@ class UdioBrowserAutomation:
             if (!isReady) return { status: 'generating' };
             
             // It's ready, trigger download
-            // First find and click the '...' menu if the download button isn't direct
             let downloadBtn = latest.querySelector('button[aria-label*="Download"]');
             
             if (!downloadBtn) {
@@ -480,4 +437,3 @@ class UdioBrowserAutomation:
             
         logger.error(f"Timed out after {timeout}s waiting for track.")
         return False
-

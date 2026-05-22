@@ -1,18 +1,28 @@
-# Handoff - v1.27.0
+# Handoff - Version 1.28.0 (Vocal Remix & Udio Extension Hack)
 
-## Session Achievements
-- **UI Polish**: Integrated `st.spinner` and granular status updates for high-latency AI calls (DALL-E 3, ElevenLabs) in `hymn_remaker/app.py` and `main.py`.
-- **Docker Optimization**:
-  - Added `.dockerignore` to reduce build context.
-  - Optimized `Dockerfile` with necessary system libraries (`libgl1`, `libglib`) for ML inference.
-  - Synchronized package versions (`Pillow 11.1.0`, `python-dotenv 1.0.1`) to ensure build stability.
-- **Documentation**: Updated `ROADMAP.md`, `TODO.md`, and `CHANGELOG.md`. Bumped version to `1.27.0`.
-- **Verification**: Validated UI via Playwright (screenshots taken) and passed all unit tests for `tts_generator` and `utils`.
+## Session Summary
+Building upon the Psy-Mono foundation, this session implemented the automated Vocal Remix pipeline for integrating hip-hop acapellas and the Udio "Extension Hack" for improved stylistic transformations.
 
-## Technical Observations
-- The environment has strict limits on `overlayfs` and Docker rate limits, making full local container builds difficult; however, the `Dockerfile` structure is now verified for slim deployments.
-- Replaced redundant `docs/VERSION.md` with a single source of truth in the root `VERSION` file.
+## Major Changes
+- **Vocal Remix Pipeline (TS):**
+  - `src/integrators/vocal_processor.ts`: Full implementation with Demucs isolation, librosa BPM analysis, and FFmpeg grid-locking.
+  - `main.py`: Added `--mix-vocals` argument to orchestrate hip-hop vocal integration.
+  - `app.py`: Added UI input for "Hip-Hop Vocal Remix".
+- **Udio Power User Hack:**
+  - `udio_remaker.py`: Implemented the 15-second crop and 'extend' mode logic to bypass soundfont texture bleed and force 100% electronic instrumentation.
+- **Robustness:**
+  - Standardized `ts-node` calls with `--transpile-only` to avoid environment-specific type checking issues in production execution.
+  - Fixed `cookie_string` compat issue in `UdioRemaker`.
 
-## Next Steps for Successor Agent
-- **Roadmap Phase 6 (Microservices)**: Continue the transition towards a microservice architecture by extracting the ML dependencies into a separate worker container (started in `services/renderer/worker.py`).
-- **Interactive Review Improvements**: Enhance the "Interactive Mode" to allow users to regenerate specific stems or segments without restarting the entire pipeline.
+## Environment Updates
+- New Python dependency: `librosa`.
+- New Node.js dependency: `@types/node` (dev).
+
+## Verification Status
+- TS Sequencer and VocalProcessor verified to load and execute via `ts-node`.
+- `main.py` verified to parse new arguments and correctly branch for Psytrance and Vocal Remix modes.
+- `app.py` verified to display and pass new experimental parameters.
+
+## Outstanding Items / Next Steps
+- Implement `yt-dlp` download logic in `main.py` for direct YouTube URL vocal mixing.
+- Full end-to-end integration test with a live GPU for Demucs separation.
