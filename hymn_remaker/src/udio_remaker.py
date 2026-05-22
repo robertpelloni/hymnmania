@@ -153,30 +153,34 @@ class UdioRemaker:
                 raise RuntimeError("Edge automation failed to trigger generation.")
 
             logger.info("Generation triggered in Edge! Waiting for track completion and auto-download...")
-            
-            # Since the CDP script clicks 'Create', we now just wait for the file to appear 
-            # in the project's 'extend_songs/' or similar folder if the wrapper/browser 
-            # is configured to save there. 
-            # Actually, Udio downloads to the browser's default Downloads folder.
-            # We will poll the Downloads folder for the latest MP3.
-            
+
+            # Use the new active polling and download method
+            download_triggered = self.edge_auto.wait_for_completion_and_download(timeout=300)
+
+            if not download_triggered:
+                raise RuntimeError("Edge automation failed to trigger track download.")
+
+            # Now poll the Downloads folder for the file we just clicked 'Download' on
             download_dir = os.path.join(os.path.expanduser("~"), "Downloads")
             start_time = time.time()
             final_path = None
-            
-            while time.time() - start_time < 300: # 5 minute timeout
+
+            logger.info(f"Watching {download_dir} for the downloaded track...")
+            while time.time() - start_time < 60: # Short 1 min timeout since download should be active
                 files = glob.glob(os.path.join(download_dir, "*.mp3"))
                 if files:
                     latest_mp3 = max(files, key=os.path.getmtime)
-                    if time.time() - os.path.getmtime(latest_mp3) < 60: # Created in last minute
+                    # Use a very short window (30s) to ensure it's the one we just triggered
+                    if time.time() - os.path.getmtime(latest_mp3) < 30:
                         final_path = latest_mp3
                         break
-                time.sleep(10)
-            
+                time.sleep(5)
+
             if not final_path:
-                raise RuntimeError("Timed out waiting for Udio download in browser Downloads folder.")
+                raise RuntimeError("Timed out waiting for file to appear in Downloads folder after click.")
 
             logger.info(f"Detected Udio download: {final_path}")
+
 
             # Finalize
             output_dir = os.path.dirname(wav_path)

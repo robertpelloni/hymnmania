@@ -147,6 +147,63 @@ class UdioBrowserAutomation:
                 pass
         raise TimeoutError(f"No response for CDP {method} (id {msg_id}) in time.")
 
+    def _clear_udio_popups(self, ws_url):
+        """Detect and clear Udio modals like 'Upload Confirmation'."""
+        clear_js = """
+        (function() {
+            console.log('Gemini: Checking for modals...');
+            const results = { checkbox: false, clicked: null };
+            
+            // 1. Check for the 'I understand' checkbox
+            const labels = Array.from(document.querySelectorAll('label, span, div'));
+            const confirmText = labels.find(el => 
+                el.textContent.toLowerCase().includes('understand') || 
+                el.textContent.toLowerCase().includes('attest that you have the right')
+            );
+            
+            if (confirmText) {
+                // Find checkbox in parent or nearby
+                const parent = confirmText.closest('div') || confirmText.parentElement;
+                const checkbox = parent.querySelector('input[type="checkbox"]');
+                if (checkbox && !checkbox.checked) {
+                    checkbox.click();
+                    results.checkbox = true;
+                }
+            }
+
+            // 2. Click the 'Remix' button inside the modal if it exists, otherwise 'Confirm/Understand'
+            const buttons = Array.from(document.querySelectorAll('button, [role="button"]'));
+            
+            // Prefer 'Remix' button first if it's a selection modal
+            let targetBtn = buttons.find(b => {
+                const txt = b.textContent.toLowerCase();
+                return txt === 'remix' && !b.className.includes('bg-remix-foreground');
+            });
+            
+            if (!targetBtn) {
+                targetBtn = buttons.find(b => {
+                    const txt = b.textContent.toLowerCase();
+                    return txt.includes('confirm') || txt.includes('understand');
+                });
+            }
+
+            if (targetBtn) {
+                targetBtn.click();
+                targetBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                results.clicked = targetBtn.textContent.trim();
+                return results;
+            }
+            
+            return results;
+        })()
+        """
+        logger.info("Scanning for Udio modals...")
+        res = self.execute_js(ws_url, clear_js)
+        if res and (res.get('checkbox') or res.get('clicked')):
+            logger.info(f"Modal interaction: {res}")
+            return True
+        return False
+
     def trigger_generation(self, prompt, audio_path=None, variance=0.85, negative_prompt="organ, classical, baroque, church organ, cathedral"):
         """Drive Edge to paste the prompt and click the Create button, optionally uploading reference audio."""
         tab = self._get_active_tab()
@@ -199,9 +256,12 @@ class UdioBrowserAutomation:
                     except Exception:
                         pass
             
-            # Wait for upload popover options to render in DOM
-            logger.info("Waiting 5 seconds for page to react to file upload and render option cards...")
-            time.sleep(5)
+            # Wait for upload popover options or confirmation modals to render
+            logger.info("Waiting for page to react to file upload...")
+            time.sleep(3)
+
+            # Check for and clear any 'Upload Confirmation' modals
+            self._clear_udio_popups(ws_url)
             
             # Click Remix option button
             click_remix_js = """
@@ -243,9 +303,13 @@ class UdioBrowserAutomation:
                 logger.warning(f"Could not click Remix option automatically: {err}. Proceeding anyway...")
             else:
                 logger.info(f"Remix option card clicked successfully: {remix_result.get('clicked')}")
+            
+            # Modal can also appear AFTER clicking Remix if not already cleared
+            time.sleep(2)
+            self._clear_udio_popups(ws_url)
                 
             logger.info("Waiting 4 seconds for Remix settings and inputs to render...")
-            time.sleep(4)
+            time.sleep(2)
         elif audio_path:
             logger.warning(f"Reference audio path does not exist: {audio_path}")
 
@@ -341,4 +405,79 @@ class UdioBrowserAutomation:
             
         logger.info("Successfully triggered Udio generation in browser!")
         return True
+
+    def wait_for_completion_and_download(self, timeout=300):
+        """Poll the browser for the latest track's status and trigger download when ready."""
+        tab = self._get_active_tab()
+        if not tab:
+            return False
+            
+        ws_url = tab.get('webSocketDebuggerUrl')
+        
+        # JS script to find the first 'ready' track and click its download button
+        # Note: Udio's UI structure for the latest track row
+        poll_script = """
+        (async function() {
+            // Find the most recent track row (top of the feed)
+            const tracks = Array.from(document.querySelectorAll('[data-testid*="track-row"], .track-row'));
+            if (tracks.length === 0) return { status: 'none' };
+            
+            const latest = tracks[0];
+            const isReady = latest.textContent.includes('ready') || !!latest.querySelector('button[aria-label*="Download"]');
+            const isError = latest.textContent.includes('error') || latest.textContent.includes('failed');
+            
+            if (isError) return { status: 'error' };
+            if (!isReady) return { status: 'generating' };
+            
+            // It's ready, trigger download
+            // First find and click the '...' menu if the download button isn't direct
+            let downloadBtn = latest.querySelector('button[aria-label*="Download"]');
+            
+            if (!downloadBtn) {
+                const moreBtn = latest.querySelector('button[aria-label*="More"], [data-testid*="more-actions"]');
+                if (moreBtn) {
+                    moreBtn.click();
+                    await new Promise(r => setTimeout(r, 500));
+                    const menuItems = Array.from(document.querySelectorAll('[role="menuitem"]'));
+                    downloadBtn = menuItems.find(i => i.textContent.toLowerCase().includes('download'));
+                }
+            }
+            
+            if (downloadBtn) {
+                downloadBtn.click();
+                return { status: 'downloading' };
+            }
+            
+            return { status: 'ready_but_no_button' };
+        })()
+        """
+        
+        start_time = time.time()
+        logger.info("Polling browser for track completion...")
+        
+        while time.time() - start_time < timeout:
+            try:
+                res = self.execute_js(ws_url, poll_script)
+                status = res.get('status')
+                
+                if status == 'downloading':
+                    logger.info("✅ Track completed! Triggered browser download.")
+                    return True
+                elif status == 'error':
+                    logger.error("❌ Udio reported a generation error in the UI.")
+                    return False
+                elif status == 'none':
+                    logger.warning("No tracks found in the Udio feed yet...")
+                
+                # Still generating...
+                elapsed = int(time.time() - start_time)
+                logger.info(f"  Status: {status} ({elapsed}s)")
+                
+            except Exception as e:
+                logger.warning(f"Error while polling Udio UI: {e}")
+                
+            time.sleep(15)
+            
+        logger.error(f"Timed out after {timeout}s waiting for track.")
+        return False
 
