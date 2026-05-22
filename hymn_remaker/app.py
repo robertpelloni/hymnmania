@@ -529,6 +529,9 @@ with tab3:
     st.header("🌀 Live Psy-Mono Studio")
     st.write("Tweak algorithmic psytrance parameters in real-time.")
 
+    from streamlit_mic_recorder import mic_recorder
+    from hymn_remaker.src.audio_to_midi import transcribe_audio_to_midi
+
     if "psy_player" not in st.session_state:
         import hymn_player_ext
         sf_path = settings.DEFAULT_SOUNDFONT_PATHS[0]
@@ -537,7 +540,33 @@ with tab3:
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        live_midi = st.file_uploader("Upload Hymn MIDI", type=["mid", "midi"], key="live_psy_uploader")
+        source_mode = st.radio("Input Source", ["Hymn MIDI", "Mic Input"])
+
+        input_midi_path = None
+
+        if source_mode == "Hymn MIDI":
+            live_midi = st.file_uploader("Upload Hymn MIDI", type=["mid", "midi"], key="live_psy_uploader")
+            if live_midi:
+                temp_input = os.path.join(settings.INPUT_DIR, "live_input.mid")
+                with open(temp_input, "wb") as f:
+                    f.write(live_midi.getbuffer())
+                input_midi_path = temp_input
+        else:
+            st.write("Record your melody (monophonic):")
+            audio_rec = mic_recorder(start_prompt="⏺️ Record", stop_prompt="⏹️ Stop", key="mic")
+            if audio_rec:
+                temp_audio = os.path.join(settings.INPUT_DIR, "live_mic.wav")
+                with open(temp_audio, "wb") as f:
+                    f.write(audio_rec['bytes'])
+
+                temp_input = os.path.join(settings.INPUT_DIR, "live_input_from_mic.mid")
+                with st.spinner("Transcribing audio..."):
+                    try:
+                        transcribe_audio_to_midi(temp_audio, temp_input)
+                        st.success("Transcription complete!")
+                        input_midi_path = temp_input
+                    except Exception as e:
+                        st.error(f"Transcription failed: {e}")
 
         st.subheader("Sequencer Config")
         bpm = st.slider("Target BPM", 120, 160, 145)
@@ -567,22 +596,17 @@ with tab3:
         play_btn = c1.button("▶️ Play / Refresh")
         stop_btn = c2.button("⏹️ Stop")
 
-        if live_midi:
+        if input_midi_path:
             if play_btn:
-                # 1. Save temp input
-                temp_input = os.path.join(settings.INPUT_DIR, "live_input.mid")
-                with open(temp_input, "wb") as f:
-                    f.write(live_midi.getbuffer())
-
-                # 2. Run TS Sequencer
+                # 1. Run TS Sequencer
                 temp_output = os.path.join(output_dir, "live_psy_output.mid")
                 config_json = json.dumps(psy_config)
 
                 with st.spinner("Generating Psytrance..."):
-                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", temp_input, temp_output, config_json]
+                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", input_midi_path, temp_output, config_json]
                     subprocess.run(cmd, check=True, capture_output=True)
 
-                # 3. Load and Play
+                # 2. Load and Play
                 st.session_state.psy_player.stop_realtime()
                 st.session_state.psy_player.load(temp_output)
                 st.session_state.psy_player.start_realtime()

@@ -7,6 +7,7 @@
 - [x] Automated Hip-Hop Vocal Isolation and Grid-Locking.
 - [x] Transient-Only Rendering for Udio/Suno conditioning.
 - [x] Real-time "Live Studio" parameter tweaking via C++ engine.
+- [x] Real-time microphone input for on-the-fly melody generation.
 
 ## Future Phases
 - [ ] Real-time browser-based synth engine.
