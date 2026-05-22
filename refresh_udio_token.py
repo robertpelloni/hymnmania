@@ -52,15 +52,27 @@ def get_udio_token_from_browser():
                 lines = f.readlines()
         
         new_lines = []
-        found = False
+        keys_to_update = {
+            "UDIO_OAUTH_TOKEN": token,
+            "UDIO_COOKIE_0": cookie0,
+            "UDIO_COOKIE_1": cookie1 or ""
+        }
+        
+        updated_keys = set()
         for line in lines:
-            if line.startswith("UDIO_OAUTH_TOKEN="):
-                new_lines.append(f"UDIO_OAUTH_TOKEN={token}\n")
-                found = True
-            else:
+            matched = False
+            for key in keys_to_update:
+                if line.startswith(f"{key}="):
+                    new_lines.append(f"{key}={keys_to_update[key]}\n")
+                    updated_keys.add(key)
+                    matched = True
+                    break
+            if not matched:
                 new_lines.append(line)
-        if not found:
-            new_lines.append(f"UDIO_OAUTH_TOKEN={token}\n")
+        
+        for key in keys_to_update:
+            if key not in updated_keys:
+                new_lines.append(f"{key}={keys_to_update[key]}\n")
             
         with open(env_path, "w", encoding="utf-8") as f:
             f.writelines(new_lines)

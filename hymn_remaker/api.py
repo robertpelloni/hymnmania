@@ -64,6 +64,7 @@ async def generate_hymn(
     normalize_audio: bool = Form(True),
     fade_in_ms: int = Form(0),
     fade_out_ms: int = Form(0),
+    transient: bool = Form(True),
 ):
     """
     Upload a MIDI file and asynchronously generate the hymn remake.
@@ -106,6 +107,7 @@ async def generate_hymn(
         fade_in_ms=fade_in_ms,
         fade_out_ms=fade_out_ms,
         generate_vocals=generate_vocals,
+        transient=transient,
         status_callback=lambda msg, prog: logger.info(f"Background Progress [{prog}%]: {msg}")
     )
 
