@@ -1,7 +1,7 @@
 import requests
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class WebhookNotifier:
             "title": title,
             "description": description,
             "color": color,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "footer": {
                 "text": "Hymn Remaker AI Pipeline"
             },

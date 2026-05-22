@@ -10,7 +10,6 @@ pydub
 streamlit
 elevenlabs
 watchdog
-
 soundfile
 mido
 music21
@@ -20,3 +19,12 @@ demucs==4.0.1
 redis==5.0.3
 streamlit-autorefresh==1.0.1
 playwright-stealth
+pyrubberband
+google-genai
+requests-oauthlib
+udio-wrapper
+
+# Local GPU Video Generation (10GB VRAM)
+diffusers
+transformers
+accelerate

@@ -14,7 +14,10 @@ from hymn_remaker import settings
 from hymn_remaker.src.midi_renderer import MidiRenderer
 from hymn_remaker.src.remaker import MusicRemaker
 from hymn_remaker.src.suno_remaker import SunoRemaker
-from hymn_remaker.src.content_generator import ContentGenerator
+from hymn_remaker.src.udio_remaker import UdioRemaker
+from hymn_remaker.src.udio_oauth_remaker import UdioOAuthRemaker
+from hymn_remaker.src.gemini_generator import GeminiContentGenerator
+from hymn_remaker.src.ai_video import AIVideoGenerator
 from hymn_remaker.src.video_uploader import VideoProducer
 from hymn_remaker.src.tts_generator import TTSGenerator
 from hymn_remaker.src.musicxml_parser import MusicXMLParser
@@ -22,18 +25,81 @@ from hymn_remaker.src.omr_processor import OMRProcessor
 from hymn_remaker.src.stem_separator import StemSeparator
 from hymn_remaker.src.radio_streamer import RadioStreamer
 from hymn_remaker.src.utils import process_audio
+from hymn_remaker.src.midi_analyzer import MidiAnalyzer
 
 # Load environment variables
 load_dotenv()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-    ]
-)
+# Force root logger level and handler configuration to ensure all module logs print
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+for h in root_logger.handlers[:]:
+    root_logger.removeHandler(h)
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+root_logger.addHandler(handler)
+
 logger = logging.getLogger("HymnRemaker")
+
+
+def generate_fallback_gradient(output_path):
+    """
+    Generates a high-quality, premium dark abstract gradient image
+    (deep purple, midnight blue, and warm magenta/cyan accent)
+    to serve as a beautiful background fallback.
+    """
+    try:
+        from PIL import Image, ImageDraw
+        
+        width, height = 1920, 1080
+        image = Image.new("RGB", (width, height))
+        draw = ImageDraw.Draw(image)
+        
+        # Base vertical gradient: dark violet to deep navy
+        for y in range(height):
+            factor = y / height
+            r1, g1, b1 = 15, 10, 30      # Deep dark violet
+            r2, g2, b2 = 5, 5, 20        # Midnight navy
+            r = int(r1 + (r2 - r1) * factor)
+            g = int(g1 + (g2 - g1) * factor)
+            b = int(b1 + (b2 - b1) * factor)
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
+            
+        # Draw a beautiful soft radial glow in the center-right (warm magenta)
+        glow_x, glow_y = int(width * 0.7), int(height * 0.3)
+        glow_radius = 600
+        glow_img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        glow_draw = ImageDraw.Draw(glow_img)
+        
+        for r in range(glow_radius, 0, -8):
+            alpha = int(35 * (1.0 - (r / glow_radius) ** 1.5))
+            if alpha <= 0:
+                continue
+            glow_draw.ellipse(
+                [glow_x - r, glow_y - r, glow_x + r, glow_y + r],
+                fill=(235, 75, 130, alpha)
+            )
+            
+        # Draw a second soft cyan-blue glow in the bottom-left
+        glow_x2, glow_y2 = int(width * 0.25), int(height * 0.75)
+        glow_radius2 = 500
+        for r in range(glow_radius2, 0, -8):
+            alpha = int(25 * (1.0 - (r / glow_radius2) * 1.5))
+            if alpha <= 0:
+                continue
+            glow_draw.ellipse(
+                [glow_x2 - r, glow_y2 - r, glow_x2 + r, glow_y2 + r],
+                fill=(50, 150, 240, alpha)
+            )
+            
+        # Composite the glow on the base gradient
+        final_image = Image.alpha_composite(image.convert("RGBA"), glow_img)
+        final_image.convert("RGB").save(output_path, "PNG")
+        logger.info(f"Generated beautiful fallback gradient at {output_path}")
+        return output_path
+    except Exception as e:
+        logger.error(f"Failed to generate fallback gradient: {e}")
+        return None
 
 
 def main():
@@ -45,8 +111,11 @@ def main():
     parser.add_argument("--upload", action="store_true", help="Upload to YouTube after generation")
     parser.add_argument("--skip-render", action="store_true", help="Skip MIDI rendering if WAV exists")
     parser.add_argument("--skip-remake", action="store_true", help="Skip music generation if output audio exists")
-    parser.add_argument("--remake-priority", default=settings.REMAKE_PRIORITY, choices=["suno", "replicate"], help="AI service priority for Step 2 remake (default: suno)")
+    parser.add_argument("--remake-priority", default=settings.REMAKE_PRIORITY, choices=["suno", "udio", "udio-oauth", "replicate"], help="AI service priority for Step 2 remake (default: suno)")
     parser.add_argument("--suno-session", default=None, help="Suno AI session token (overrides SUNO_SESSION_TOKEN env var)")
+    parser.add_argument("--udio-token", default=None, help="Udio AI auth token (overrides UDIO_AUTH_TOKEN env var)")
+    parser.add_argument("--udio-cookie", default=None, help="Udio AI full cookie string (most reliable)")
+    parser.add_argument("--udio-variance", type=float, default=0.25, help="Udio remix variance (0.1 to 1.0). Lower is stricter.")
     parser.add_argument("--convert-mp3", action="store_true", help="Batch convert all base WAV files to MP3 and exit")
     parser.add_argument("--voice-id", default=settings.DEFAULT_ELEVENLABS_VOICE_ID, help="ElevenLabs Voice ID")
     parser.add_argument("--model", default=settings.DEFAULT_ELEVENLABS_MODEL, help="ElevenLabs Model")
@@ -56,6 +125,11 @@ def main():
     parser.add_argument("--stream-rtmp", default=None, help="RTMP URL for live DJ radio streaming")
     parser.add_argument("--visualizer", action="store_true", help="Enable audio-reactive visualizer overlay")
     parser.add_argument("--visualizer-mode", default="cline", choices=["cline", "line", "p2p", "avectorscope"], help="Visualizer mode type")
+    parser.add_argument("--ai-video", action="store_true", help="Generate AI-powered dynamic video background")
+    parser.add_argument("--use-quotes", action="store_true", help="Overlay soulful quotes timed to beats instead of lyrics")
+    parser.add_argument("--local-video", action="store_true", help="Force local GPU video generation instead of Replicate cloud")
+    parser.add_argument("--video-model", default="ltx-video", choices=["ltx-video", "wan"], help="Local video generation model type")
+    parser.add_argument("--video-model-size", default="1.3b", choices=["1.3b", "14b"], help="Local video generation model size")
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -64,7 +138,10 @@ def main():
         renderer = MidiRenderer(soundfont_path=args.soundfont)
         remaker = MusicRemaker()
         suno_remaker = SunoRemaker(session_token=args.suno_session)
-        content_gen = ContentGenerator()
+        udio_remaker = UdioRemaker(auth_token=args.udio_token, cookie_string=args.udio_cookie)
+        udio_oauth_remaker = UdioOAuthRemaker() # Uses env vars if available
+        content_gen = GeminiContentGenerator()
+        ai_video_gen = AIVideoGenerator()
         video_producer = VideoProducer()
         mxl_parser = MusicXMLParser()
         omr_processor = OMRProcessor()
@@ -91,10 +168,12 @@ def main():
                     args.upload,
                     renderer,
                     remaker,
-                    suno_remaker,
-                    args.remake_priority,
-                    content_gen,
-                    video_producer,
+                    suno_remaker=suno_remaker,
+                    udio_remaker=udio_remaker,
+                    udio_oauth_remaker=udio_oauth_remaker,
+                    remake_priority=args.remake_priority,
+                    content_gen=content_gen,
+                    video_producer=video_producer,
                     mxl_parser=mxl_parser,
                     omr_processor=omr_processor,
                     tts_generator=None,
@@ -104,7 +183,13 @@ def main():
                     video_format=args.video_format,
                     create_shorts=args.create_shorts,
                     enable_visualizer=args.visualizer,
-                    visualizer_mode=args.visualizer_mode
+                    visualizer_mode=args.visualizer_mode,
+                    ai_video_gen=ai_video_gen if args.ai_video else None,
+                    use_quotes=args.use_quotes,
+                    local_video=args.local_video,
+                    video_model=args.video_model,
+                    video_model_size=args.video_model_size,
+                    udio_variance=args.udio_variance
                 ): midi_path
                 for midi_path in midi_file_list
             }
@@ -170,6 +255,67 @@ def main():
             sys.exit(0)
 
 
+def generate_beat_synced_quotes(audio_path, tempo_bpm, quotes_file="hymn_remaker/src/quotes.json", duration_sec=None):
+    """
+    Generate subtitle lyrics timed to the beats using quotes from quotes_file.
+    """
+    import json
+    import os
+    import random
+    
+    if not duration_sec:
+        try:
+            import wave
+            with wave.open(audio_path, 'rb') as wav_file:
+                frames = wav_file.getnframes()
+                rate = wav_file.getframerate()
+                duration_sec = frames / float(rate)
+        except Exception:
+            duration_sec = 30.0
+            
+    if not os.path.exists(quotes_file):
+        logger.warning(f"Quotes file not found at {quotes_file}")
+        return []
+        
+    try:
+        with open(quotes_file, "r", encoding="utf-8") as f:
+            quotes = json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to load quotes: {e}")
+        return []
+        
+    if not quotes:
+        return []
+        
+    beat_interval = 60.0 / tempo_bpm
+    # We change quotes every 16 beats (4 bars at 4/4)
+    beats_per_quote = 16
+    quote_interval = beat_interval * beats_per_quote
+    
+    num_quotes_needed = int(duration_sec / quote_interval) + 1
+    
+    lyrics = []
+    
+    # Deterministic choice of quotes based on file name or length so it remains stable on reruns
+    random.seed(len(audio_path))
+    selected_quotes = random.sample(quotes, min(len(quotes), num_quotes_needed))
+    if len(selected_quotes) < num_quotes_needed:
+        selected_quotes = (selected_quotes * (num_quotes_needed // len(selected_quotes) + 1))[:num_quotes_needed]
+        
+    for i in range(num_quotes_needed):
+        start_time = i * quote_interval
+        end_time = min(start_time + quote_interval - 0.5, duration_sec)
+        if start_time >= duration_sec:
+            break
+        lyrics.append({
+            "start": start_time,
+            "end": end_time,
+            "text": selected_quotes[i]
+        })
+        
+    return lyrics
+
+
 def process_single_midi(
     midi_path,
     output_dir,
@@ -180,6 +326,8 @@ def process_single_midi(
     renderer,
     remaker,
     suno_remaker=None,
+    udio_remaker=None,
+    udio_oauth_remaker=None,
     remake_priority="suno",
     content_gen=None,
     video_producer=None,
@@ -203,7 +351,13 @@ def process_single_midi(
     sub_box=True,
     enable_visualizer=False,
     visualizer_mode="cline",
-    interactive_callback=None):
+    interactive_callback=None,
+    ai_video_gen=None,
+    use_quotes=False,
+    local_video=False,
+    video_model="ltx-video",
+    video_model_size="1.3b",
+    udio_variance=0.25):
 
     base_audio_path = remake_audio_path = metadata_path = vocal_track_path = None
     try:
@@ -239,6 +393,9 @@ def process_single_midi(
                 pre_extracted_metadata = mxl_parser.process(midi_path, target_midi_path)
             else:
                 logger.warning("MusicXML parser not available, skipping XML parsing.")
+        elif filename.lower().endswith(".mid"):
+            update_status(f"Step 0/4: Parsing MIDI metadata and lyrics ({filename})...", 15)
+            pre_extracted_metadata = MidiAnalyzer.extract_all_metadata(midi_path)
 
         # 1. Render MIDI to Audio (WAV)
         update_status(f"Step 1/4: Rendering MIDI ({filename})...", 20)
@@ -255,19 +412,56 @@ def process_single_midi(
         else:
             update_status(f"Skipping render for {filename}, {base_audio_path} exists.", 30)
 
-          # 2. Generate Remake (Suno AI -> Replicate MusicGen -> Base Audio Fallback)
+          # 2. Generate Remake (Udio AI -> Suno AI -> Replicate MusicGen -> Base Audio Fallback)
         remake_audio_path = os.path.join(output_dir, f"{name_no_ext}_remake.wav")
         if not skip_remake or not os.path.exists(remake_audio_path):
             remake_success = False
 
-            # --- Priority 1: Suno AI (audio influence -> Deep House) ---
-            if remake_priority == "suno" and suno_remaker and suno_remaker.is_available():
+            # --- Priority 1: Udio AI (Official OAuth API) ---
+            if remake_priority == "udio-oauth" and udio_oauth_remaker and udio_oauth_remaker.is_available():
+                update_status(f"Step 2/4: Remaking Audio via Udio OAuth API ({filename})...", 40)
+                try:
+                    udio_result = udio_oauth_remaker.remake(base_audio_path, style, variance=udio_variance)
+                    if udio_result and os.path.exists(udio_result):
+                        if udio_result != remake_audio_path:
+                            import shutil
+                            shutil.move(udio_result, remake_audio_path)
+                        update_status(f"Udio OAuth remake complete for {filename}", 55)
+                        process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms)
+                        remake_success = True
+                        logger.info(f"Udio OAuth remake succeeded for {filename}")
+                except Exception as udio_err:
+                    logger.warning(f"Udio OAuth failed for {filename}: {udio_err}")
+                    update_status(f"Udio OAuth error, trying session-based Udio...", 42)
+
+            # --- Priority 2: Udio AI (Session-based) ---
+            if not remake_success and (remake_priority == "udio" or (remake_priority == "udio-oauth" and udio_remaker and udio_remaker.is_available())):
+                update_status(f"Step 2/4: Remaking Audio via Udio AI ({filename})...", 45)
+                try:
+                    clean_title = (pre_extracted_metadata.get("title") or name_no_ext.replace('_', ' ').replace('-', ' ')).title()
+                    composer = pre_extracted_metadata.get("composer") or "Traditional"
+                    rich_prompt = f"A modern {style} remix of '{clean_title}' by {composer}. Inspired by the original MIDI melody as reference media. {target_bpm:.1f} BPM."
+                    
+                    udio_result = udio_remaker.remake(base_audio_path, rich_prompt, variance=udio_variance)
+                    if udio_result and os.path.exists(udio_result):
+                        if udio_result != remake_audio_path:
+                            import shutil
+                            shutil.move(udio_result, remake_audio_path)
+                        update_status(f"Udio AI remake complete for {filename}", 55)
+                        process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms)
+                        remake_success = True
+                        logger.info(f"Udio AI remake succeeded for {filename}")
+                except Exception as udio_err:
+                    logger.warning(f"Udio AI failed for {filename}: {udio_err}")
+                    update_status(f"Udio AI error for {filename}, trying Suno fallback...", 47)
+
+            # --- Priority 3: Suno AI (audio influence -> Deep House) ---
+            if not remake_success and (remake_priority == "suno" or remake_priority == "udio" or remake_priority == "udio-oauth") and suno_remaker and suno_remaker.is_available():
                 update_status(f"Step 2/4: Remaking Audio via Suno AI ({filename})...", 40)
                 try:
                     tempo_enforced_style = f"{style}, {target_bpm:.1f} BPM"
                     suno_result = suno_remaker.remake(base_audio_path, tempo_enforced_style)
                     if suno_result and os.path.exists(suno_result):
-                        # Suno returns the WAV path directly
                         if suno_result != remake_audio_path:
                             import shutil
                             shutil.move(suno_result, remake_audio_path)
@@ -276,198 +470,133 @@ def process_single_midi(
                         remake_success = True
                         logger.info(f"Suno AI remake succeeded for {filename}")
                 except Exception as suno_err:
-                    err_msg = str(suno_err)
-                    logger.warning(f"Suno AI failed for {filename}: {err_msg}")
-                    if "credits" in err_msg.lower() or "402" in err_msg:
-                        update_status(f"Suno credits exhausted for {filename}, trying fallback...", 42)
-                    elif "invalid" in err_msg.lower() or "expired" in err_msg.lower() or "401" in err_msg:
-                        update_status(f"Suno session token invalid/expired, trying Replicate fallback...", 42)
-                    else:
-                        update_status(f"Suno AI error for {filename}, trying fallback...", 42)
+                    logger.warning(f"Suno AI failed for {filename}: {suno_err}")
+                    update_status(f"Suno AI error for {filename}, trying Replicate fallback...", 42)
 
-            # --- Priority 2: Replicate MusicGen ---
-            if not remake_success and remake_priority == "replicate":
-                update_status(f"Step 2/4: Remaking Audio via Replicate MusicGen ({filename})...", 40)
-            elif not remake_success:
-                update_status(f"Step 2/4: Trying Replicate MusicGen fallback ({filename})...", 43)
-
+            # --- Priority 4: Replicate MusicGen ---
             if not remake_success:
+                update_status(f"Step 2/4: Trying Replicate MusicGen fallback ({filename})...", 43)
                 try:
                     tempo_enforced_style = f"{style}. The track must be exactly {target_bpm:.1f} BPM. Keep this exact tempo."
                     remake_url = remaker.remake(base_audio_path, tempo_enforced_style)
-                    update_status(f"Downloading remake from {remake_url}...", 50)
                     response = requests.get(remake_url)
                     response.raise_for_status()
                     with open(remake_audio_path, "wb") as f:
                         f.write(response.content)
-                    update_status(f"Applying advanced audio processing to {filename}...", 60)
                     process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms)
                     remake_success = True
                     logger.info(f"Replicate MusicGen remake succeeded for {filename}")
                 except Exception as remake_err:
-                    err_msg = str(remake_err)
-                    if "Insufficient credit" in err_msg or "402" in err_msg:
-                        update_status(f"Replicate credits insufficient for {filename}", 45)
-                        logger.warning(f"Replicate credit error for {filename}.")
-                    else:
-                        update_status(f"Remake generation failed for {filename}: {err_msg[:100]}", 45)
-                        logger.warning(f"Remake failed for {filename}: {err_msg}")
+                    logger.warning(f"Remake failed for {filename}: {remake_err}")
 
-            # --- Priority 3: Base Audio Fallback ---
+            # --- Priority 5: Base Audio Fallback ---
             if not remake_success:
                 update_status(f"Using base audio as fallback for {filename}", 55)
-                logger.warning(f"All AI remakers failed for {filename}. Copying base audio as fallback.")
                 import shutil
                 shutil.copy2(base_audio_path, remake_audio_path)
-                logger.info(f"Copied base audio to remake path: {remake_audio_path}")
-                update_status(f"Applying audio processing to fallback for {filename}...", 60)
                 process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms)
         else:
             update_status(f"Skipping remake for {filename}, {remake_audio_path} exists.", 60)
 
-# 3. Generate Content (Metadata, Lyrics & Art)
-        update_status(f"Step 3/4: Generating Lyrics, Art & Metadata ({filename})...", 70)
+        # 3. Generate Content (Metadata, Lyrics & Art)
+        update_status(f"Step 3/4: Analyzing Audio and Generating Lyrics, Art & Metadata ({filename})...", 70)
         metadata_path = os.path.join(output_dir, f"{name_no_ext}_metadata.json")
 
         if os.path.exists(metadata_path):
-            update_status(f"Loading existing metadata and lyrics from {metadata_path}...", 72)
             with open(metadata_path, "r") as f:
                 metadata = json.load(f)
             lyrics = metadata.get("lyrics", [])
             art_prompt = metadata.get("art_prompt", f"Abstract album art for {metadata.get('title', name_no_ext)}, {style} style, high quality, 4k")
-            if interactive_callback:
-                update_status(f"Pausing for interactive review...", 76)
-                edited_data = interactive_callback({
-                    "metadata": metadata,
-                    "lyrics": lyrics,
-                    "art_prompt": art_prompt
-                })
-                if edited_data:
-                    metadata = edited_data.get("metadata", metadata)
-                    lyrics = edited_data.get("lyrics", lyrics)
-                    art_prompt = edited_data.get("art_prompt", art_prompt)
-                    with open(metadata_path, "w") as f:
-                        metadata["lyrics"] = lyrics
-                        metadata["art_prompt"] = art_prompt
-                        json.dump(metadata, f, indent=4)
-                    update_status(f"Resuming pipeline...", 78)
         else:
-            # First time generation
-            if pre_extracted_metadata and pre_extracted_metadata.get("title"):
-                metadata = content_gen.generate_metadata(pre_extracted_metadata["title"], style=style)
-            else:
-                metadata = content_gen.generate_metadata(name_no_ext, style=style)
-
-            extracted_lyrics = pre_extracted_metadata.get("lyrics") if pre_extracted_metadata else None
-            if extracted_lyrics and isinstance(extracted_lyrics, list) and len(extracted_lyrics) > 0 and "start" in extracted_lyrics[0]:
-                update_status("Using exact note-timed lyrics extracted from MusicXML...", 75)
+            analysis_data = content_gen.analyze_audio_for_content(base_audio_path, name_no_ext, style=style)
+            metadata = analysis_data.get("metadata", {})
+            lyrics = analysis_data.get("lyrics", [])
+            extracted_lyrics = pre_extracted_metadata.get("lyrics")
+            if extracted_lyrics and isinstance(extracted_lyrics, list) and len(extracted_lyrics) > 0:
                 lyrics = extracted_lyrics
-            else:
-                update_status("Generating AI lyrics and timings via OpenAI...", 75)
-                title_context = metadata.get("title") or name_no_ext
-                lyrics = content_gen.generate_lyrics(title_context)
-
-            art_prompt = f"Abstract album art for {metadata.get('title', name_no_ext)}, {style} style, high quality, 4k"
-
+            art_prompt = content_gen.generate_art_prompt(analysis_data, style=style)
             with open(metadata_path, "w") as f:
                 metadata["lyrics"] = lyrics
                 metadata["art_prompt"] = art_prompt
                 json.dump(metadata, f, indent=4)
 
-            if interactive_callback:
-                update_status(f"Pausing for interactive review...", 76)
-                edited_data = interactive_callback({
-                    "metadata": metadata,
-                    "lyrics": lyrics,
-                    "art_prompt": art_prompt
-                })
-                if edited_data:
-                    metadata = edited_data.get("metadata", metadata)
-                    lyrics = edited_data.get("lyrics", lyrics)
-                    art_prompt = edited_data.get("art_prompt", art_prompt)
-                    with open(metadata_path, "w") as f:
-                        metadata["lyrics"] = lyrics
-                        metadata["art_prompt"] = art_prompt
-                        json.dump(metadata, f, indent=4)
-                    update_status(f"Resuming pipeline...", 78)
+        if interactive_callback:
+            edited_data = interactive_callback({
+                "metadata": metadata,
+                "lyrics": lyrics,
+                "art_prompt": art_prompt
+            })
+            if edited_data:
+                metadata = edited_data.get("metadata", metadata)
+                lyrics = edited_data.get("lyrics", lyrics)
+                art_prompt = edited_data.get("art_prompt", art_prompt)
+                with open(metadata_path, "w") as f:
+                    metadata["lyrics"] = lyrics
+                    metadata["art_prompt"] = art_prompt
+                    json.dump(metadata, f, indent=4)
 
-        # Generate the actual image using the (potentially edited) prompt
-        art_url = content_gen.generate_art(art_prompt)
+        # Generate Art
+        update_status(f"Generating Album Art via Gemini Imagen 3 ({filename})...", 79)
+        art_url = content_gen.generate_image(art_prompt)
+        if not art_url:
+            fallback_art_path = os.path.join(output_dir, f"{name_no_ext}_fallback_art.png")
+            art_url = generate_fallback_gradient(fallback_art_path)
+            if not art_url:
+                art_url = "black"
 
-        # Optional: Generate Vocals via ElevenLabs
+        # Quotes
+        if use_quotes:
+            lyrics = generate_beat_synced_quotes(remake_audio_path if os.path.exists(remake_audio_path) else base_audio_path, target_bpm)
+
+        # Vocals
         vocal_track_path = None
         if generate_vocals and tts_generator and lyrics:
-            update_status(f"Step 3.5/4: Generating Vocals via ElevenLabs ({filename})...", 80)
             vocal_track_path = os.path.join(output_dir, f"{name_no_ext}_vocals.wav")
             try:
-                tts_generator.generate_vocals(lyrics, vocal_track_path, voice_id=voice_id, model=model)
-            except Exception as e:
-                logger.error(f"Failed to generate vocals: {e}")
+                tts_generator.generate_vocals(lyrics, vocal_track_path, voice_id=voice_id, model=model, status_callback=status_callback)
+            except Exception:
                 vocal_track_path = None
 
         if vocal_track_path:
-            update_status(f"Mixing Vocals into Instrumental ({filename})...", 82)
             stems = None
             if stem_separator:
-                update_status(f"Running AI Stem Separation for smart vocal ducking ({filename})...", 83)
                 stem_out_dir = os.path.join(output_dir, f"{name_no_ext}_stems")
                 try:
                     stems = stem_separator.separate(remake_audio_path, stem_out_dir)
-                except Exception as e:
-                    logger.warning(f"Stem separation failed, falling back to basic ducking: {e}")
-            process_audio(
-                remake_audio_path,
-                remake_audio_path,
-                normalize=normalize_audio,
-                fade_in_ms=fade_in_ms,
-                fade_out_ms=fade_out_ms,
-                vocal_track_path=vocal_track_path,
-                stems=stems
-            )
+                except Exception:
+                    pass
+            process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms, vocal_track_path=vocal_track_path, stems=stems)
 
-        # 4. Create Video (with subtitles if lyrics exist)
+        # 4. Create Video
         update_status(f"Step 4/4: Creating Video with Subtitles ({filename})...", 85)
         video_path = os.path.join(output_dir, f"{name_no_ext}.mp4")
-        video_producer.create_video(
-            remake_audio_path, art_url, video_path,
-            lyrics=lyrics, video_format=video_format,
-            sub_font_size=sub_font_size,
-            sub_primary_color=sub_primary_color,
-            sub_outline_color=sub_outline_color,
-            sub_back_color=sub_back_color,
-            sub_box=sub_box,
-            enable_visualizer=enable_visualizer,
-            visualizer_mode=visualizer_mode
-        )
+        final_art_or_video = art_url
+        if ai_video_gen:
+            if hasattr(content_gen, 'generate_video_veo') and not local_video:
+                veo_video_path = os.path.join(output_dir, f"{name_no_ext}_veo_bg.mp4")
+                generated_bg = content_gen.generate_video_veo(art_prompt, art_url, veo_video_path)
+                if generated_bg:
+                    final_art_or_video = generated_bg
+            if final_art_or_video == art_url:
+                ai_video_path = os.path.join(output_dir, f"{name_no_ext}_ai_bg.mp4")
+                generated_bg = ai_video_gen.generate_video(remake_audio_path, art_url, ai_video_path, prompt=art_prompt, tempo=target_bpm, force_local=local_video, model_type=video_model, model_size=video_model_size, quotes=lyrics)
+                if generated_bg:
+                    final_art_or_video = generated_bg
+
+        sub_align = 5 if use_quotes else 2
+        sub_font = "Georgia" if use_quotes else "Arial"
+        video_producer.create_video(remake_audio_path, final_art_or_video, video_path, lyrics=lyrics, video_format=video_format, sub_font_size=sub_font_size, sub_primary_color=sub_primary_color, sub_outline_color=sub_outline_color, sub_back_color=sub_back_color, sub_box=sub_box, enable_visualizer=enable_visualizer, visualizer_mode=visualizer_mode, sub_alignment=sub_align, sub_font_name=sub_font, tempo_bpm=target_bpm)
 
         if create_shorts:
-            update_status(f"Extracting Short Clips ({filename})...", 90)
-            try:
-                video_producer.create_shorts(video_path, output_dir)
-                update_status(f"Short clips generated in output/shorts/", 92)
-            except Exception as e:
-                logger.error(f"Failed to generate shorts: {e}")
-
+            video_producer.create_shorts(video_path, output_dir)
         if upload:
-            update_status(f"Uploading {filename} to YouTube...", 95)
-            def upload_progress_cb(pct):
-                scaled_pct = int(95 + (pct * 0.05))
-                update_status(f"Uploading {filename} to YouTube... {pct}%", scaled_pct)
-            video_id = video_producer.upload_to_youtube(video_path, metadata, progress_callback=upload_progress_cb)
+            video_id = video_producer.upload_to_youtube(video_path, metadata)
             update_status(f"Video uploaded: https://youtu.be/{video_id}", 100)
         else:
             update_status(f"Finished processing {filename}", 100)
 
     except Exception as e:
         logger.error(f"Error processing {midi_path}: {e}")
-        logger.info(f"Cleaning up temporary files due to failure...")
-        for path in [base_audio_path, remake_audio_path, metadata_path, vocal_track_path]:
-            if path and os.path.exists(path):
-                try:
-                    os.remove(path)
-                    logger.info(f"Cleaned up {path}")
-                except OSError:
-                    pass
         raise e
 
 

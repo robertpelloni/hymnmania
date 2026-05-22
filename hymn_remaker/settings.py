@@ -1,4 +1,10 @@
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+
 
 # --- Paths ---
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -53,10 +59,17 @@ SUNO_BASE_URL = os.environ.get("SUNO_BASE_URL", "https://studio-api.suno.ai")
 SUNO_POLL_INTERVAL = int(os.environ.get("SUNO_POLL_INTERVAL", "5"))
 SUNO_POLL_TIMEOUT = int(os.environ.get("SUNO_POLL_TIMEOUT", "300"))
 
+# --- Udio AI Music API ---
+UDIO_AUTH_TOKEN = os.environ.get("UDIO_AUTH_TOKEN", "")
+UDIO_CLIENT_ID = os.environ.get("UDIO_CLIENT_ID", "")
+UDIO_CLIENT_SECRET = os.environ.get("UDIO_CLIENT_SECRET", "")
+UDIO_POLL_INTERVAL = int(os.environ.get("UDIO_POLL_INTERVAL", "10"))
+UDIO_POLL_TIMEOUT = int(os.environ.get("UDIO_POLL_TIMEOUT", "600"))
+
 # --- MP3 Conversion ---
 DEFAULT_MP3_BITRATE = "192k"
 
 # --- Remake Priority ---
 # Which AI service to use first for Step 2 (remake)
-# Options: "suno", "replicate"
+# Options: "udio-oauth", "udio", "suno", "replicate"
 REMAKE_PRIORITY = os.environ.get("REMAKE_PRIORITY", "suno")
