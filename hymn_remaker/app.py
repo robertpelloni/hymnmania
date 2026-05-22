@@ -35,7 +35,8 @@ st.sidebar.markdown("---")
 from hymn_remaker.src.midi_renderer import MidiRenderer
 from hymn_remaker.src.remaker import MusicRemaker
 from hymn_remaker.src.suno_remaker import SunoRemaker
-from hymn_remaker.src.content_generator import ContentGenerator
+from hymn_remaker.src.udio_remaker import UdioRemaker
+from hymn_remaker.src.gemini_generator import GeminiContentGenerator
 from hymn_remaker.src.video_uploader import VideoProducer
 from hymn_remaker.src.tts_generator import TTSGenerator
 from hymn_remaker.src.musicxml_parser import MusicXMLParser
@@ -55,7 +56,8 @@ def load_modules():
         renderer = MidiRenderer()
         remaker = MusicRemaker()
         suno_remaker = SunoRemaker()
-        content_gen = ContentGenerator()
+        udio_remaker = UdioRemaker()
+        content_gen = GeminiContentGenerator()
         video_producer = VideoProducer()
         tts_generator = TTSGenerator()
         mxl_parser = MusicXMLParser()
@@ -73,12 +75,12 @@ renderer, remaker, suno_remaker, content_gen, video_producer, tts_generator, mxl
 
 st.sidebar.header("Environment & API")
 missing_keys = []
-if not os.environ.get("OPENAI_API_KEY"):
-    missing_keys.append("OPENAI_API_KEY")
+if not os.environ.get("GEMINI_API_KEY") and not os.path.exists("client_secrets.json"):
+    missing_keys.append("GEMINI_API_KEY / client_secrets.json")
 if not os.environ.get("REPLICATE_API_TOKEN"):
     missing_keys.append("REPLICATE_API_TOKEN")
 if missing_keys:
-    st.sidebar.error(f"Missing Essential API Keys: {', '.join(missing_keys)}. The pipeline may fail. Please set them in your `.env` file.")
+    st.sidebar.error(f"Missing Essential API Keys: {', '.join(missing_keys)}. The pipeline may fail. Please set them in your `.env` file or provide credentials.")
 else:
     st.sidebar.success("Essential API Keys configured! ✅")
 
@@ -166,10 +168,16 @@ if generate_vocals:
 
 skip_render = st.sidebar.checkbox("Skip Render if exists", value=False, help="If the intermediate base WAV file already exists, don't re-render it from MIDI.")
 skip_remake = st.sidebar.checkbox("Skip Remake if exists", value=False, help="If the remade audio already exists, don't call the MusicGen API again.")
-remake_priority = st.sidebar.selectbox("AI Remake Service", ["suno", "replicate"], index=0, help="Suno AI uses audio influence for better results. Replicate MusicGen is the fallback.")
-suno_session = st.sidebar.text_input("Suno Session Token", value=os.environ.get("SUNO_SESSION_TOKEN", ""), type="password", help="Paste your Suno session token from browser cookies.")
-if suno_session:
-    suno_remaker = SunoRemaker(session_token=suno_session)
+remake_priority = st.sidebar.selectbox("AI Remake Service", ["udio-oauth", "udio", "suno", "replicate"], index=0, help="Udio OAuth is the official API. Udio AI uses session cookies. Suno AI uses audio influence.")
+udio_client_id = st.sidebar.text_input("Udio Client ID", value=os.environ.get("UDIO_CLIENT_ID", ""), help="Your official Udio Developer Portal Client ID.")
+udio_client_secret = st.sidebar.text_input("Udio Client Secret", value=os.environ.get("UDIO_CLIENT_SECRET", ""), type="password", help="Your official Udio Developer Portal Client Secret.")
+udio_token = st.sidebar.text_input("Udio Auth Token", value=os.environ.get("UDIO_AUTH_TOKEN", ""), type="password", help="Paste your Udio sb-api-auth-token (if using session-based Udio).")
+udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.25, 0.05, help="Lower variance follows the original melody more strictly.")
+
+# Initialize remakers with UI overrides
+suno_remaker = SunoRemaker(session_token=suno_session) if suno_session else suno_remaker
+udio_remaker = UdioRemaker(auth_token=udio_token) if udio_token else udio_remaker
+udio_oauth_remaker = UdioOAuthRemaker(client_id=udio_client_id, client_secret=udio_client_secret) if udio_client_id and udio_client_secret else None
 upload = st.sidebar.checkbox("Upload to YouTube", value=False, help="Automatically upload the finished video to YouTube (requires OAuth credentials setup).")
 
 interactive_mode = st.sidebar.checkbox("Interactive Review Mode", value=False, help="Pause the pipeline after metadata/lyrics generation to manually edit the lyrics, title, and art prompt before rendering the final audio and video.")
@@ -251,7 +259,7 @@ with tab1:
                                 st.subheader(f"Edit Metadata & Art Prompt: {filename}")
                                 new_title = st.text_input("Title", value=curr_data['metadata'].get('title', ''))
                                 new_desc = st.text_area("Description", value=curr_data['metadata'].get('description', ''))
-                                new_art = st.text_area("Art Prompt (DALL-E)", value=curr_data['art_prompt'])
+                                new_art = st.text_area("Art Prompt (Imagen 3)", value=curr_data['art_prompt'])
                                 st.subheader("Edit Lyrics")
                                 raw_text = "\n".join([l['text'] for l in curr_data['lyrics']])
                                 new_lyrics_text = st.text_area("Lyrics (One line per subtitle block)", value=raw_text, height=300)
@@ -292,6 +300,7 @@ with tab1:
                         renderer,
                         remaker,
                         suno_remaker,
+                        udio_remaker,
                         remake_priority,
                         content_gen,
                         video_producer,
@@ -315,7 +324,8 @@ with tab1:
                         enable_visualizer=enable_visualizer,
                         visualizer_mode=visualizer_mode,
                         status_callback=lambda msg, prog: (status_texts[file_path].info(msg), progress_bars[file_path].progress(prog)),
-                        interactive_callback=callback
+                        interactive_callback=callback,
+                        udio_variance=udio_variance
                     )
 
                     status_texts[file_path].success(f"Completed! ✅ ({filename})")
