@@ -32,7 +32,7 @@ class SonicVacuumProcessor:
                 audio[start_sample:end_sample] += sine
 
         # Normalize
-        if np.max(np.abs(audio)) > 0:
+        if audio.size > 0 and np.max(np.abs(audio)) > 0:
             audio = audio / np.max(np.abs(audio))
 
         wavfile.write(output_path, sample_rate, (audio * 32767).astype(np.int16))
@@ -61,7 +61,7 @@ class SonicVacuumProcessor:
 
                 audio[start_sample:end_sample] += sine
 
-        if np.max(np.abs(audio)) > 0:
+        if audio.size > 0 and np.max(np.abs(audio)) > 0:
             audio = audio / np.max(np.abs(audio))
 
         wavfile.write(output_path, sample_rate, (audio * 32767).astype(np.int16))

@@ -20,6 +20,11 @@ def run_experiments(midi_path):
     filename = os.path.basename(midi_path)
     name_no_ext = os.path.splitext(filename)[0]
 
+    # Ensure output directories exist
+    os.makedirs("pipeline/output/dry_render", exist_ok=True)
+    os.makedirs("pipeline/output/symbolic_midi", exist_ok=True)
+    os.makedirs("pipeline/output/house_skeletons", exist_ok=True)
+
     # Module 1: Sonic Vacuum
     logger.info(f"--- Experiment 1: Sonic Vacuum for {filename} ---")
     vacuum = SonicVacuumProcessor(midi_path)

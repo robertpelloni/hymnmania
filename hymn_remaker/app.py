@@ -116,6 +116,7 @@ with st.sidebar.expander("Udio/Suno Optimizers", expanded=False):
     sonic_vacuum = st.checkbox("Sonic Vacuum (Dry Render)", value=False, help="Render transient-only audio to prevent soundfont bleed.")
     symbolic_norm = st.checkbox("Symbolic Norm (Velocity 100)", value=False, help="Strip performance baggage and flatten velocity.")
     house_quantizer = st.checkbox("House Structural Quantizer", value=False, help="Force snap to 124 BPM electronic grid.")
+    mix_hiphop_vocals = st.text_input("Hip-Hop Vocal Remix (Path/URL)", help="Provide a local path or YouTube URL to an acapella or hip-hop track to remix into the psytrance track.")
 
 st.sidebar.markdown("### Advanced Audio Processing")
 with st.sidebar.expander("Audio Settings", expanded=False):
@@ -338,7 +339,8 @@ with tab1:
                         udio_variance=udio_variance,
                         sonic_vacuum=sonic_vacuum,
                         symbolic_norm=symbolic_norm,
-                        house_quantizer=house_quantizer
+                        house_quantizer=house_quantizer,
+                        hiphop_vocal_path=mix_hiphop_vocals if mix_hiphop_vocals else None
                     )
 
                     status_texts[file_path].success(f"Completed! ✅ ({filename})")

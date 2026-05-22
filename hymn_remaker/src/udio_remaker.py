@@ -15,8 +15,9 @@ from hymn_remaker import settings
 logger = logging.getLogger(__name__)
 
 class UdioRemaker:
-    def __init__(self, auth_token=None):
+    def __init__(self, auth_token=None, cookie_string=None):
         self.auth_token = auth_token or settings.UDIO_AUTH_TOKEN
+        # cookie_string is currently ignored by UdioWrapper but accepted for compat
         self.client = None
         if self.auth_token:
             self.client = UdioWrapper(self.auth_token)
@@ -47,7 +48,7 @@ class UdioRemaker:
             logger.error(f"Failed to upload {file_path} to tmpfiles.org: {e}")
         return None
 
-    def remake(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True):
+    def remake(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True, extension_hack=False):
         """
         Remix the hymn audio using Udio's conditioning/remix feature.
         """
@@ -58,35 +59,57 @@ class UdioRemaker:
             raise FileNotFoundError(f"Audio file not found: {wav_path}")
 
         try:
+            # Power User Hack: If extension_hack is True, crop the audio to first 15 seconds
+            # and use Udio's 'extend' mode instead of 'remix'.
+            source_audio = wav_path
+            if extension_hack:
+                logger.info("Applying Udio Extension Hack: Cropping to 15s...")
+                cropped_path = wav_path.replace(".wav", "_crop15.wav")
+                crop_cmd = [settings.FFMPEG_BIN, "-y", "-i", wav_path, "-t", "15", cropped_path]
+                subprocess.run(crop_cmd, check=True, capture_output=True)
+                source_audio = cropped_path
+
             # 1. Upload to Public Bridge
-            public_audio_url = self._upload_to_tmpfiles(wav_path)
+            public_audio_url = self._upload_to_tmpfiles(source_audio)
             if not public_audio_url:
                 raise RuntimeError("Could not upload audio to temporary public hosting for Udio.")
 
-            # 2. Trigger Remix via Internal API (studio/create)
-            # We use the internal studio/create endpoint to force REMIX mode
-            # which handles audio conditioning much better than standard extend.
-            logger.info(f"Triggering Udio REMIX with variance {variance}...")
-            
-            full_prompt = f"{prompt}. REMIX strictly following the melody provided. Deep House."
-            
-            payload = {
-                "prompt": prompt,
-                "lyrics": "",
-                "lyrics_type": "instrumental",
-                "seed": -1,
-                "variance": variance,
-                "prompt_strength": prompt_strength,
-                "manual_mode": manual_mode,
-                "model_type": "studio32-v1.5",
-                "config": {
-                    "mode": "manual" if manual_mode else "auto",
-                    "audio_conditioning_path": public_audio_url,
-                    "audio_conditioning_type": "upload",
-                    "clip_start": 0.0,
-                    "duration": 32
+            # 2. Trigger Remix or Extension via Internal API (studio/create)
+            if extension_hack:
+                logger.info("Triggering Udio EXTENSION...")
+                payload = {
+                    "prompt": f"{prompt} [Drop] [Full Electronic Instrumentation]",
+                    "lyrics": "",
+                    "lyrics_type": "instrumental",
+                    "seed": -1,
+                    "model_type": "studio32-v1.5",
+                    "config": {
+                        "mode": "manual" if manual_mode else "auto",
+                        "audio_conditioning_path": public_audio_url,
+                        "audio_conditioning_type": "upload",
+                        "extension_type": "after",
+                        "duration": 32
+                    }
                 }
-            }
+            else:
+                logger.info(f"Triggering Udio REMIX with variance {variance}...")
+                payload = {
+                    "prompt": prompt,
+                    "lyrics": "",
+                    "lyrics_type": "instrumental",
+                    "seed": -1,
+                    "variance": variance,
+                    "prompt_strength": prompt_strength,
+                    "manual_mode": manual_mode,
+                    "model_type": "studio32-v1.5",
+                    "config": {
+                        "mode": "manual" if manual_mode else "auto",
+                        "audio_conditioning_path": public_audio_url,
+                        "audio_conditioning_type": "upload",
+                        "clip_start": 0.0,
+                        "duration": 32
+                    }
+                }
 
             # Submit generation
             res = self.client.make_request("POST", "studio/create", json_data=payload)

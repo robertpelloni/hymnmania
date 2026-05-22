@@ -194,7 +194,14 @@ class MidiRenderer:
         logger.info(f"Rendering {midi_path} to {output_path}...")
 
         if transient_only:
-            logger.info("Transient-only rendering requested. Ensuring staccato dry output.")
+            logger.info("Transient-only rendering requested. Routing to SonicVacuum (Staccato Sines).")
+            try:
+                from pipeline.processing.sonic_vacuum import SonicVacuumProcessor
+                vacuum = SonicVacuumProcessor(midi_path)
+                vacuum.render_dry_piano(output_path)
+                return
+            except Exception as e:
+                logger.error(f"SonicVacuum failed: {e}. Falling back to standard render.")
 
         try:
             if NATIVE_ENGINE_AVAILABLE:
