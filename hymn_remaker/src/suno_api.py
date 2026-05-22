@@ -310,7 +310,8 @@ class SunoAPIClient:
     # ------------------------------------------------------------------
 
     def generate_songs(self, prompt, turnstile_token=None, make_instrumental=True,
-                       tags=None, title=None, generation_type="TEXT"):
+                       tags=None, title=None, generation_type="TEXT",
+                       audio_influence_id=None, audio_influence_weight=0.5):
         """Submit a song generation request to Suno via the v2-web API.
 
         Args:
@@ -320,6 +321,8 @@ class SunoAPIClient:
             tags (str): Genre tags (e.g., "deep house, electronic").
             title (str): Song title.
             generation_type (str): One of TEXT, AUDIO, IMAGE, VIDEO, TWITTER, SIMPLE_REMIX.
+            audio_influence_id (str): ID of an uploaded audio file.
+            audio_influence_weight (float): Influence strength (0.0 to 1.0).
 
         Returns:
             list: List of clip dictionaries from the API response.
@@ -336,19 +339,30 @@ class SunoAPIClient:
             "mv": self.model_version,
             "prompt": "",
             "make_instrumental": make_instrumental,
-            "generation_type": generation_type,
+            "generation_type": "AUDIO" if audio_influence_id else generation_type,
             "metadata": {
                 "create_mode": "simple",
                 "user_tier": "free",
                 "lyrics_model": "default",
             },
         }
+
+        if audio_influence_id:
+            payload["audio_influence_id"] = audio_influence_id
+            payload["audio_influence_weight"] = audio_influence_weight
+            if not tags:
+                tags = "deep house, electronic"
+            if not title:
+                title = "Hymn Remix"
+
         if tags:
             payload["tags"] = tags
         if title:
             payload["title"] = title
 
         logger.info(f"Submitting Suno generation request via API...")
+        if audio_influence_id:
+            logger.info(f"  Audio Influence ID: {audio_influence_id}")
         logger.info(f"  Prompt: {prompt[:100]}...")
         logger.info(f"  Model: {self.model_version}")
         logger.info(f"  Instrumental: {make_instrumental}")

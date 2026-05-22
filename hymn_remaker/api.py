@@ -10,7 +10,8 @@ from hymn_remaker.src.midi_renderer import MidiRenderer
 from hymn_remaker.src.remaker import MusicRemaker
 from hymn_remaker.src.suno_remaker import SunoRemaker
 from hymn_remaker.src.udio_remaker import UdioRemaker
-from hymn_remaker.src.content_generator import ContentGenerator
+from hymn_remaker.src.udio_oauth_remaker import UdioOAuthRemaker
+from hymn_remaker.src.gemini_generator import GeminiContentGenerator
 from hymn_remaker.src.video_uploader import VideoProducer
 from hymn_remaker.src.tts_generator import TTSGenerator
 from hymn_remaker.src.musicxml_parser import MusicXMLParser
@@ -39,7 +40,8 @@ def get_modules():
                 "remaker": MusicRemaker(),
                 "suno_remaker": SunoRemaker(),
                 "udio_remaker": UdioRemaker(),
-                "content_gen": ContentGenerator(),
+                "udio_oauth_remaker": UdioOAuthRemaker(),
+                "content_gen": GeminiContentGenerator(),
                 "video_producer": VideoProducer(),
                 "tts_generator": TTSGenerator(),
                 "mxl_parser": MusicXMLParser(),
@@ -92,6 +94,7 @@ async def generate_hymn(
         remaker=mods["remaker"],
         suno_remaker=mods["suno_remaker"],
         udio_remaker=mods["udio_remaker"],
+        udio_oauth_remaker=mods["udio_oauth_remaker"],
         remake_priority=remake_priority,
         content_gen=mods["content_gen"],
         video_producer=mods["video_producer"],
