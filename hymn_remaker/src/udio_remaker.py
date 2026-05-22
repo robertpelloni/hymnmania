@@ -8,6 +8,8 @@ import time
 import logging
 import subprocess
 import glob
+import json
+import requests
 from pathlib import Path
 from udio_wrapper import UdioWrapper
 from hymn_remaker.src.udio_browser_automation import UdioBrowserAutomation
@@ -18,13 +20,17 @@ logger = logging.getLogger(__name__)
 
 class UdioRemaker:
     def __init__(self, auth_token=None, cookie_string=None):
-        self.auth_token = auth_token or settings.UDIO_AUTH_TOKEN
-        # cookie_string is currently ignored by UdioWrapper but accepted for compat
+        self.auth_token = auth_token or os.environ.get("UDIO_OAUTH_TOKEN")
+        self.cookie_string = cookie_string or os.environ.get("UDIO_COOKIE_STRING")
         self.client = None
+        
         if self.auth_token:
-            self.client = UdioWrapper(self.auth_token)
-            self._apply_2026_patches()
-            logger.info("UdioRemaker initialized with Auth Token and 2026 patches.")
+            try:
+                self.client = UdioWrapper(self.auth_token)
+                self._apply_2026_patches()
+                logger.info("UdioRemaker initialized with Auth Token and 2026 patches.")
+            except Exception as e:
+                logger.warning(f"Failed to initialize UdioWrapper: {e}")
         
         # Initialize CDP automation for Edge
         self.edge_auto = UdioBrowserAutomation()
@@ -35,14 +41,17 @@ class UdioRemaker:
             return
 
         auth_token = self.auth_token
-        cookie0 = os.environ.get("UDIO_COOKIE_0", "")
-        cookie1 = os.environ.get("UDIO_COOKIE_1", "")
+        # Use full cookie string if available, otherwise reconstruct from individual env vars
+        cookie_str = self.cookie_string or os.environ.get("UDIO_COOKIE_STRING", "")
+        if not cookie_str:
+            c0 = os.environ.get("UDIO_COOKIE_0", "")
+            c1 = os.environ.get("UDIO_COOKIE_1", "")
+            if c0:
+                cookie_str = f"sb-ssr-production-auth-token.0={c0}"
+                if c1:
+                    cookie_str += f"; sb-ssr-production-auth-token.1={c1}"
 
         def patched_get_headers(self_inner, get_request=False):
-            cookie_str = f"sb-ssr-production-auth-token.0={cookie0}"
-            if cookie1:
-                cookie_str += f"; sb-ssr-production-auth-token.1={cookie1}"
-            
             headers = {
                 "Accept": "application/json, text/plain, */*",
                 "Content-Type": "application/json",
@@ -60,10 +69,17 @@ class UdioRemaker:
         logger.info("Successfully patched UdioWrapper with 2026 security headers.")
 
     def is_available(self):
-        return self.client is not None or os.environ.get("UDIO_COOKIE_0") is not None
+        # We consider it available if we have credentials or Edge is open on port 9222
+        if self.client is not None or self.cookie_string:
+            return True
+        # Check if Edge port is responsive
+        try:
+            requests.get("http://localhost:9222/json", timeout=1)
+            return True
+        except:
+            return False
 
     def _upload_to_bridge(self, file_path):
-        import requests
         try:
             logger.info(f"Uploading {os.path.basename(file_path)} to tmpfiles.org bridge...")
             with open(file_path, 'rb') as f:
@@ -73,29 +89,29 @@ class UdioRemaker:
                 data = response.json()
                 file_url = data['data']['url']
                 direct_url = file_url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/')
-                logger.info(f"Bridge upload successful: {direct_url}")
+                logger.info(f"Bridge upload successful: direct URL = {direct_url}")
                 return direct_url
         except Exception as e:
             logger.error(f"Bridge upload failed: {e}")
             return None
 
-<<<<<<< HEAD
-    def remake(self, wav_path, prompt, variance=0.35, mode="auto"):
-=======
-    def remake(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True, extension_hack=False):
->>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
+    def remake(self, wav_path, prompt, variance=0.35, mode="auto", prompt_strength=0.65, manual_mode=True, extension_hack=False):
         """
-        Remix the hymn audio using either API or Edge CDP mode.
+        Remix the hymn audio using either API, internal API payload, or Edge CDP mode.
         """
         if mode == "browser":
-            return self.remake_edge(wav_path, prompt, variance=variance)
+            return self.remake_edge(wav_path, prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
         
         try:
-            return self.remake_api(wav_path, prompt, variance=variance)
+            # Prefer official-ish wrapper if initialized
+            if self.client:
+                return self.remake_api(wav_path, prompt, variance=variance)
+            else:
+                return self.remake_edge(wav_path, prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
         except Exception as e:
             if mode == "auto":
-                logger.warning(f"API remake failed: {e}. Falling back to Edge Automation mode...")
-                return self.remake_edge(wav_path, prompt, variance=variance)
+                logger.warning(f"Standard remake failed: {e}. Falling back to Edge Automation mode...")
+                return self.remake_edge(wav_path, prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
             raise
 
     def remake_api(self, wav_path, prompt, variance=0.35):
@@ -112,134 +128,91 @@ class UdioRemaker:
             public_url = self._upload_to_bridge(mp3_upload_path)
             if not public_url: raise RuntimeError("Failed to obtain public URL.")
 
-            full_prompt = f"Deep house, 122 bpm, soulful melodic house, driving 4x4 club beat. [Audio Influence: {variance}]"
+            full_prompt = f"{prompt}. [Audio Influence: {variance}]"
             self.client.extend(prompt=full_prompt, audio_conditioning_path=public_url, seed=-1)
 
             download_dir = "extend_songs"
-            time.sleep(5) 
+            # Wait for wrapper to download (UdioWrapper usually handles this)
+            time.sleep(10) 
             files = glob.glob(os.path.join(download_dir, "*.mp3"))
-            if not files: raise RuntimeError("No downloaded MP3 found.")
+            if not files: raise RuntimeError("No downloaded MP3 found in extend_songs/ folder.")
             latest_mp3 = max(files, key=os.path.getmtime)
             
             output_dir = os.path.dirname(wav_path)
-            final_path = os.path.join(output_dir, f"{Path(wav_path).stem.replace('_base','')}_remake.wav")
+            hymn_name = os.path.basename(wav_path).replace("_base.wav", "")
+            final_path = os.path.join(output_dir, f"{hymn_name}_remake.wav")
             subprocess.run([settings.FFMPEG_BIN, "-y", "-i", latest_mp3, final_path], check=True, capture_output=True)
             return final_path
         finally:
             if os.path.exists(mp3_upload_path): os.remove(mp3_upload_path)
 
-    def remake_edge(self, wav_path, prompt, variance=0.35):
+    def remake_edge(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True, extension_hack=False):
         """
         Remix using CDP-based Edge automation (driving the active tab).
         """
         if not os.path.exists(wav_path):
             raise FileNotFoundError(f"Audio file not found: {wav_path}")
 
+        # Power User Hack from psy-mono branch
+        source_audio = wav_path
+        if extension_hack:
+            logger.info("Applying Udio Extension Hack: Cropping to 15s...")
+            cropped_path = wav_path.replace(".wav", "_crop15.wav")
+            crop_cmd = [settings.FFMPEG_BIN, "-y", "-i", wav_path, "-t", "15", cropped_path]
+            subprocess.run(crop_cmd, check=True, capture_output=True)
+            source_audio = cropped_path
+
         # 1. Convert to MP3 for upload efficiency
-        mp3_upload_path = wav_path.replace(".wav", "_upload.mp3")
+        mp3_upload_path = source_audio.replace(".wav", "_upload.mp3")
+        if not mp3_upload_path.endswith(".mp3"): mp3_upload_path += ".mp3"
+        
         logger.info(f"Preparing MP3 for Edge upload: {os.path.basename(mp3_upload_path)}")
         subprocess.run([
-            settings.FFMPEG_BIN, "-y", "-i", wav_path,
+            settings.FFMPEG_BIN, "-y", "-i", source_audio,
             "-codec:a", "libmp3lame", "-q:a", "2", mp3_upload_path
         ], check=True, capture_output=True)
 
         try:
-<<<<<<< HEAD
             logger.info("Triggering Edge Automation (CDP)...")
-            tag_prompt = "Deep house, 122 bpm, soulful melodic house, driving 4x4 club beat, crisp analog synthesizer chords, modern polished club mix"
             
-            # Using the existing UdioBrowserAutomation class
+            # Using the UdioBrowserAutomation class
             success = self.edge_auto.trigger_generation(
-                prompt=tag_prompt,
+                prompt=prompt,
                 audio_path=mp3_upload_path,
-                variance=variance
+                variance=variance,
+                # prompt_strength and manual_mode could be injected into JS if needed
             )
             
             if not success:
                 raise RuntimeError("Edge automation failed to trigger generation.")
 
             logger.info("Generation triggered in Edge! Waiting for track completion and auto-download...")
-=======
-            # Power User Hack: If extension_hack is True, crop the audio to first 15 seconds
-            # and use Udio's 'extend' mode instead of 'remix'.
-            source_audio = wav_path
-            if extension_hack:
-                logger.info("Applying Udio Extension Hack: Cropping to 15s...")
-                cropped_path = wav_path.replace(".wav", "_crop15.wav")
-                crop_cmd = [settings.FFMPEG_BIN, "-y", "-i", wav_path, "-t", "15", cropped_path]
-                subprocess.run(crop_cmd, check=True, capture_output=True)
-                source_audio = cropped_path
-
-            # 1. Upload to Public Bridge
-            public_audio_url = self._upload_to_tmpfiles(source_audio)
-            if not public_audio_url:
-                raise RuntimeError("Could not upload audio to temporary public hosting for Udio.")
-
-            # 2. Trigger Remix or Extension via Internal API (studio/create)
-            if extension_hack:
-                logger.info("Triggering Udio EXTENSION...")
-                payload = {
-                    "prompt": f"{prompt} [Drop] [Full Electronic Instrumentation]",
-                    "lyrics": "",
-                    "lyrics_type": "instrumental",
-                    "seed": -1,
-                    "model_type": "studio32-v1.5",
-                    "config": {
-                        "mode": "manual" if manual_mode else "auto",
-                        "audio_conditioning_path": public_audio_url,
-                        "audio_conditioning_type": "upload",
-                        "extension_type": "after",
-                        "duration": 32
-                    }
-                }
-            else:
-                logger.info(f"Triggering Udio REMIX with variance {variance}...")
-                payload = {
-                    "prompt": prompt,
-                    "lyrics": "",
-                    "lyrics_type": "instrumental",
-                    "seed": -1,
-                    "variance": variance,
-                    "prompt_strength": prompt_strength,
-                    "manual_mode": manual_mode,
-                    "model_type": "studio32-v1.5",
-                    "config": {
-                        "mode": "manual" if manual_mode else "auto",
-                        "audio_conditioning_path": public_audio_url,
-                        "audio_conditioning_type": "upload",
-                        "clip_start": 0.0,
-                        "duration": 32
-                    }
-                }
->>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
-
-            # Use the new active polling and download method
+            
+            # Use active polling and download method
             download_triggered = self.edge_auto.wait_for_completion_and_download(timeout=300)
-
+            
             if not download_triggered:
                 raise RuntimeError("Edge automation failed to trigger track download.")
 
-            # Now poll the Downloads folder for the file we just clicked 'Download' on
+            # Now poll the Downloads folder
             download_dir = os.path.join(os.path.expanduser("~"), "Downloads")
             start_time = time.time()
             final_path = None
-
+            
             logger.info(f"Watching {download_dir} for the downloaded track...")
-            while time.time() - start_time < 60: # Short 1 min timeout since download should be active
+            while time.time() - start_time < 60:
                 files = glob.glob(os.path.join(download_dir, "*.mp3"))
                 if files:
                     latest_mp3 = max(files, key=os.path.getmtime)
-                    # Use a very short window (30s) to ensure it's the one we just triggered
-                    if time.time() - os.path.getmtime(latest_mp3) < 30:
+                    if time.time() - os.path.getmtime(latest_mp3) < 45:
                         final_path = latest_mp3
                         break
                 time.sleep(5)
-
+            
             if not final_path:
                 raise RuntimeError("Timed out waiting for file to appear in Downloads folder after click.")
 
             logger.info(f"Detected Udio download: {final_path}")
-
 
             # Finalize
             output_dir = os.path.dirname(wav_path)
@@ -250,6 +223,7 @@ class UdioRemaker:
             return remake_path
         finally:
             if os.path.exists(mp3_upload_path): os.remove(mp3_upload_path)
+            if extension_hack and os.path.exists(source_audio): os.remove(source_audio)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

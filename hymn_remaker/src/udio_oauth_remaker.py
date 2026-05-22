@@ -132,15 +132,6 @@ class UdioOAuthRemaker:
             gen_res = self.session.post(
                 f"{UDIO_API_BASE}generate",
                 json={
-<<<<<<< HEAD
-                    "prompt": tag_prompt,
-                    "model": "udio-v4-remix",
-                    "conditioning_id": upload_id,
-                    "variance": variance if variance != 0.25 else 0.35, # Use 0.35 as default sweet spot
-                    "prompt_strength": 0.65, # Heavy text influence
-                    "config": {
-                        "mode": "manual", # Force specific tags
-=======
                     "prompt": prompt,
                     "model": "udio-v4-remix",
                     "conditioning_id": upload_id,
@@ -149,7 +140,6 @@ class UdioOAuthRemaker:
                     "manual_mode": manual_mode,
                     "config": {
                         "mode": "manual" if manual_mode else "auto",
->>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
                         "duration": 32,
                         "audio_fidelity": "48khz"
                     }

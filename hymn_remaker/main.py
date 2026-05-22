@@ -195,14 +195,11 @@ def main():
                     video_model=args.video_model,
                     video_model_size=args.video_model_size,
                     udio_variance=args.udio_variance,
-<<<<<<< HEAD
-                    transient=args.transient
-=======
+                    transient=args.transient,
                     sonic_vacuum=args.sonic_vacuum,
                     symbolic_norm=args.symbolic_norm,
                     house_quantizer=args.house_quantizer,
                     hiphop_vocal_path=args.mix_vocals
->>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
                 ): midi_path
                 for midi_path in midi_file_list
             }
@@ -371,14 +368,11 @@ def process_single_midi(
     video_model="ltx-video",
     video_model_size="1.3b",
     udio_variance=0.25,
-<<<<<<< HEAD
-    transient=False):
-=======
+    transient=False,
     sonic_vacuum=False,
     symbolic_norm=False,
     house_quantizer=False,
     hiphop_vocal_path=None):
->>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
 
     base_audio_path = remake_audio_path = metadata_path = vocal_track_path = None
     try:
@@ -493,11 +487,7 @@ def process_single_midi(
             update_status(f"Extracted dynamic tempo: {target_bpm:.1f} BPM", 25)
 
         if not skip_render or not os.path.exists(base_audio_path):
-<<<<<<< HEAD
-            renderer.render(target_midi_path, base_audio_path, transient_mode=transient)
-=======
-            renderer.render(target_midi_path, base_audio_path, transient_only=(transient_only or sonic_vacuum))
->>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
+            renderer.render(target_midi_path, base_audio_path, transient=transient, transient_only=(transient_only or sonic_vacuum))
         else:
             update_status(f"Skipping render for {filename}, {base_audio_path} exists.", 30)
 
