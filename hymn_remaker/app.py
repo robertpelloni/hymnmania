@@ -207,7 +207,7 @@ if st.sidebar.button("🗑️ Clear Workspace", help="Delete all files in the in
     except Exception as e:
         st.sidebar.error(f"Failed to clear workspace: {e}")
 
-tab1, tab2 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)"])
+tab1, tab2, tab3 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)", "🌀 Live Psy-Mono Studio"])
 
 with tab1:
     uploaded_files = st.file_uploader("Upload MIDI, MusicXML, or Sheet Music images (OMR)", type=["mid", "midi", "mxl", "xml", "png", "jpg", "pdf"], accept_multiple_files=True, help="Select one or more public domain hymn MIDI, MusicXML, or Sheet Music image files to process.")
@@ -524,3 +524,74 @@ with tab2:
                     st.balloons()
         except Exception as e:
             st.warning("Could not connect to Redis to check job status.")
+
+with tab3:
+    st.header("🌀 Live Psy-Mono Studio")
+    st.write("Tweak algorithmic psytrance parameters in real-time.")
+
+    if "psy_player" not in st.session_state:
+        import hymn_player_ext
+        sf_path = settings.DEFAULT_SOUNDFONT_PATHS[0]
+        st.session_state.psy_player = hymn_player_ext.HymnPlayer(sf_path)
+
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+        live_midi = st.file_uploader("Upload Hymn MIDI", type=["mid", "midi"], key="live_psy_uploader")
+
+        st.subheader("Sequencer Config")
+        bpm = st.slider("Target BPM", 120, 160, 145)
+        density = st.slider("Euclidean Density", 1, 16, 5)
+        gallop = st.selectbox("Gallop Variant", ["classic", "triplet", "rolling"])
+        octave_freq = st.slider("Octave Jump Freq", 0, 4, 2)
+
+        st.subheader("Mixer")
+        k_vel = st.slider("Kick Volume", 0.0, 1.0, 0.9)
+        b_vel = st.slider("Bass Volume", 0.0, 1.0, 0.7)
+        l_vel = st.slider("Lead Volume", 0.0, 1.0, 0.8)
+
+        psy_config = {
+            "targetBpm": bpm,
+            "euclideanDensity": density,
+            "gallopVariant": gallop,
+            "octaveJumpBarFrequency": octave_freq,
+            "kickVelocity": k_vel,
+            "bassVelocity": b_vel,
+            "leadVelocity": l_vel
+        }
+
+    with col2:
+        st.subheader("Live Controls")
+        c1, c2, c3 = st.columns(3)
+
+        play_btn = c1.button("▶️ Play / Refresh")
+        stop_btn = c2.button("⏹️ Stop")
+
+        if live_midi:
+            if play_btn:
+                # 1. Save temp input
+                temp_input = os.path.join(settings.INPUT_DIR, "live_input.mid")
+                with open(temp_input, "wb") as f:
+                    f.write(live_midi.getbuffer())
+
+                # 2. Run TS Sequencer
+                temp_output = os.path.join(output_dir, "live_psy_output.mid")
+                config_json = json.dumps(psy_config)
+
+                with st.spinner("Generating Psytrance..."):
+                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", temp_input, temp_output, config_json]
+                    subprocess.run(cmd, check=True, capture_output=True)
+
+                # 3. Load and Play
+                st.session_state.psy_player.stop_realtime()
+                st.session_state.psy_player.load(temp_output)
+                st.session_state.psy_player.start_realtime()
+                st.session_state.psy_player.play()
+                st.success("Playing live!")
+
+            if stop_btn:
+                st.session_state.psy_player.stop()
+                st.session_state.psy_player.stop_realtime()
+                st.info("Playback stopped.")
+        else:
+            st.info("Upload a MIDI file to start the live studio.")

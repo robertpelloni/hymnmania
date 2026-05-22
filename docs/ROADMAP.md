@@ -1,11 +1,12 @@
 # Roadmap
 
 ## Phase 7: Algorithmic Psytrance (Psy-Mono) [Current]
-- [ ] TypeScript-based MIDI DNA Extraction.
-- [ ] Procedural 145 BPM Full-On Psytrance Sequencer.
-- [ ] Euclidean Rhythm Gating for Hymn Melodies.
-- [ ] Automated Hip-Hop Vocal Isolation and Grid-Locking.
-- [ ] Transient-Only Rendering for Udio/Suno conditioning.
+- [x] TypeScript-based MIDI DNA Extraction.
+- [x] Procedural 145 BPM Full-On Psytrance Sequencer.
+- [x] Euclidean Rhythm Gating for Hymn Melodies.
+- [x] Automated Hip-Hop Vocal Isolation and Grid-Locking.
+- [x] Transient-Only Rendering for Udio/Suno conditioning.
+- [x] Real-time "Live Studio" parameter tweaking via C++ engine.
 
 ## Future Phases
 - [ ] Real-time browser-based synth engine.

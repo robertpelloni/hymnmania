@@ -12,7 +12,10 @@ async function main() {
     const outputPath = args[1];
 
     const dna = MidiParser.parse(inputPath);
-    const psyMidi = PsyGenerator.generate(dna, 145);
+
+    const config = args[2] ? JSON.parse(args[2]) : undefined;
+
+    const psyMidi = PsyGenerator.generate(dna, config);
     PsyGenerator.saveMidi(psyMidi, outputPath);
     console.log("Success");
 }
