@@ -537,6 +537,9 @@ with tab3:
         sf_path = settings.DEFAULT_SOUNDFONT_PATHS[0]
         st.session_state.psy_player = hymn_player_ext.HymnPlayer(sf_path)
 
+    if "local_remaker" not in st.session_state:
+        st.session_state.local_remaker = None
+
     col1, col2 = st.columns([1, 2])
 
     with col1:
@@ -596,6 +599,11 @@ with tab3:
         play_btn = c1.button("▶️ Play / Refresh")
         stop_btn = c2.button("⏹️ Stop")
 
+        st.markdown("---")
+        st.subheader("Full AI Render")
+        gen_mode = st.selectbox("AI Model", ["Replicate (Cloud)", "Transformers (Local)"])
+        render_btn = st.button("🚀 Render with Generative AI")
+
         if input_midi_path:
             if play_btn:
                 # 1. Run TS Sequencer
@@ -612,6 +620,44 @@ with tab3:
                 st.session_state.psy_player.start_realtime()
                 st.session_state.psy_player.play()
                 st.success("Playing live!")
+
+            if render_btn:
+                # 1. Generate local conditioning WAV
+                temp_output = os.path.join(output_dir, "live_psy_output.mid")
+                config_json = json.dumps(psy_config)
+                with st.spinner("Generating algorithmic MIDI..."):
+                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", input_midi_path, temp_output, config_json]
+                    subprocess.run(cmd, check=True, capture_output=True)
+
+                # 2. Render MIDI to dry audio
+                cond_audio = os.path.join(output_dir, "live_psy_cond.wav")
+                with st.spinner("Rendering dry conditioning audio..."):
+                    renderer.render(temp_output, cond_audio, transient_only=True)
+
+                # 3. AI Generation
+                final_audio = os.path.join(output_dir, "live_psy_final.wav")
+                prompt = f"Modern Full-On Psytrance, {bpm} BPM, driving, psychedelic sound design, festival grade master"
+
+                if gen_mode == "Replicate (Cloud)":
+                    with st.spinner("Remaking via Replicate (MusicGen)..."):
+                        remake_url = remaker.remake(cond_audio, prompt)
+                        import requests
+                        resp = requests.get(remake_url)
+                        with open(final_audio, "wb") as f:
+                            f.write(resp.content)
+                else:
+                    if st.session_state.local_remaker is None:
+                        from hymn_remaker.src.local_remaker import LocalMusicRemaker
+                        with st.spinner("Loading local model (first time)..."):
+                            st.session_state.local_remaker = LocalMusicRemaker()
+
+                    with st.spinner("Remaking via Local Transformers..."):
+                        st.session_state.local_remaker.generate(cond_audio, prompt, duration=30, output_path=final_audio)
+
+                st.success("AI Generation Complete!")
+                st.audio(final_audio)
+                with open(final_audio, "rb") as f:
+                    st.download_button("Download Final Track 🎵", f, file_name="psy_hymn_remix.wav", mime="audio/wav")
 
             if stop_btn:
                 st.session_state.psy_player.stop()
