@@ -47,7 +47,7 @@ class UdioRemaker:
             logger.error(f"Failed to upload {file_path} to tmpfiles.org: {e}")
         return None
 
-    def remake(self, wav_path, prompt, variance=0.25):
+    def remake(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True):
         """
         Remix the hymn audio using Udio's conditioning/remix feature.
         """
@@ -71,14 +71,16 @@ class UdioRemaker:
             full_prompt = f"{prompt}. REMIX strictly following the melody provided. Deep House."
             
             payload = {
-                "prompt": full_prompt,
+                "prompt": prompt,
                 "lyrics": "",
                 "lyrics_type": "instrumental",
                 "seed": -1,
                 "variance": variance,
+                "prompt_strength": prompt_strength,
+                "manual_mode": manual_mode,
                 "model_type": "studio32-v1.5",
                 "config": {
-                    "mode": "manual",
+                    "mode": "manual" if manual_mode else "auto",
                     "audio_conditioning_path": public_audio_url,
                     "audio_conditioning_type": "upload",
                     "clip_start": 0.0,

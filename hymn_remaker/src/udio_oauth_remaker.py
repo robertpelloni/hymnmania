@@ -55,7 +55,7 @@ class UdioOAuthRemaker:
     def is_available(self):
         return self.session is not None
 
-    def remake(self, wav_path, prompt, variance=0.25):
+    def remake(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True):
         """
         Remix the hymn audio using Udio's official API conditioning.
         """
@@ -93,12 +93,14 @@ class UdioOAuthRemaker:
             gen_res = self.session.post(
                 f"{UDIO_API_BASE}generate",
                 json={
-                    "prompt": f"{prompt}. REMIX strictly following the melody provided.",
+                    "prompt": prompt,
                     "model": "udio-v4-remix",
                     "conditioning_id": upload_id,
                     "variance": variance,
+                    "prompt_strength": prompt_strength,
+                    "manual_mode": manual_mode,
                     "config": {
-                        "mode": "manual",
+                        "mode": "manual" if manual_mode else "auto",
                         "duration": 32,
                         "audio_fidelity": "48khz"
                     }

@@ -44,6 +44,16 @@ suno_page.html
 
 # Jules session folders
 jules_session_*/
+
+# Node.js
+node_modules/
+package-lock.json
+dist/
+tsconfig.tsbuildinfo
+
+# Experiments & Logs
+*.txt
+pipeline/output/
 suno_create_*.png
 suno_error.png
 suno_fail.png
