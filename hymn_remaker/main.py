@@ -125,6 +125,7 @@ def main():
     parser.add_argument("--stream-rtmp", default=None, help="RTMP URL for live DJ radio streaming")
     parser.add_argument("--visualizer", action="store_true", help="Enable audio-reactive visualizer overlay")
     parser.add_argument("--visualizer-mode", default="cline", choices=["cline", "line", "p2p", "avectorscope"], help="Visualizer mode type")
+    parser.add_argument("--transient", action="store_true", help="Enable Pure Transient rendering (Woodblock pulses) for better AI inspiration")
     parser.add_argument("--ai-video", action="store_true", help="Generate AI-powered dynamic video background")
     parser.add_argument("--use-quotes", action="store_true", help="Overlay soulful quotes timed to beats instead of lyrics")
     parser.add_argument("--local-video", action="store_true", help="Force local GPU video generation instead of Replicate cloud")
@@ -189,7 +190,8 @@ def main():
                     local_video=args.local_video,
                     video_model=args.video_model,
                     video_model_size=args.video_model_size,
-                    udio_variance=args.udio_variance
+                    udio_variance=args.udio_variance,
+                    transient=args.transient
                 ): midi_path
                 for midi_path in midi_file_list
             }
@@ -357,7 +359,8 @@ def process_single_midi(
     local_video=False,
     video_model="ltx-video",
     video_model_size="1.3b",
-    udio_variance=0.25):
+    udio_variance=0.25,
+    transient=False):
 
     base_audio_path = remake_audio_path = metadata_path = vocal_track_path = None
     try:
@@ -408,7 +411,7 @@ def process_single_midi(
             update_status(f"Extracted dynamic tempo: {target_bpm:.1f} BPM", 25)
 
         if not skip_render or not os.path.exists(base_audio_path):
-            renderer.render(target_midi_path, base_audio_path)
+            renderer.render(target_midi_path, base_audio_path, transient_mode=transient)
         else:
             update_status(f"Skipping render for {filename}, {base_audio_path} exists.", 30)
 

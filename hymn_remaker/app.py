@@ -172,7 +172,8 @@ remake_priority = st.sidebar.selectbox("AI Remake Service", ["udio-oauth", "udio
 udio_client_id = st.sidebar.text_input("Udio Client ID", value=os.environ.get("UDIO_CLIENT_ID", ""), help="Your official Udio Developer Portal Client ID.")
 udio_client_secret = st.sidebar.text_input("Udio Client Secret", value=os.environ.get("UDIO_CLIENT_SECRET", ""), type="password", help="Your official Udio Developer Portal Client Secret.")
 udio_token = st.sidebar.text_input("Udio Auth Token", value=os.environ.get("UDIO_AUTH_TOKEN", ""), type="password", help="Paste your Udio sb-api-auth-token (if using session-based Udio).")
-udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.25, 0.05, help="Lower variance follows the original melody more strictly.")
+udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.35, 0.05, help="Lower variance follows the original melody more strictly.")
+transient = st.sidebar.checkbox("Pure Transient Rendering", value=True, help="Render MIDI as Woodblock pulses to strip stylistic flavor and force AI instruments.")
 
 # Initialize remakers with UI overrides
 suno_remaker = SunoRemaker(session_token=suno_session) if suno_session else suno_remaker
@@ -325,7 +326,8 @@ with tab1:
                         visualizer_mode=visualizer_mode,
                         status_callback=lambda msg, prog: (status_texts[file_path].info(msg), progress_bars[file_path].progress(prog)),
                         interactive_callback=callback,
-                        udio_variance=udio_variance
+                        udio_variance=udio_variance,
+                        transient=transient
                     )
 
                     status_texts[file_path].success(f"Completed! ✅ ({filename})")

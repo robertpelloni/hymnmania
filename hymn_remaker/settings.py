@@ -60,7 +60,7 @@ SUNO_POLL_INTERVAL = int(os.environ.get("SUNO_POLL_INTERVAL", "5"))
 SUNO_POLL_TIMEOUT = int(os.environ.get("SUNO_POLL_TIMEOUT", "300"))
 
 # --- Udio AI Music API ---
-UDIO_AUTH_TOKEN = os.environ.get("UDIO_AUTH_TOKEN", "")
+UDIO_AUTH_TOKEN = os.environ.get("UDIO_AUTH_TOKEN", "") or os.environ.get("UDIO_OAUTH_TOKEN", "")
 UDIO_CLIENT_ID = os.environ.get("UDIO_CLIENT_ID", "")
 UDIO_CLIENT_SECRET = os.environ.get("UDIO_CLIENT_SECRET", "")
 UDIO_POLL_INTERVAL = int(os.environ.get("UDIO_POLL_INTERVAL", "10"))

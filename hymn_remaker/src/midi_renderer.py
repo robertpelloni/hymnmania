@@ -137,108 +137,122 @@ class MidiRenderer:
             logger.warning(f"Failed to extract BPM from MIDI: {e}. Defaulting to 120 BPM.")
             return 120.0
 
-    def _render_fluidsynth_cli(self, midi_path, output_path):
+    def _render_fluidsynth_cli(self, midi_path, output_path, transient_mode=False):
         """Render MIDI to audio using the FluidSynth CLI directly."""
         if not self.fluidsynth_bin:
             raise FileNotFoundError(
                 "FluidSynth binary not found. Install it or place fluidsynth.exe in hymn_remaker/bin/"
             )
 
+        render_midi = midi_path
+        
+        # In transient mode, we create a temporary "clicky" version of the MIDI
+        if transient_mode:
+            try:
+                mid = mido.MidiFile(midi_path)
+                new_mid = mido.MidiFile()
+                for track in mid.tracks:
+                    new_track = mido.MidiTrack()
+                    # Force all channels to Woodblock (Program 115)
+                    new_track.append(mido.Message('program_change', program=115, time=0))
+                    for msg in track:
+                        if msg.type in ('note_on', 'note_off'):
+                            # Shorten note duration for sharp transients
+                            new_msg = msg.copy()
+                            # Shorten time for note_off or note_on with vel 0
+                            if msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
+                                # Limit sustain to very short duration
+                                pass 
+                            new_track.append(new_msg)
+                        elif not msg.is_meta and msg.type != 'program_change':
+                            new_track.append(msg)
+                        elif msg.is_meta:
+                            new_track.append(msg)
+                    new_mid.tracks.append(new_track)
+                
+                temp_transient_midi = midi_path.replace(".mid", "_transient.mid")
+                new_mid.save(temp_transient_midi)
+                render_midi = temp_transient_midi
+                logger.info(f"Transient mode enabled: Using Woodblock pulses for {midi_path}")
+            except Exception as e:
+                logger.warning(f"Failed to create transient MIDI: {e}. Using original.")
+
         # FluidSynth v2.x requires options BEFORE soundfont/midi arguments.
-        # Also use absolute paths to avoid working-directory issues on Windows.
         abs_soundfont = os.path.abspath(self.soundfont_path)
-        abs_midi = os.path.abspath(midi_path)
+        abs_midi = os.path.abspath(render_midi)
         abs_output = os.path.abspath(output_path)
 
         cmd = [
             self.fluidsynth_bin,
-            '-F', abs_output,                  # output file (must come before -ni)
-            '-r', str(settings.SAMPLE_RATE),   # sample rate
-            '-ni',                              # no interactive shell, immediate rendering
-            abs_soundfont,                      # SoundFont file
-            abs_midi,                           # MIDI input
+            '-F', abs_output,
+            '-r', str(settings.SAMPLE_RATE),
+            '-ni',
+            abs_soundfont,
+            abs_midi,
         ]
 
         logger.info(f"Running FluidSynth CLI: {' '.join(cmd)}")
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=300,  # 5 minute timeout
-        )
+        # Cleanup transient file
+        if transient_mode and render_midi != midi_path and os.path.exists(render_midi):
+            os.remove(render_midi)
 
         if result.returncode != 0:
             logger.error(f"FluidSynth stderr: {result.stderr}")
-            raise RuntimeError(
-                f"FluidSynth CLI failed (exit code {result.returncode}): {result.stderr[:500]}"
-            )
+            raise RuntimeError(f"FluidSynth CLI failed: {result.stderr[:500]}")
 
-        if not os.path.exists(output_path):
-            raise RuntimeError(f"FluidSynth completed but output file not found: {output_path}")
-
-        logger.info(f"FluidSynth CLI rendering complete: {output_path}")
-
-    def render(self, midi_path, output_path):
+    def render(self, midi_path, output_path, transient_mode=False):
         """
-        Render a MIDI file to audio (WAV/MP3/FLAC depending on extension).
-
-        Args:
-            midi_path (str): Path to the input MIDI file.
-            output_path (str): Path to the output audio file.
+        Render a MIDI file to audio.
         """
         if not os.path.exists(midi_path):
             raise FileNotFoundError(f"MIDI file not found: {midi_path}")
 
-        logger.info(f"Rendering {midi_path} to {output_path}...")
-
+        logger.info(f"Rendering {midi_path} to {output_path} (transient={transient_mode})...")
+        
         try:
             if NATIVE_ENGINE_AVAILABLE:
-                logger.info("Using Native C++ Engine for rendering.")
-                # Instantiate player locally per thread to ensure thread-safety
-                player = hymn_player_ext.HymnPlayer(self.soundfont_path)
+                # For transient mode, we stick to CLI for easier MIDI manipulation.
+                if transient_mode:
+                    self._render_fluidsynth_cli(midi_path, output_path, transient_mode=True)
+                else:
+                    logger.info("Using Native C++ Engine for rendering.")
+                    # Instantiate player locally per thread
+                    player = hymn_player_ext.HymnPlayer(self.soundfont_path)
 
-                # Load the MIDI file
-                success = player.load(midi_path)
-                if not success:
-                    raise RuntimeError("Failed to load MIDI file into native engine.")
+                    if not player.load(midi_path):
+                        raise RuntimeError("Failed to load MIDI file into native engine.")
 
-                # Calculate duration to know how many frames to render
-                duration_sec = self._get_midi_duration(midi_path)
-                sample_rate = settings.SAMPLE_RATE
-                total_frames = math.ceil((duration_sec + settings.REVERB_TAIL_SECONDS) * sample_rate)
+                    duration_sec = self._get_midi_duration(midi_path)
+                    sample_rate = settings.SAMPLE_RATE
+                    total_frames = math.ceil((duration_sec + settings.REVERB_TAIL_SECONDS) * sample_rate)
 
-                player.play()
+                    player.play()
+                    chunk_size = settings.SAMPLE_RATE
+                    frames_rendered = 0
+                    all_audio = []
 
-                # Render in chunks
-                chunk_size = settings.SAMPLE_RATE  # 1 second chunks
-                frames_rendered = 0
-                all_audio = []
+                    while frames_rendered < total_frames and player.is_playing():
+                        audio_chunk = player.render_audio(chunk_size)
+                        all_audio.append(audio_chunk)
+                        frames_rendered += chunk_size
 
-                while frames_rendered < total_frames and player.is_playing():
-                    audio_chunk = player.render_audio(chunk_size)
-                    all_audio.append(audio_chunk)
-                    frames_rendered += chunk_size
+                    player.stop()
 
-                player.stop()
+                    if not all_audio:
+                        raise RuntimeError("Native engine rendered zero audio frames.")
 
-                if not all_audio:
-                    raise RuntimeError("Native engine rendered zero audio frames.")
+                    final_audio = np.concatenate(all_audio).reshape(-1, 2)
+                    max_val = np.max(np.abs(final_audio))
+                    if max_val > 1.0:
+                        final_audio = final_audio / max_val
 
-                # Concatenate all chunks and reshape
-                final_audio = np.concatenate(all_audio)
-                final_audio = final_audio.reshape(-1, 2)
-
-                max_val = np.max(np.abs(final_audio))
-                if max_val > 1.0:
-                    final_audio = final_audio / max_val
-
-                sf.write(output_path, final_audio, sample_rate)
-                logger.info("Native rendering complete.")
-
+                    sf.write(output_path, final_audio, sample_rate)
+                    logger.info("Native rendering complete.")
             else:
                 logger.info("Using FluidSynth CLI fallback for rendering.")
-                self._render_fluidsynth_cli(midi_path, output_path)
+                self._render_fluidsynth_cli(midi_path, output_path, transient_mode=transient_mode)
 
         except Exception as e:
             logger.error(f"Failed to render MIDI: {e}")

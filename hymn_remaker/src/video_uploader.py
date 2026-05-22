@@ -141,11 +141,25 @@ class VideoProducer:
                         word_duration_cs = max(1, duration_cs // num_words)
                         
                         # Form karaoke string: {\kf25}Word1 {\kf30}Word2 ...
+                        # AND add a pulsing pulse effect to the whole line!
+                        # We add multiple \t tags to scale up and down on every beat.
+                        beat_len_sec = 60.0 / tempo_bpm
+                        beat_len_cs = int(beat_len_sec * 100)
+                        
+                        pulse_tags = ""
+                        curr_cs = 0
+                        while curr_cs < duration_cs:
+                            # Scale UP at start of beat (105%)
+                            pulse_tags += f"{{\\t({curr_cs},{curr_cs+50},\\fscx105\\fscy105)}}"
+                            # Scale DOWN shortly after (100%)
+                            pulse_tags += f"{{\\t({curr_cs+50},{curr_cs+150},\\fscx100\\fscy100)}}"
+                            curr_cs += beat_len_cs
+
                         karaoke_parts = []
                         for word in words:
                             karaoke_parts.append(f"{{\\kf{word_duration_cs}}}{word}")
                         
-                        formatted_text = f"{effect_prefix}" + " ".join(karaoke_parts)
+                        formatted_text = f"{effect_prefix}{pulse_tags}" + " ".join(karaoke_parts)
                     else:
                         formatted_text = f"{effect_prefix}{text}"
 
@@ -274,6 +288,7 @@ class VideoProducer:
                         f"contrast='1.0+0.06*exp(-15.0*mod(t,{beat_len}))+0.06*exp(-6.0*mod(t,{bar_len}))':"
                         f"eval=frame[v_pulsed]"
                     )
+
                     filters.append(pulse_expr)
                     video_stream_name = "[v_pulsed]"
                 else:
