@@ -1,10 +1,12 @@
 # TODO
 
-- [ ] Initialize `package.json` and TypeScript environment.
-- [ ] Implement `src/analysis/midi_parser.ts`.
-- [ ] Implement `src/sequencer/psy_generator.ts`.
-- [ ] Implement `src/integrators/vocal_processor.ts`.
-- [ ] Modify `MidiRenderer` to support transient rendering.
-- [ ] Update `UdioRemaker` with advanced sliders and prompt architecture.
-- [ ] Wire the TS sequencer into `main.py` via `subprocess`.
-- [ ] Add "Psytrance" style to the Streamlit UI.
+### Immediate Fixes
+- [ ] Implement LALAL.AI REST API integration as a fall-back for local Demucs.
+- [ ] Optimize Local MusicGen latency by implementing a quantized model (INT8/FP16).
+- [ ] Add more complex Markov-chain transition rules to the arpeggiator for "peak climax" variations.
+
+### Enhancements
+- [ ] Multi-voice vocal harmonization for hip-hop acapellas using ElevenLabs.
+- [ ] Automated video generation matching the 145 BPM grid with audio-reactive visuals.
+- [ ] Integration of a VST3 host inside the C++ engine for high-end local instrument rendering.
+- [ ] Real-time "Jam Mode" where the sequencer responds to live MIDI controller input.

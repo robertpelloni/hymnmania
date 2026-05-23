@@ -4,6 +4,7 @@ import uuid
 import streamlit as st
 import os
 import sys
+import subprocess
 import concurrent.futures
 from dotenv import load_dotenv
 
@@ -36,6 +37,7 @@ from hymn_remaker.src.midi_renderer import MidiRenderer
 from hymn_remaker.src.remaker import MusicRemaker
 from hymn_remaker.src.suno_remaker import SunoRemaker
 from hymn_remaker.src.udio_remaker import UdioRemaker
+from hymn_remaker.src.udio_oauth_remaker import UdioOAuthRemaker
 from hymn_remaker.src.gemini_generator import GeminiContentGenerator
 from hymn_remaker.src.video_uploader import VideoProducer
 from hymn_remaker.src.tts_generator import TTSGenerator
@@ -543,6 +545,12 @@ with tab3:
     col1, col2 = st.columns([1, 2])
 
     with col1:
+        selected_sf = st.selectbox("Studio SoundFont", settings.DEFAULT_SOUNDFONT_PATHS, help="Select the soundfont for real-time preview and export.")
+        if "current_sf" not in st.session_state or st.session_state.current_sf != selected_sf:
+            import hymn_player_ext
+            st.session_state.psy_player = hymn_player_ext.HymnPlayer(selected_sf)
+            st.session_state.current_sf = selected_sf
+
         source_mode = st.radio("Input Source", ["Hymn MIDI", "Mic Input"])
 
         input_midi_path = None
@@ -594,10 +602,16 @@ with tab3:
 
     with col2:
         st.subheader("Live Controls")
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
 
         play_btn = c1.button("▶️ Play / Refresh")
         stop_btn = c2.button("⏹️ Stop")
+        export_btn = c3.button("💾 Export WAV")
+
+        if st.session_state.get("studio_is_playing"):
+            st.info("🔊 Real-time audio output is active.")
+        else:
+            st.warning("🔇 Audio output is idle.")
 
         st.markdown("---")
         st.subheader("Full AI Render")
@@ -619,6 +633,7 @@ with tab3:
                 st.session_state.psy_player.load(temp_output)
                 st.session_state.psy_player.start_realtime()
                 st.session_state.psy_player.play()
+                st.session_state["studio_is_playing"] = True
                 st.success("Playing live!")
 
             if render_btn:
@@ -659,9 +674,43 @@ with tab3:
                 with open(final_audio, "rb") as f:
                     st.download_button("Download Final Track 🎵", f, file_name="psy_hymn_remix.wav", mime="audio/wav")
 
+            if export_btn:
+                # 1. Generate algorithmic MIDI (same logic as Play)
+                temp_output = os.path.join(output_dir, "live_psy_output.mid")
+                config_json = json.dumps(psy_config)
+                with st.spinner("Generating MIDI for export..."):
+                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", input_midi_path, temp_output, config_json]
+                    subprocess.run(cmd, check=True, capture_output=True)
+
+                # 2. Render to full quality WAV via offline engine
+                export_wav = os.path.join(output_dir, "live_psy_export.wav")
+                with st.spinner("Exporting high-fidelity WAV..."):
+                    try:
+                        import soundfile as sf
+                        import numpy as np
+                        # Use a local temporary player to not disrupt real-time session
+                        import hymn_player_ext
+                        exporter = hymn_player_ext.HymnPlayer(selected_sf)
+                        exporter.load(temp_output)
+
+                        # Get duration
+                        import mido
+                        mid = mido.MidiFile(temp_output)
+                        duration_frames = int((mid.length + 2) * settings.SAMPLE_RATE)
+
+                        audio = exporter.render_audio(duration_frames)
+                        audio = audio.reshape(-1, 2)
+                        sf.write(export_wav, audio, settings.SAMPLE_RATE)
+                        st.success("Export complete!")
+                        with open(export_wav, "rb") as f:
+                            st.download_button("Download Exported WAV 🎵", f, file_name="psy_studio_export.wav", mime="audio/wav")
+                    except Exception as e:
+                        st.error(f"Export failed: {e}")
+
             if stop_btn:
                 st.session_state.psy_player.stop()
                 st.session_state.psy_player.stop_realtime()
+                st.session_state["studio_is_playing"] = False
                 st.info("Playback stopped.")
         else:
             st.info("Upload a MIDI file to start the live studio.")
