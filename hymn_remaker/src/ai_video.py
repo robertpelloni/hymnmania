@@ -61,7 +61,7 @@ class AIVideoGenerator:
             else:
                 logger.info("REPLICATE_API_TOKEN is missing. Attempting local programmatic video generation...")
                 
-            self.local_gen = LocalVideoGenerator(model_type=model_type, size=model_size)
+            self.local_gen = LocalVideoGenerator(model_type=model_type, model_size=model_size)
             if self.local_gen.check_dependencies():
                 local_image_path = image_url
                 # If image_url is a web URL, download it locally first

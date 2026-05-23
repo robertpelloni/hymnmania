@@ -7,6 +7,7 @@ import time
 import logging
 import requests
 import subprocess
+import json
 from pathlib import Path
 from requests_oauthlib import OAuth2Session
 
@@ -43,7 +44,6 @@ class UdioOAuthRemaker:
                 self.session = OAuth2Session(self.client_id, token=token_dict)
             else:
                 # For machine-to-machine/enterprise access (Client Credentials)
-                # Note: If Udio requires Authorization Code flow, we would handle it here.
                 from oauthlib.oauth2 import BackendApplicationClient
                 client = BackendApplicationClient(client_id=self.client_id)
                 self.session = OAuth2Session(client=client)
@@ -132,24 +132,14 @@ class UdioOAuthRemaker:
             gen_res = self.session.post(
                 f"{UDIO_API_BASE}generate",
                 json={
-<<<<<<< HEAD
                     "prompt": tag_prompt,
                     "model": "udio-v4-remix",
                     "conditioning_id": upload_id,
                     "variance": variance if variance != 0.25 else 0.35, # Use 0.35 as default sweet spot
-                    "prompt_strength": 0.65, # Heavy text influence
-                    "config": {
-                        "mode": "manual", # Force specific tags
-=======
-                    "prompt": prompt,
-                    "model": "udio-v4-remix",
-                    "conditioning_id": upload_id,
-                    "variance": variance,
                     "prompt_strength": prompt_strength,
                     "manual_mode": manual_mode,
                     "config": {
                         "mode": "manual" if manual_mode else "auto",
->>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
                         "duration": 32,
                         "audio_fidelity": "48khz"
                     }

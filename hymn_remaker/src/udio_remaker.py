@@ -8,6 +8,7 @@ import time
 import logging
 import subprocess
 import glob
+import json
 from pathlib import Path
 from udio_wrapper import UdioWrapper
 from hymn_remaker.src.udio_browser_automation import UdioBrowserAutomation
@@ -79,11 +80,7 @@ class UdioRemaker:
             logger.error(f"Bridge upload failed: {e}")
             return None
 
-<<<<<<< HEAD
-    def remake(self, wav_path, prompt, variance=0.35, mode="auto"):
-=======
-    def remake(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True, extension_hack=False):
->>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
+    def remake(self, wav_path, prompt, variance=0.35, mode="auto", prompt_strength=0.65, manual_mode=True, extension_hack=False):
         """
         Remix the hymn audio using either API or Edge CDP mode.
         """
@@ -91,14 +88,14 @@ class UdioRemaker:
             return self.remake_edge(wav_path, prompt, variance=variance)
         
         try:
-            return self.remake_api(wav_path, prompt, variance=variance)
+            return self.remake_api(wav_path, prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
         except Exception as e:
             if mode == "auto":
                 logger.warning(f"API remake failed: {e}. Falling back to Edge Automation mode...")
                 return self.remake_edge(wav_path, prompt, variance=variance)
             raise
 
-    def remake_api(self, wav_path, prompt, variance=0.35):
+    def remake_api(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True, extension_hack=False):
         if not self.client:
             raise RuntimeError("Udio client not initialized for API mode.")
 
@@ -112,7 +109,7 @@ class UdioRemaker:
             public_url = self._upload_to_bridge(mp3_upload_path)
             if not public_url: raise RuntimeError("Failed to obtain public URL.")
 
-            full_prompt = f"Deep house, 122 bpm, soulful melodic house, driving 4x4 club beat. [Audio Influence: {variance}]"
+            full_prompt = f"{prompt}. [Audio Influence: {variance}]"
             self.client.extend(prompt=full_prompt, audio_conditioning_path=public_url, seed=-1)
 
             download_dir = "extend_songs"
@@ -144,7 +141,6 @@ class UdioRemaker:
         ], check=True, capture_output=True)
 
         try:
-<<<<<<< HEAD
             logger.info("Triggering Edge Automation (CDP)...")
             tag_prompt = "Deep house, 122 bpm, soulful melodic house, driving 4x4 club beat, crisp analog synthesizer chords, modern polished club mix"
             
@@ -159,59 +155,6 @@ class UdioRemaker:
                 raise RuntimeError("Edge automation failed to trigger generation.")
 
             logger.info("Generation triggered in Edge! Waiting for track completion and auto-download...")
-=======
-            # Power User Hack: If extension_hack is True, crop the audio to first 15 seconds
-            # and use Udio's 'extend' mode instead of 'remix'.
-            source_audio = wav_path
-            if extension_hack:
-                logger.info("Applying Udio Extension Hack: Cropping to 15s...")
-                cropped_path = wav_path.replace(".wav", "_crop15.wav")
-                crop_cmd = [settings.FFMPEG_BIN, "-y", "-i", wav_path, "-t", "15", cropped_path]
-                subprocess.run(crop_cmd, check=True, capture_output=True)
-                source_audio = cropped_path
-
-            # 1. Upload to Public Bridge
-            public_audio_url = self._upload_to_tmpfiles(source_audio)
-            if not public_audio_url:
-                raise RuntimeError("Could not upload audio to temporary public hosting for Udio.")
-
-            # 2. Trigger Remix or Extension via Internal API (studio/create)
-            if extension_hack:
-                logger.info("Triggering Udio EXTENSION...")
-                payload = {
-                    "prompt": f"{prompt} [Drop] [Full Electronic Instrumentation]",
-                    "lyrics": "",
-                    "lyrics_type": "instrumental",
-                    "seed": -1,
-                    "model_type": "studio32-v1.5",
-                    "config": {
-                        "mode": "manual" if manual_mode else "auto",
-                        "audio_conditioning_path": public_audio_url,
-                        "audio_conditioning_type": "upload",
-                        "extension_type": "after",
-                        "duration": 32
-                    }
-                }
-            else:
-                logger.info(f"Triggering Udio REMIX with variance {variance}...")
-                payload = {
-                    "prompt": prompt,
-                    "lyrics": "",
-                    "lyrics_type": "instrumental",
-                    "seed": -1,
-                    "variance": variance,
-                    "prompt_strength": prompt_strength,
-                    "manual_mode": manual_mode,
-                    "model_type": "studio32-v1.5",
-                    "config": {
-                        "mode": "manual" if manual_mode else "auto",
-                        "audio_conditioning_path": public_audio_url,
-                        "audio_conditioning_type": "upload",
-                        "clip_start": 0.0,
-                        "duration": 32
-                    }
-                }
->>>>>>> origin/feat/psy-mono-pipeline-1.27.0-9908176330949525010
 
             # Use the new active polling and download method
             download_triggered = self.edge_auto.wait_for_completion_and_download(timeout=300)
@@ -229,7 +172,6 @@ class UdioRemaker:
                 files = glob.glob(os.path.join(download_dir, "*.mp3"))
                 if files:
                     latest_mp3 = max(files, key=os.path.getmtime)
-                    # Use a very short window (30s) to ensure it's the one we just triggered
                     if time.time() - os.path.getmtime(latest_mp3) < 30:
                         final_path = latest_mp3
                         break
