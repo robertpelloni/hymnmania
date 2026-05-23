@@ -618,6 +618,7 @@ with tab3:
         st.markdown("---")
         st.subheader("Full AI Render")
         gen_mode = st.selectbox("AI Model", ["Replicate (Cloud)", "Transformers (Local)"])
+        use_ts_pipeline = st.checkbox("Use Psy-Mono TS Pipeline", value=True, help="Enable the full TypeScript-led orchestration (includes stem rendering).")
         render_btn = st.button("🚀 Render with Generative AI")
 
         if input_midi_path:
@@ -639,7 +640,18 @@ with tab3:
                 st.success("Playing live!")
 
             if render_btn:
-                # 1. Generate local conditioning WAV
+                if use_ts_pipeline:
+                    with st.spinner("Executing Psy-Mono TS Pipeline..."):
+                        from pipeline.psy_mono_bridge import generate_psytrance_pipeline
+                        success = generate_psytrance_pipeline(input_midi_path, os.path.join(output_dir, "psy_mono"), psy_config=psy_config)
+                        if success:
+                            st.success("Pipeline execution complete! Check output directory for stems.")
+                            # For the UI preview, we'll still show a local AI result if possible
+                            st.info("TS Pipeline finished. Individual stems available in output/psy_mono/stems.")
+                        else:
+                            st.error("TS Pipeline failed.")
+
+                # 1. Generate local conditioning WAV (legacy flow for UI preview)
                 temp_output = os.path.join(output_dir, "live_psy_output.mid")
                 config_json = json.dumps(psy_config)
                 with st.spinner("Generating algorithmic MIDI..."):
@@ -657,11 +669,16 @@ with tab3:
 
                 if gen_mode == "Replicate (Cloud)":
                     with st.spinner("Remaking via Replicate (MusicGen)..."):
-                        remake_url = remaker.remake(cond_audio, prompt)
-                        import requests
-                        resp = requests.get(remake_url)
-                        with open(final_audio, "wb") as f:
-                            f.write(resp.content)
+                        try:
+                            remake_url = remaker.remake(cond_audio, prompt)
+                            import requests
+                            resp = requests.get(remake_url)
+                            with open(final_audio, "wb") as f:
+                                f.write(resp.content)
+                            st.success("AI Generation Complete!")
+                            st.audio(final_audio)
+                        except Exception as e:
+                            st.error(f"Cloud remake failed: {e}")
                 else:
                     if st.session_state.local_remaker is None:
                         from hymn_remaker.src.local_remaker import LocalMusicRemaker
