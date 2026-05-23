@@ -2,10 +2,8 @@ import os
 import time
 import logging
 import requests
-import replicate
 
 from hymn_remaker import settings
-from hymn_remaker.src.local_video_generator import LocalVideoGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -18,13 +16,23 @@ class AIVideoGenerator:
     def __init__(self, api_token=None):
         """Initialize the AI Video Generator."""
         self.api_token = api_token or os.environ.get("REPLICATE_API_TOKEN")
-        self.local_gen = LocalVideoGenerator()
+        self.local_gen = None
         
         if self.api_token:
-            replicate.Client(api_token=self.api_token)
-            logger.info("AIVideoGenerator initialized via Replicate.")
+            try:
+                import replicate
+                replicate.Client(api_token=self.api_token)
+                logger.info("AIVideoGenerator initialized via Replicate.")
+            except ImportError:
+                logger.warning("Replicate library not found.")
         else:
-            logger.warning("REPLICATE_API_TOKEN not set. Remote Replicate video generation will be unavailable.")
+            logger.warning("REPLICATE_API_TOKEN not set.")
+
+    def _get_local_gen(self):
+        if not self.local_gen:
+            from hymn_remaker.src.local_video_generator import LocalVideoGenerator
+            self.local_gen = LocalVideoGenerator()
+        return self.local_gen
 
     def generate_video(self, audio_path, image_url, output_path, prompt=None, tempo=120.0, force_local=False, model_type="ltx-video", model_size="1.3b", quotes=None):
         """
@@ -97,19 +105,19 @@ class AIVideoGenerator:
                 return None
 
         try:
-            logger.info(f"Starting Replicate AI Video Generation for {os.path.basename(audio_path)}...")
+            logger.info(f"Starting Replicate AI Video Generation (LTX-Video) for {os.path.basename(audio_path)}...")
             
-            with open(audio_path, "rb") as audio_file:
-                output = replicate.run(
-                    "lightricks/audio-to-video:e4878a87313098f98ec56f345c225381d50c11100f77983c27e85c292f7f3e8b",
-                    input={
-                        "audio": audio_file,
-                        "image": image_url,
-                        "prompt": prompt,
-                        "num_frames": 120,
-                        "guidance_scale": 7.5
-                    }
-                )
+            # Using lucataco/ltx-video on Replicate for higher reliability
+            output = replicate.run(
+                "lucataco/ltx-video:603957f6e07662c5e533b34479e09d5930e104e54884260908865f80b2a7576f",
+                input={
+                    "prompt": prompt,
+                    "input_image": image_url,
+                    "num_frames": 121,
+                    "fps": 24,
+                    "aspect_ratio": "16:9"
+                }
+            )
 
             if not output:
                 raise RuntimeError("AI video generation returned no output.")

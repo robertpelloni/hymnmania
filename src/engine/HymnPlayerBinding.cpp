@@ -29,5 +29,7 @@ PYBIND11_MODULE(hymn_player_ext, m) {
         .def("pause", &HymnPlayer::pause, "Pause playback")
         .def("stop", &HymnPlayer::stop, "Stop playback")
         .def("is_playing", &HymnPlayer::isPlaying, "Check if the player is currently playing")
+        .def("start_realtime", &HymnPlayer::start_realtime, "Start real-time audio output")
+        .def("stop_realtime", &HymnPlayer::stop_realtime, "Stop real-time audio output")
         .def("render_audio", &renderAudioWrapper, "Render audio into a numpy array of floats (stereo interleaved)", py::arg("numFrames"));
 }

@@ -1,9 +1,6 @@
 import os
-import torch
 import logging
 from pathlib import Path
-from diffusers import LTXImageToVideoPipeline, WanImageToVideoPipeline
-from diffusers.utils import export_to_video
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +12,12 @@ class LocalVideoGenerator:
     def __init__(self, model_type="ltx-video", model_size="1.3b"):
         self.model_type = model_type.lower()
         self.model_size = model_size.lower()
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu"
+        try:
+            import torch
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        except ImportError:
+            pass
         self.pipeline = None
         
         if self.device == "cpu":
@@ -25,6 +27,9 @@ class LocalVideoGenerator:
         if self.pipeline:
             return
 
+        import torch
+        from diffusers import LTXImageToVideoPipeline, WanImageToVideoPipeline
+        
         try:
             if self.model_type == "ltx-video":
                 model_id = "Lightricks/LTX-Video"
@@ -106,6 +111,7 @@ class LocalVideoGenerator:
                         guidance_scale=6.0
                     ).frames[0]
 
+            from diffusers.utils import export_to_video
             temp_video = "temp_generated_loop.mp4"
             export_to_video(video_frames, temp_video, fps=24)
             

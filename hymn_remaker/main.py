@@ -487,7 +487,7 @@ def process_single_midi(
             update_status(f"Extracted dynamic tempo: {target_bpm:.1f} BPM", 25)
 
         if not skip_render or not os.path.exists(base_audio_path):
-            renderer.render(target_midi_path, base_audio_path, transient_mode=(transient or transient_only or sonic_vacuum))
+            renderer.render(target_midi_path, base_audio_path, transient=transient, transient_only=(transient_only or sonic_vacuum))
         else:
             update_status(f"Skipping render for {filename}, {base_audio_path} exists.", 30)
 

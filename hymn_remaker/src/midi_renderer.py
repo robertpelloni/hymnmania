@@ -2,47 +2,78 @@ import os
 import sys
 import logging
 import subprocess
-import soundfile as sf
-import numpy as np
-import mido
 import math
 import time
+import numpy as np
 
 from hymn_remaker import settings
 
 # Ensure the root directory is in sys.path so we can import hymn_remaker
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-try:
-    import hymn_player_ext
-    NATIVE_ENGINE_AVAILABLE = True
-except ImportError:
-    NATIVE_ENGINE_AVAILABLE = False
-    logging.warning("Native HymnPlayer engine not found. Falling back to FluidSynth CLI. (No module named 'hymn_player_ext')")
+def _check_native_engine():
+    try:
+        import hymn_player_ext
+        return True
+    except ImportError:
+        return False
+
+def _find_fluidsynth_bin():
+    """Find the fluidsynth executable. Checks settings.FLUIDSYNTH_BIN first, then PATH."""
+    local_bin = settings.FLUIDSYNTH_BIN
+    if os.path.isfile(local_bin):
+        return local_bin
+
+    import shutil
+    system_bin = shutil.which("fluidsynth")
+    if system_bin:
+        return system_bin
+
+    candidates = [
+        "/usr/bin/fluidsynth",
+        "/usr/local/bin/fluidsynth",
+        "/opt/homebrew/bin/fluidsynth",
+    ]
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+    return None
 
 logger = logging.getLogger(__name__)
 
-
 class MidiRenderer:
     def __init__(self, soundfont_path=None):
-        self.soundfont_path = soundfont_path or self._find_default_soundfont()
-        self.fluidsynth_bin = settings.FLUIDSYNTH_BIN
+        if soundfont_path:
+            self.soundfont_path = soundfont_path
+        else:
+            env_path = os.environ.get('SOUNDFONT_PATH')
+            if env_path and os.path.exists(env_path):
+                self.soundfont_path = env_path
+            else:
+                for path in settings.DEFAULT_SOUNDFONT_PATHS:
+                    if os.path.exists(path):
+                        self.soundfont_path = path
+                        break
+                else:
+                    raise FileNotFoundError("No default soundfont found.")
 
-    def _find_default_soundfont(self):
-        """Find the first available soundfont from settings."""
-        for path in settings.DEFAULT_SOUNDFONT_PATHS:
-            if os.path.exists(path):
-                logger.info(f"Using SoundFont: {path}")
-                return path
-        raise FileNotFoundError("No valid SoundFont file found in default paths.")
+        logger.info(f"Using SoundFont: {self.soundfont_path}")
+        self.fluidsynth_bin = _find_fluidsynth_bin()
+        if self.fluidsynth_bin:
+            logger.info(f"FluidSynth CLI: {self.fluidsynth_bin}")
+        else:
+            logger.warning("FluidSynth CLI binary not found.")
 
     def _get_midi_duration(self, midi_path):
-        """Calculate the duration of a MIDI file in seconds."""
-        mid = mido.MidiFile(midi_path)
-        return mid.length
+        import mido
+        try:
+            mid = mido.MidiFile(midi_path)
+            return mid.length
+        except Exception:
+            return 30.0
 
     def get_midi_bpm(self, midi_path):
-        """Extract the average BPM from a MIDI file."""
+        import mido
         try:
             mid = mido.MidiFile(midi_path)
             # Default if no tempo found
@@ -50,19 +81,17 @@ class MidiRenderer:
             for track in mid.tracks:
                 for msg in track:
                     if msg.type == 'set_tempo':
-                        tempo = msg.tempo
-                        break
-            return mido.tempo2bpm(tempo)
+                        return mido.tempo2bpm(msg.tempo)
+            return 120.0
         except Exception:
             return 120.0
 
     def _render_fluidsynth_cli(self, midi_path, output_path, transient_mode=False):
         """Render MIDI to audio using the FluidSynth CLI directly."""
         if not self.fluidsynth_bin:
-            raise FileNotFoundError(
-                "FluidSynth binary not found. Install it or place fluidsynth.exe in hymn_remaker/bin/"
-            )
+            raise FileNotFoundError("FluidSynth binary not found.")
 
+        import mido
         render_midi = midi_path
         
         # In transient mode, we create a temporary "clicky" version of the MIDI
@@ -91,18 +120,13 @@ class MidiRenderer:
             except Exception as e:
                 logger.warning(f"Failed to create transient MIDI: {e}. Using original.")
 
-        # FluidSynth v2.x requires options BEFORE soundfont/midi arguments.
-        abs_soundfont = os.path.abspath(self.soundfont_path)
-        abs_midi = os.path.abspath(render_midi)
-        abs_output = os.path.abspath(output_path)
-
         cmd = [
             self.fluidsynth_bin,
-            '-F', abs_output,
+            '-F', os.path.abspath(output_path),
             '-r', str(settings.SAMPLE_RATE),
             '-ni',
-            abs_soundfont,
-            abs_midi,
+            os.path.abspath(self.soundfont_path),
+            os.path.abspath(render_midi),
         ]
 
         logger.info(f"Running FluidSynth CLI: {' '.join(cmd)}")
@@ -116,18 +140,32 @@ class MidiRenderer:
             logger.error(f"FluidSynth stderr: {result.stderr}")
             raise RuntimeError(f"FluidSynth CLI failed: {result.stderr[:500]}")
 
-    def render(self, midi_path, output_path, transient_mode=False):
+    def render(self, midi_path, output_path, transient=False, transient_only=False):
         """
         Render a MIDI file to audio.
+        transient: Use Woodblock pulses for AI conditioning.
+        transient_only: Route to SonicVacuum for dry piano.
         """
         if not os.path.exists(midi_path):
             raise FileNotFoundError(f"MIDI file not found: {midi_path}")
 
-        logger.info(f"Rendering {midi_path} to {output_path} (transient={transient_mode})...")
+        if transient_only:
+            logger.info("Transient-only rendering requested (SonicVacuum).")
+            try:
+                from pipeline.processing.sonic_vacuum import SonicVacuumProcessor
+                vacuum = SonicVacuumProcessor(midi_path)
+                vacuum.render_dry_piano(output_path)
+                return
+            except Exception as e:
+                logger.error(f"SonicVacuum failed: {e}. Falling back to standard render.")
+
+        logger.info(f"Rendering {midi_path} to {output_path} (transient={transient})...")
         
         try:
-            if NATIVE_ENGINE_AVAILABLE:
-                if transient_mode:
+            if _check_native_engine():
+                import hymn_player_ext
+                import soundfile as sf
+                if transient:
                     self._render_fluidsynth_cli(midi_path, output_path, transient_mode=True)
                 else:
                     logger.info("Using Native C++ Engine for rendering.")
@@ -164,15 +202,14 @@ class MidiRenderer:
                     logger.info("Native rendering complete.")
             else:
                 logger.info("Using FluidSynth CLI fallback for rendering.")
-                self._render_fluidsynth_cli(midi_path, output_path, transient_mode=transient_mode)
+                self._render_fluidsynth_cli(midi_path, output_path, transient_mode=transient)
 
         except Exception as e:
             logger.error(f"Failed to render MIDI: {e}")
-            raise
-
+            # Final fallback
+            self._render_fluidsynth_cli(midi_path, output_path, transient_mode=transient)
 
 if __name__ == "__main__":
-    import sys
     if len(sys.argv) > 2:
         renderer = MidiRenderer()
         renderer.render(sys.argv[1], sys.argv[2])
