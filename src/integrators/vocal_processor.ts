@@ -1,7 +1,6 @@
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import axios from 'axios';
 
 export interface VocalProcessorConfig {
     mode: 'local' | 'api';
@@ -20,8 +19,14 @@ export class VocalProcessor {
     async process(inputPath: string, outputDir: string): Promise<string> {
         console.log(`Starting vocal processing for ${inputPath}...`);
 
+        // 0. Download if it's a URL
+        let localInput = inputPath;
+        if (inputPath.startsWith('http')) {
+            localInput = await this.downloadAudio(inputPath, outputDir);
+        }
+
         // 1. Demixing
-        const vocalStem = await this.isolateVocals(inputPath, outputDir);
+        const vocalStem = await this.isolateVocals(localInput, outputDir);
 
         // 2. Analysis (BPM/Key)
         const analysis = await this.analyzeAudio(vocalStem);
@@ -31,41 +36,78 @@ export class VocalProcessor {
         const stretchedPath = this.timeStretch(vocalStem, analysis.bpm, this.config.targetBpm);
 
         // 4. Pitch Shift (Placeholder for key alignment)
-        // In a real scenario, we'd calculate semitone diff between analysis.key and config.targetKey
-        const finalPath = stretchedPath; // Assume alignment for now or implement rubberband call
+        const finalPath = stretchedPath;
 
         return finalPath;
+    }
+
+    private async downloadAudio(url: string, outputDir: string): Promise<string> {
+        console.log(`Downloading audio from ${url}...`);
+        const outputPath = path.join(outputDir, 'downloaded_vocal.wav');
+
+        // Use spawnSync for safer command execution with arguments
+        const result = spawnSync('python3', [
+            '-m', 'yt_dlp',
+            '-x', '--audio-format', 'wav',
+            '--output', outputPath.replace('.wav', '.%(ext)s'),
+            url
+        ]);
+
+        if (result.status !== 0) {
+            throw new Error(`yt-dlp failed: ${result.stderr.toString()}`);
+        }
+
+        return outputPath;
     }
 
     private async isolateVocals(inputPath: string, outputDir: string): Promise<string> {
         if (this.config.mode === 'local') {
             console.log("Running Demucs locally...");
-            const cmd = `python3 -m demucs.separate --two-stems=vocals -o ${outputDir} "${inputPath}"`;
-            execSync(cmd);
+
+            const result = spawnSync('python3', [
+                '-m', 'demucs.separate',
+                '--two-stems=vocals',
+                '-o', outputDir,
+                inputPath
+            ]);
+
+            if (result.status !== 0) {
+                throw new Error(`Demucs failed: ${result.stderr.toString()}`);
+            }
 
             const nameNoExt = path.basename(inputPath, path.extname(inputPath));
-            // Demucs output structure: outputDir/htdemucs/filename/vocals.wav
             return path.join(outputDir, 'htdemucs', nameNoExt, 'vocals.wav');
         } else {
             console.log("LALAL.AI API integration (stub)...");
-            // Implement REST call to LALAL.AI here
             throw new Error("LALAL.AI API mode not fully implemented yet.");
         }
     }
 
     private async analyzeAudio(filePath: string): Promise<{ bpm: number, key: string }> {
         console.log("Analyzing audio via Python helper...");
-        // Use a simple python snippet to get BPM using librosa
+
         const pythonScript = `
 import librosa
 import sys
-y, sr = librosa.load("${filePath}")
+import os
+
+filePath = sys.argv[1]
+if not os.path.exists(filePath):
+    sys.exit(1)
+
+y, sr = librosa.load(filePath)
 tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-# Key detection is more complex, returning a stub
+# Key detection stub
 print(f"{float(tempo)},Cmin")
 `;
-        const result = execSync(`python3 -c '${pythonScript}'`).toString().trim();
-        const [bpm, key] = result.split(',');
+        const result = spawnSync('python3', ['-c', pythonScript, filePath]);
+
+        if (result.status !== 0) {
+            throw new Error(`Analysis failed: ${result.stderr.toString()}`);
+        }
+
+        const output = result.stdout.toString().trim();
+        const [bpm, key] = output.split(',');
         return { bpm: parseFloat(bpm), key };
     }
 
@@ -74,13 +116,21 @@ print(f"{float(tempo)},Cmin")
         const outputPath = inputPath.replace(".wav", "_stretched.wav");
         console.log(`Time-stretching: ${originalBpm} -> ${targetBpm} (Ratio: ${ratio.toFixed(3)})`);
 
-        // FFmpeg atempo filter (chained if ratio > 2.0 or < 0.5)
         let filter = `atempo=${ratio}`;
         if (ratio > 2.0) filter = `atempo=2.0,atempo=${ratio/2.0}`;
         if (ratio < 0.5) filter = `atempo=0.5,atempo=${ratio/0.5}`;
 
-        const cmd = `ffmpeg -y -i "${inputPath}" -filter:a "${filter}" "${outputPath}"`;
-        execSync(cmd);
+        const result = spawnSync('ffmpeg', [
+            '-y',
+            '-i', inputPath,
+            '-filter:a', filter,
+            outputPath
+        ]);
+
+        if (result.status !== 0) {
+            throw new Error(`FFmpeg failed: ${result.stderr.toString()}`);
+        }
+
         return outputPath;
     }
 }

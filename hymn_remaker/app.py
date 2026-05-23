@@ -4,6 +4,7 @@ import uuid
 import streamlit as st
 import os
 import sys
+import subprocess
 import concurrent.futures
 from dotenv import load_dotenv
 
@@ -36,6 +37,7 @@ from hymn_remaker.src.midi_renderer import MidiRenderer
 from hymn_remaker.src.remaker import MusicRemaker
 from hymn_remaker.src.suno_remaker import SunoRemaker
 from hymn_remaker.src.udio_remaker import UdioRemaker
+from hymn_remaker.src.udio_oauth_remaker import UdioOAuthRemaker
 from hymn_remaker.src.gemini_generator import GeminiContentGenerator
 from hymn_remaker.src.video_uploader import VideoProducer
 from hymn_remaker.src.tts_generator import TTSGenerator
@@ -208,7 +210,7 @@ if st.sidebar.button("🗑️ Clear Workspace", help="Delete all files in the in
     except Exception as e:
         st.sidebar.error(f"Failed to clear workspace: {e}")
 
-tab1, tab2 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)"])
+tab1, tab2, tab3 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)", "🌀 Live Psy-Mono Studio"])
 
 with tab1:
     uploaded_files = st.file_uploader("Upload MIDI, MusicXML, or Sheet Music images (OMR)", type=["mid", "midi", "mxl", "xml", "png", "jpg", "pdf"], accept_multiple_files=True, help="Select one or more public domain hymn MIDI, MusicXML, or Sheet Music image files to process.")
@@ -526,3 +528,191 @@ with tab2:
                     st.balloons()
         except Exception as e:
             st.warning("Could not connect to Redis to check job status.")
+
+with tab3:
+    st.header("🌀 Live Psy-Mono Studio")
+    st.write("Tweak algorithmic psytrance parameters in real-time.")
+
+    from streamlit_mic_recorder import mic_recorder
+    from hymn_remaker.src.audio_to_midi import transcribe_audio_to_midi
+
+    if "psy_player" not in st.session_state:
+        import hymn_player_ext
+        sf_path = settings.DEFAULT_SOUNDFONT_PATHS[0]
+        st.session_state.psy_player = hymn_player_ext.HymnPlayer(sf_path)
+
+    if "local_remaker" not in st.session_state:
+        st.session_state.local_remaker = None
+
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+        selected_sf = st.selectbox("Studio SoundFont", settings.DEFAULT_SOUNDFONT_PATHS, help="Select the soundfont for real-time preview and export.")
+        if "current_sf" not in st.session_state or st.session_state.current_sf != selected_sf:
+            import hymn_player_ext
+            st.session_state.psy_player = hymn_player_ext.HymnPlayer(selected_sf)
+            st.session_state.current_sf = selected_sf
+
+        source_mode = st.radio("Input Source", ["Hymn MIDI", "Mic Input"])
+
+        input_midi_path = None
+
+        if source_mode == "Hymn MIDI":
+            live_midi = st.file_uploader("Upload Hymn MIDI", type=["mid", "midi"], key="live_psy_uploader")
+            if live_midi:
+                temp_input = os.path.join(settings.INPUT_DIR, "live_input.mid")
+                with open(temp_input, "wb") as f:
+                    f.write(live_midi.getbuffer())
+                input_midi_path = temp_input
+        else:
+            st.write("Record your melody (monophonic):")
+            audio_rec = mic_recorder(start_prompt="⏺️ Record", stop_prompt="⏹️ Stop", key="mic")
+            if audio_rec:
+                temp_audio = os.path.join(settings.INPUT_DIR, "live_mic.wav")
+                with open(temp_audio, "wb") as f:
+                    f.write(audio_rec['bytes'])
+
+                temp_input = os.path.join(settings.INPUT_DIR, "live_input_from_mic.mid")
+                with st.spinner("Transcribing audio..."):
+                    try:
+                        transcribe_audio_to_midi(temp_audio, temp_input)
+                        st.success("Transcription complete!")
+                        input_midi_path = temp_input
+                    except Exception as e:
+                        st.error(f"Transcription failed: {e}")
+
+        st.subheader("Sequencer Config")
+        bpm = st.slider("Target BPM", 120, 160, 145)
+        density = st.slider("Euclidean Density", 1, 16, 5)
+        gallop = st.selectbox("Gallop Variant", ["classic", "triplet", "rolling"])
+        octave_freq = st.slider("Octave Jump Freq", 0, 4, 2)
+
+        st.subheader("Mixer")
+        k_vel = st.slider("Kick Volume", 0.0, 1.0, 0.9)
+        b_vel = st.slider("Bass Volume", 0.0, 1.0, 0.7)
+        l_vel = st.slider("Lead Volume", 0.0, 1.0, 0.8)
+
+        psy_config = {
+            "targetBpm": bpm,
+            "euclideanDensity": density,
+            "gallopVariant": gallop,
+            "octaveJumpBarFrequency": octave_freq,
+            "kickVelocity": k_vel,
+            "bassVelocity": b_vel,
+            "leadVelocity": l_vel
+        }
+
+    with col2:
+        st.subheader("Live Controls")
+        c1, c2, c3, c4 = st.columns(4)
+
+        play_btn = c1.button("▶️ Play / Refresh")
+        stop_btn = c2.button("⏹️ Stop")
+        export_btn = c3.button("💾 Export WAV")
+
+        if st.session_state.get("studio_is_playing"):
+            st.info("🔊 Real-time audio output is active.")
+        else:
+            st.warning("🔇 Audio output is idle.")
+
+        st.markdown("---")
+        st.subheader("Full AI Render")
+        gen_mode = st.selectbox("AI Model", ["Replicate (Cloud)", "Transformers (Local)"])
+        render_btn = st.button("🚀 Render with Generative AI")
+
+        if input_midi_path:
+            if play_btn:
+                # 1. Run TS Sequencer
+                temp_output = os.path.join(output_dir, "live_psy_output.mid")
+                config_json = json.dumps(psy_config)
+
+                with st.spinner("Generating Psytrance..."):
+                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", input_midi_path, temp_output, config_json]
+                    subprocess.run(cmd, check=True, capture_output=True)
+
+                # 2. Load and Play
+                st.session_state.psy_player.stop_realtime()
+                st.session_state.psy_player.load(temp_output)
+                st.session_state.psy_player.start_realtime()
+                st.session_state.psy_player.play()
+                st.session_state["studio_is_playing"] = True
+                st.success("Playing live!")
+
+            if render_btn:
+                # 1. Generate local conditioning WAV
+                temp_output = os.path.join(output_dir, "live_psy_output.mid")
+                config_json = json.dumps(psy_config)
+                with st.spinner("Generating algorithmic MIDI..."):
+                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", input_midi_path, temp_output, config_json]
+                    subprocess.run(cmd, check=True, capture_output=True)
+
+                # 2. Render MIDI to dry audio
+                cond_audio = os.path.join(output_dir, "live_psy_cond.wav")
+                with st.spinner("Rendering dry conditioning audio..."):
+                    renderer.render(temp_output, cond_audio, transient_only=True)
+
+                # 3. AI Generation
+                final_audio = os.path.join(output_dir, "live_psy_final.wav")
+                prompt = f"Modern Full-On Psytrance, {bpm} BPM, driving, psychedelic sound design, festival grade master"
+
+                if gen_mode == "Replicate (Cloud)":
+                    with st.spinner("Remaking via Replicate (MusicGen)..."):
+                        remake_url = remaker.remake(cond_audio, prompt)
+                        import requests
+                        resp = requests.get(remake_url)
+                        with open(final_audio, "wb") as f:
+                            f.write(resp.content)
+                else:
+                    if st.session_state.local_remaker is None:
+                        from hymn_remaker.src.local_remaker import LocalMusicRemaker
+                        with st.spinner("Loading local model (first time)..."):
+                            st.session_state.local_remaker = LocalMusicRemaker()
+
+                    with st.spinner("Remaking via Local Transformers..."):
+                        st.session_state.local_remaker.generate(cond_audio, prompt, duration=30, output_path=final_audio)
+
+                st.success("AI Generation Complete!")
+                st.audio(final_audio)
+                with open(final_audio, "rb") as f:
+                    st.download_button("Download Final Track 🎵", f, file_name="psy_hymn_remix.wav", mime="audio/wav")
+
+            if export_btn:
+                # 1. Generate algorithmic MIDI (same logic as Play)
+                temp_output = os.path.join(output_dir, "live_psy_output.mid")
+                config_json = json.dumps(psy_config)
+                with st.spinner("Generating MIDI for export..."):
+                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", input_midi_path, temp_output, config_json]
+                    subprocess.run(cmd, check=True, capture_output=True)
+
+                # 2. Render to full quality WAV via offline engine
+                export_wav = os.path.join(output_dir, "live_psy_export.wav")
+                with st.spinner("Exporting high-fidelity WAV..."):
+                    try:
+                        import soundfile as sf
+                        import numpy as np
+                        # Use a local temporary player to not disrupt real-time session
+                        import hymn_player_ext
+                        exporter = hymn_player_ext.HymnPlayer(selected_sf)
+                        exporter.load(temp_output)
+
+                        # Get duration
+                        import mido
+                        mid = mido.MidiFile(temp_output)
+                        duration_frames = int((mid.length + 2) * settings.SAMPLE_RATE)
+
+                        audio = exporter.render_audio(duration_frames)
+                        audio = audio.reshape(-1, 2)
+                        sf.write(export_wav, audio, settings.SAMPLE_RATE)
+                        st.success("Export complete!")
+                        with open(export_wav, "rb") as f:
+                            st.download_button("Download Exported WAV 🎵", f, file_name="psy_studio_export.wav", mime="audio/wav")
+                    except Exception as e:
+                        st.error(f"Export failed: {e}")
+
+            if stop_btn:
+                st.session_state.psy_player.stop()
+                st.session_state.psy_player.stop_realtime()
+                st.session_state["studio_is_playing"] = False
+                st.info("Playback stopped.")
+        else:
+            st.info("Upload a MIDI file to start the live studio.")

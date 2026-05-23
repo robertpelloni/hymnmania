@@ -17,6 +17,10 @@ public:
     bool isPlaying() const;
     void renderAudio(float* buffer, int numFrames);
 
+    // Real-time methods
+    void start_realtime();
+    void stop_realtime();
+
 private:
     bool playing;
     std::string currentFile;
@@ -25,6 +29,7 @@ private:
     fluid_settings_t* settings;
     fluid_synth_t* synth;
     fluid_player_t* player;
+    fluid_audio_driver_t* adriver;
 
     int soundfontId;
 };

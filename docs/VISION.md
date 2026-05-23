@@ -11,3 +11,4 @@ To build the "holy grail" of electronic music automation: an expert system that 
 2. **Algorithmic Sequencing:** Using mathematical rules (Euclidean rhythms, Markov chains) to generate 145 BPM Full-On Psytrance patterns.
 3. **Neural Texture Mapping:** Using AI models (Suno, Udio, MusicGen) not as creators of notes, but as "neural synthesizers" that apply high-end sound design to procedurally generated stems.
 4. **Vocal Integration:** Programmatic isolation and grid-locking of hip-hop acapellas into the psytrance framework.
+5. **Real-time Interaction:** A live "Psy-Mono Studio" for parameter tweaking and instant algorithmic feedback via a native C++ audio engine.

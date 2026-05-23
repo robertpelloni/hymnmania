@@ -634,36 +634,35 @@ def process_single_midi(
         if hiphop_vocal_path:
             update_status(f"Step 3.5/4: Isolating and Grid-locking Hip-Hop Vocals...", 82)
             try:
-                # Resolve local path if URL
-                input_vocal = hiphop_vocal_path
-                if hiphop_vocal_path.startswith("http"):
-                    # Use yt-dlp to download audio (stubbed logic for now)
-                    pass
-
-                # Call TypeScript VocalProcessor
+                # Call TypeScript VocalProcessor via dedicated CLI
                 vocal_out_dir = os.path.join(output_dir, f"{name_no_ext}_hiphop")
                 os.makedirs(vocal_out_dir, exist_ok=True)
 
-                # Setup TS call for vocal isolation and stretching
-                ts_vocal_script = f"""
-import {{ VocalProcessor }} from './src/integrators/vocal_processor.ts';
-async function run() {{
-    const vp = new VocalProcessor({{ mode: 'local', targetBpm: {target_bpm} }});
-    const result = await vp.process("{input_vocal}", "{vocal_out_dir}");
-    console.log(result);
-}}
-run().catch(console.error);
-"""
-                with open("temp_vocal_task.ts", "w") as f:
-                    f.write(ts_vocal_script)
+                cmd = [
+                    "npx", "ts-node", "--transpile-only",
+                    "src/vocal_task_cli.ts",
+                    hiphop_vocal_path,
+                    vocal_out_dir,
+                    str(target_bpm)
+                ]
 
-                cmd = ["npx", "ts-node", "--transpile-only", "temp_vocal_task.ts"]
+                logger.info(f"Executing vocal task: {' '.join(cmd)}")
                 proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                vocal_track_path = proc.stdout.strip().split('\n')[-1]
-                logger.info(f"Isolated hip-hop vocals ready at: {vocal_track_path}")
-                os.remove("temp_vocal_task.ts")
+
+                # Parse the result path from stdout
+                output_lines = proc.stdout.strip().split('\n')
+                for line in output_lines:
+                    if line.startswith("RESULT_PATH:"):
+                        vocal_track_path = line.replace("RESULT_PATH:", "").strip()
+
+                if vocal_track_path:
+                    logger.info(f"Isolated hip-hop vocals ready at: {vocal_track_path}")
+                else:
+                    logger.error("Vocal processing finished but RESULT_PATH not found in output.")
             except Exception as e:
                 logger.error(f"Hip-hop vocal integration failed: {e}")
+                if hasattr(e, 'stderr'):
+                    logger.error(f"Error detail: {e.stderr}")
 
         if not vocal_track_path and generate_vocals and tts_generator and lyrics:
             vocal_track_path = os.path.join(output_dir, f"{name_no_ext}_vocals.wav")
