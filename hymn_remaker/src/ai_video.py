@@ -4,6 +4,7 @@ import logging
 import requests
 
 from hymn_remaker import settings
+from hymn_remaker.src.local_video_generator import LocalVideoGenerator
 
 logger = logging.getLogger(__name__)
 

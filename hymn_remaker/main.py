@@ -18,6 +18,7 @@ from hymn_remaker.src.udio_remaker import UdioRemaker
 from hymn_remaker.src.udio_oauth_remaker import UdioOAuthRemaker
 from hymn_remaker.src.gemini_generator import GeminiContentGenerator
 from hymn_remaker.src.ai_video import AIVideoGenerator
+from hymn_remaker.src.local_video_generator import LocalVideoGenerator
 from hymn_remaker.src.video_uploader import VideoProducer
 from hymn_remaker.src.tts_generator import TTSGenerator
 from hymn_remaker.src.musicxml_parser import MusicXMLParser
