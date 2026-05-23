@@ -1,25 +1,14 @@
 import logging
 import os
-from music21 import converter, tempo, note
-
-logger = logging.getLogger(__name__)
-
 class MusicXMLParser:
     def __init__(self):
         pass
 
     def process(self, input_path, output_midi_path):
         """
-        Parses a MusicXML file (.xml or .mxl), extracts metadata, and converts it to a standard MIDI file
-        for the pipeline to render.
-
-        Args:
-            input_path (str): Path to the input .mxl or .xml file.
-            output_midi_path (str): Path where the converted .mid file should be saved.
-
-        Returns:
-            dict: Extracted metadata, such as title, composer, and a string of lyrics.
+        Parses a MusicXML file (.xml or .mxl), extracts metadata, and converts it to a standard MIDI file.
         """
+        from music21 import converter, tempo, note
         if not os.path.exists(input_path):
             raise FileNotFoundError(f"Input file not found: {input_path}")
 

@@ -113,51 +113,71 @@ class UdioBrowserAutomation:
                 ['mousedown', 'mouseup', 'click'].forEach(v => {
                     el.dispatchEvent(new MouseEvent(v, { bubbles: true, cancelable: true, view: window }));
                 });
-                el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+                if (el.tagName === 'LABEL' || el.getAttribute('role') === 'checkbox') {
+                    el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+                }
                 try { el.click(); } catch(e) {}
             };
+            const all = Array.from(document.querySelectorAll('*'));
             const isStr = (v) => typeof v === 'string';
-            const all = Array.from(document.getElementsByTagName('*'));
             
-            // 1. Checkbox
-            let cb = all.find(el => {
-                const t = (el.textContent || '').toLowerCase();
-                const a = (el.getAttribute('aria-label') || '').toLowerCase();
-                const isMatch = (t.includes('understand') || a.includes('understand')) && t.length < 100;
-                const isChecked = el.getAttribute('aria-checked') === 'true' || el.checked;
-                // Accept DIV/BUTTON/INPUT/LABEL
-                return isMatch && !isChecked;
-            });
-            if (cb) { robustClick(cb); return "clicked_understand"; }
+            let actions = [];
+            
+            // 1. Upload Confirmation Specifics
+            const confirmText = all.find(el => (el.textContent || '').toLowerCase().includes('understand') && el.textContent.length < 100);
+            if (confirmText) {
+                const cb = all.find(el => {
+                    const aria = (el.getAttribute('aria-label') || '').toLowerCase();
+                    return aria.includes('understand') && (el.getAttribute('role') === 'checkbox' || el.tagName === 'BUTTON');
+                });
+                if (cb && cb.getAttribute('aria-checked') !== 'true') {
+                    robustClick(cb);
+                    actions.push("checked_understand_box");
+                }
+                
+                const btn = all.find(el => {
+                    const t = (el.textContent || '').toLowerCase().trim();
+                    return (t.includes('confirm') || t === 'i understand') && !el.className.includes('opacity-50') && el.tagName === 'BUTTON';
+                });
+                if (btn) {
+                    robustClick(btn);
+                    actions.push("clicked_confirm_button");
+                }
+            }
 
-            // 2. Confirm Button
-            let conf = all.find(el => {
-                const t = (el.textContent || '').toLowerCase();
-                const cls = isStr(el.className) ? el.className : (el.className?.baseVal || '');
-                // Relax offsetParent for Portals
-                return (t.includes('understand and confirm') || t === 'confirm') && !cls.includes('opacity-50');
-            });
-            if (conf) { robustClick(conf); return "clicked_confirm"; }
+            // 2. Selection Mode: if "Selected" text is visible
+            const selectedText = all.find(el => (el.textContent || '').includes('Selected') && /\\d+/.test(el.textContent));
+            if (selectedText) {
+                const cancel = all.find(el => (el.textContent || '').toLowerCase() === 'cancel' || (el.textContent || '').toLowerCase() === 'deselect');
+                if (cancel) {
+                    robustClick(cancel);
+                    actions.push("cancelled_selection_mode");
+                }
+            }
 
-            // 3. Remix Card
+            // 3. Remix mode selection card
             let rem = all.find(el => {
                 const t = (el.textContent || '').trim();
                 const cls = isStr(el.className) ? el.className : (el.className?.baseVal || '');
-                return t === 'Remix' && (cls.includes('border') || cls.includes('rounded'));
+                return t === 'Remix' && cls.includes('border') && el.tagName === 'BUTTON';
             });
-            if (rem) { robustClick(rem); return "selected_remix_mode"; }
+            if (rem) {
+                robustClick(rem);
+                actions.push("selected_remix_card");
+            }
 
-            return null;
+            return actions.length > 0 ? actions.join("+") : null;
         })()
         """
-        logger.info("Clearing Udio modals...")
-        for i in range(15):
+        logger.info("Clearing Udio modals and selection mode...")
+        for i in range(12):
             action = self.execute_js(ws_url, clear_js, timeout=15)
             if action:
-                logger.info(f"  Modal Action (attempt {i+1}): {action}")
+                logger.info(f"  Action (attempt {i+1}): {action}")
                 time.sleep(2.5)
-                if action == "selected_remix_mode": break
-            time.sleep(1)
+                if "selected_remix_card" in action: break
+            else:
+                time.sleep(1)
         return True
 
     def trigger_generation(self, prompt, audio_path=None, variance=0.85):
@@ -184,7 +204,6 @@ class UdioBrowserAutomation:
         inj_js = """
         (function() {
             let els = Array.from(document.querySelectorAll('textarea, input[type="text"]'));
-            // Broad search for any prompt-like input
             let inp = els.find(el => {
                 let p = (el.placeholder || '').toLowerCase();
                 let v = (el.value || '').toLowerCase();
@@ -192,7 +211,7 @@ class UdioBrowserAutomation:
                 return isVisible && (p.includes('describe') || p.includes('prompt') || p.includes('imagine') || p.includes('track') || p === '');
             });
             
-            if (!inp && els.length > 0) inp = els[0]; // Desperation fallback
+            if (!inp && els.length > 0) inp = els[0];
             if (!inp) return "no_input";
             
             const setter = Object.getOwnPropertyDescriptor(inp.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype, 'value').set;
@@ -204,7 +223,6 @@ class UdioBrowserAutomation:
             let btn = buttons.find(b => {
                 let t = (b.textContent || '').toLowerCase().trim();
                 let isVisible = b.offsetParent !== null;
-                // Don't check className for opacity-50 as Tailwind utilities always include it
                 return isVisible && (t === 'create' || t === 'generate' || t === 'remix') && !b.disabled;
             });
             
@@ -228,49 +246,80 @@ class UdioBrowserAutomation:
         raise RuntimeError("Failed to trigger generation")
 
     def wait_for_completion_and_download(self, timeout=300):
+        """Poll the browser for the latest track's status and trigger download when ready."""
         tab = self._get_active_tab()
         if not tab: return False
         ws_url = tab.get('webSocketDebuggerUrl')
+        
         poll_js = """
         (function() {
             const all = Array.from(document.querySelectorAll('*'));
             const isStr = (v) => typeof v === 'string';
+            
             const tracks = all.filter(el => {
-                const tid = el.getAttribute('data-testid') || '';
-                const cls = isStr(el.className) ? el.className : (el.className?.baseVal || '');
-                const txt = (el.textContent || '').toLowerCase();
-                return tid.includes('track-row') || cls.includes('track-row') || txt.includes('0:32') || txt.includes('creating');
+                const txt = el.textContent || '';
+                const hasDuration = /\\d+:\\d+/.test(txt);
+                const hasPlay = !!el.querySelector('button[aria-label*="Play"]');
+                const isCreating = txt.toLowerCase().includes('creating') || txt.toLowerCase().includes('generating');
+                
+                return (hasDuration || isCreating) && (hasPlay || isCreating) && 
+                       el.offsetHeight > 50 && el.offsetHeight < 120 && 
+                       !el.querySelector('.absolute.left-0');
             });
+
             if (tracks.length === 0) {
-                let d = all.find(b => (b.getAttribute('aria-label') || '').toLowerCase().includes('download') && b.offsetParent !== null);
-                return d ? "found_standalone" : "none";
+                return "DIAG: no_tracks_detected";
             }
-            const l = tracks[0];
-            const t = l.textContent.toLowerCase();
-            if (t.includes('error') || t.includes('failed')) return "error";
-            if (!(t.includes('ready') || !!l.querySelector('button[aria-label*="Download"]'))) return "generating";
-            let b = l.querySelector('button[aria-label*="Download"]');
+            
+            tracks.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+            const latest = tracks[0];
+            const text = latest.textContent.toLowerCase();
+            
+            if (text.includes('error') || text.includes('failed')) return "error_row";
+            
+            const isReady = (text.includes(':') && !text.includes('creating') && !text.includes('generating')) || 
+                           !!latest.querySelector('button[aria-label*="Download"]');
+            
+            if (!isReady) return "generating (" + text.substring(0, 30).replace(/\\n/g, ' ') + ")";
+            
+            let b = latest.querySelector('button[aria-label*="Download"]');
             if (!b) {
-                let m = l.querySelector('button[aria-label*="More"]');
+                let m = latest.querySelector('button[aria-label*="More"], [data-testid*="more"]');
                 if (m) { m.click(); return "waiting_menu"; }
+                b = document.querySelector('button[aria-label*="Download"]');
             }
+            
             if (b) {
+                b.scrollIntoView({ block: 'center' });
                 b.click();
                 ['mousedown', 'mouseup', 'click'].forEach(v => b.dispatchEvent(new MouseEvent(v, { bubbles: true, view: window })));
                 return "downloading";
             }
+            
             return "ready_no_btn";
         })()
         """
         start = time.time()
+        logger.info(f"Polling browser for track completion...")
         while time.time() - start < timeout:
-            res = self.execute_js(ws_url, poll_js, timeout=10)
-            if res in ["downloading", "found_standalone"]:
-                if res == "found_standalone": self.execute_js(ws_url, "Array.from(document.querySelectorAll('button')).find(b => b.textContent.toLowerCase().includes('download'))?.click()")
-                logger.info("✅ Download triggered!")
-                return True
-            elif res == "error": return False
-            elif res == "none": self.execute_js(ws_url, "window.scrollBy(0, 100); setTimeout(()=>window.scrollBy(0,-100), 100)")
-            logger.info(f"  Status: {res} ({int(time.time()-start)}s)")
+            try:
+                res = self.execute_js(ws_url, poll_js, timeout=15)
+                if not res: res = "empty_result"
+                
+                if res in ["downloading"]:
+                    logger.info("✅ Download triggered!")
+                    return True
+                elif res == "error_row": 
+                    logger.error("❌ Udio reported failure on newest track.")
+                    return False
+                
+                logger.info(f"  Status: {res} ({int(time.time()-start)}s)")
+                
+                if "DIAG" in res:
+                    self.execute_js(ws_url, "window.scrollBy(0, 200); setTimeout(()=>window.scrollBy(0,-200), 200)")
+                    self._clear_udio_popups(ws_url)
+                         
+            except Exception as e:
+                logger.warning(f"Error while polling: {e}")
             time.sleep(15)
         return False

@@ -1,6 +1,6 @@
 import os
-import replicate
 import logging
+import sys
 from .utils import retry_request
 
 logging.basicConfig(level=logging.INFO)
@@ -8,70 +8,49 @@ logger = logging.getLogger(__name__)
 
 class MusicRemaker:
     def __init__(self, api_token=None):
-        """
-        Initialize the MusicRemaker with a Replicate API token.
-
-        Args:
-            api_token (str): Replicate API token. Defaults to REPLICATE_API_TOKEN env var.
-        """
+        """Initialize the Music Remaker using Replicate."""
         self.api_token = api_token or os.environ.get("REPLICATE_API_TOKEN")
-        if not self.api_token:
-            logger.warning("REPLICATE_API_TOKEN not set. MusicRemaker will not function.")
-
-        # Authenticate (though replicate client usually does this automatically from env)
+        self.client = None
         if self.api_token:
-            os.environ["REPLICATE_API_TOKEN"] = self.api_token
+            try:
+                import replicate
+                self.client = replicate.Client(api_token=self.api_token)
+                logger.info("MusicRemaker initialized via Replicate.")
+            except ImportError:
+                logger.warning("Replicate library not found.")
+        else:
+            logger.warning("REPLICATE_API_TOKEN not set.")
 
-    @retry_request(max_retries=3, delay=2, backoff=2)
-    def remake(self, audio_path, prompt, duration=30):
-        """
-        Generate a remake of the input audio using MusicGen via Replicate.
+    @retry_request(max_retries=4, delay=2, backoff=2)
+    def remake(self, audio_path, prompt):
+        """Remix an audio file using Replicate MusicGen."""
+        if not self.client:
+            raise RuntimeError("Replicate client not initialized.")
 
-        Args:
-            audio_path (str): Path to the input audio file (WAV/MP3).
-            prompt (str): Text prompt for the style (e.g. "Deep House, high quality, electronic").
-            duration (int): Duration of the output in seconds.
-
-        Returns:
-            str: URL of the generated audio.
-        """
-        if not os.path.exists(audio_path):
-            raise FileNotFoundError(f"Input audio file not found: {audio_path}")
-
+        import replicate
         logger.info(f"Remaking {audio_path} with prompt: '{prompt}'...")
 
-        # [MODEL HASH ABSTRACTION]
-        # Using meta/musicgen which supports melody conditioning via input_audio.
-        # We allow users to override the model hash via REPLICATE_MODEL in case Meta releases a newer version
-        # without requiring a code update. Fallback to the known stable musicgen-melody hash.
-        model = os.environ.get(
-            "REPLICATE_MODEL",
-            "meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb"
-        )
-
-        # Replicate expects a file object for input
         with open(audio_path, "rb") as audio_file:
+            # Create a 'file' object for Replicate
+            # Use specific MusicGen Melody version
             output = replicate.run(
-                model,
+                "meta/musicgen:671ac645e4ef47759470501d990802cf6f14bb7ff3c0d95885997d5e7d5a576c",
                 input={
+                    "model_version": "melody",
                     "prompt": prompt,
                     "input_audio": audio_file,
-                    "duration": duration,
-                    "model_version": "melody", # Specific for melody conditioning
-                    "normalization_strategy": "peak"
+                    "duration": 30,
+                    "continuation": False
                 }
             )
-
-        logger.info(f"Generation complete. Output: {output}")
+        
+        if not output:
+            raise RuntimeError("Music generation returned no output.")
+            
+        logger.info(f"Music remake generated: {output}")
         return output
 
 if __name__ == "__main__":
-    if os.environ.get("REPLICATE_API_TOKEN"):
+    if len(sys.argv) > 2:
         remaker = MusicRemaker()
-        import sys
-        if len(sys.argv) > 2:
-            print(remaker.remake(sys.argv[1], sys.argv[2]))
-        else:
-            print("Usage: python remaker.py <input.wav> <prompt>")
-    else:
-        print("REPLICATE_API_TOKEN not set. Skipping real test.")
+        print(remaker.remake(sys.argv[1], sys.argv[2]))
