@@ -88,19 +88,19 @@ class UdioRemaker:
             logger.error(f"Bridge upload failed: {e}")
             return None
 
-    def remake(self, wav_path, prompt, variance=0.35, mode="auto", prompt_strength=0.65, manual_mode=True, extension_hack=False):
+    def remake(self, wav_path, prompt, variance=0.35, mode="auto", prompt_strength=0.65, manual_mode=True, extension_hack=False, negative_prompt="organ, classical, baroque, church organ, cathedral"):
         unique_prompt = f"HYMNMANIA: {prompt}"
         if mode == "browser":
-            return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
+            return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack, negative_prompt=negative_prompt)
         try:
             if self.client:
                 return self.remake_api(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
             else:
-                return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
+                return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack, negative_prompt=negative_prompt)
         except Exception as e:
             if mode == "auto":
                 logger.warning(f"Standard remake failed: {e}. Falling back to Edge Automation mode...")
-                return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
+                return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack, negative_prompt=negative_prompt)
             raise
 
     def remake_api(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True, extension_hack=False):
@@ -130,7 +130,7 @@ class UdioRemaker:
         finally:
             if os.path.exists(mp3_upload_path): os.remove(mp3_upload_path)
 
-    def remake_edge(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True, extension_hack=False):
+    def remake_edge(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True, extension_hack=False, negative_prompt="organ, classical, baroque, church organ, cathedral"):
         if not os.path.exists(wav_path): raise FileNotFoundError(f"Audio file not found: {wav_path}")
         source_audio = wav_path
         if extension_hack:
@@ -147,7 +147,7 @@ class UdioRemaker:
         try:
             logger.info("Triggering Edge Automation (CDP)...")
             # tag_prompt used if prompt is generic, otherwise use provided prompt
-            success = self.edge_auto.trigger_generation(prompt=prompt, audio_path=mp3_upload_path, variance=variance)
+            success = self.edge_auto.trigger_generation(prompt=prompt, audio_path=mp3_upload_path, variance=variance, negative_prompt=negative_prompt)
             if not success: raise RuntimeError("Edge automation failed.")
             
             logger.info("Generation triggered! Waiting for completion...")

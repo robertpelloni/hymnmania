@@ -211,7 +211,7 @@ class UdioBrowserAutomation:
             else: time.sleep(1)
         return True
 
-    def trigger_generation(self, prompt, audio_path=None, variance=0.85):
+    def trigger_generation(self, prompt, audio_path=None, variance=0.85, negative_prompt="organ, classical, baroque, church organ, cathedral"):
         tab = self._get_active_tab(require_udio=True)
         ws_url = tab.get('webSocketDebuggerUrl')
         self.navigate_to_create(tab)
@@ -233,6 +233,26 @@ class UdioBrowserAutomation:
 
         inj_js = """
         (function() {
+            // Set Variance slider if present
+            let varianceSlider = document.querySelector('input[type="range"][min="0.1"][max="1"]');
+            if (varianceSlider) {
+                const proto = window.HTMLInputElement.prototype;
+                const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+                setter.call(varianceSlider, "%VARIANCE%");
+                varianceSlider.dispatchEvent(new Event('input', { bubbles: true }));
+                varianceSlider.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            // Set Style Reduction (negative prompt) if present
+            let negInput = document.querySelector('input[placeholder*="avoid"]') || document.querySelector('input[cmdk-input=""]');
+            if (negInput) {
+                const proto = window.HTMLInputElement.prototype;
+                const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+                setter.call(negInput, "%NEG_PROMPT%");
+                negInput.dispatchEvent(new Event('input', { bubbles: true }));
+                negInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
             let textareas = Array.from(document.querySelectorAll('textarea'));
             let inputs = Array.from(document.querySelectorAll('input[type="text"]'));
             let els = textareas.concat(inputs);
@@ -252,7 +272,7 @@ class UdioBrowserAutomation:
             if (inp.value !== "%PROMPT%") return "verify_failed:" + inp.value;
             return "ready_to_click";
         })()
-        """.replace("%PROMPT%", prompt.replace('"', '\\"').replace('\n', ' '))
+        """.replace("%PROMPT%", prompt.replace('"', '\\"').replace('\n', ' ')).replace("%VARIANCE%", str(variance)).replace("%NEG_PROMPT%", negative_prompt.replace('"', '\\"').replace('\n', ' '))
 
         logger.info("Injecting prompt and clicking Create...")
         for i in range(12):

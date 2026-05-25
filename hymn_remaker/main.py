@@ -118,6 +118,7 @@ def main():
     parser.add_argument("--udio-token", default=None, help="Udio AI auth token (overrides UDIO_AUTH_TOKEN env var)")
     parser.add_argument("--udio-cookie", default=None, help="Udio AI full cookie string (most reliable)")
     parser.add_argument("--udio-variance", type=float, default=0.25, help="Udio remix variance (0.1 to 1.0). Lower is stricter.")
+    parser.add_argument("--udio-neg-prompt", default="organ, classical, baroque, church organ, cathedral", help="Styles to avoid in Udio remix")
     parser.add_argument("--sonic-vacuum", action="store_true", help="Use Sonic Vacuum preprocessor (dry render)")
     parser.add_argument("--symbolic-norm", action="store_true", help="Use Symbolic Normalizer (velocity flattening)")
     parser.add_argument("--house-quantizer", action="store_true", help="Use House Structural Quantizer (snap to 124 BPM grid)")
@@ -214,6 +215,7 @@ def main():
                     video_model=args.video_model,
                     video_model_size=args.video_model_size,
                     udio_variance=args.udio_variance,
+                    udio_neg_prompt=args.udio_neg_prompt,
                     transient=args.transient,
                     sonic_vacuum=args.sonic_vacuum,
                     symbolic_norm=args.symbolic_norm,
@@ -387,6 +389,7 @@ def process_single_midi(
     video_model="ltx-video",
     video_model_size="1.3b",
     udio_variance=0.25,
+    udio_neg_prompt="organ, classical, baroque, church organ, cathedral",
     transient=False,
     sonic_vacuum=False,
     symbolic_norm=False,
@@ -502,6 +505,13 @@ def process_single_midi(
         # Extract precise BPM to prevent AI tempo drift
         target_bpm = 120.0
         if os.path.exists(target_midi_path):
+            if remake_priority in ["udio", "udio-oauth"]:
+                stretched_midi_path = os.path.join(output_dir, f"{name_no_ext}_stretched.mid")
+                update_status("Stretching MIDI to fit 28.0 seconds for Udio reference...", 24)
+                stretch_success = renderer.stretch_midi(target_midi_path, stretched_midi_path, target_duration=28.0)
+                if stretch_success and os.path.exists(stretched_midi_path):
+                    target_midi_path = stretched_midi_path
+
             target_bpm = renderer.get_midi_bpm(target_midi_path)
             update_status(f"Extracted dynamic tempo: {target_bpm:.1f} BPM", 25)
 
@@ -540,7 +550,7 @@ def process_single_midi(
                     composer = pre_extracted_metadata.get("composer") or "Traditional"
                     rich_prompt = f"A modern {style} remix of '{clean_title}' by {composer}. Inspired by the original MIDI melody as reference media. {target_bpm:.1f} BPM."
                     
-                    udio_result = udio_remaker.remake(base_audio_path, rich_prompt, variance=udio_variance)
+                    udio_result = udio_remaker.remake(base_audio_path, rich_prompt, variance=udio_variance, negative_prompt=udio_neg_prompt)
                     if udio_result and os.path.exists(udio_result):
                         if udio_result != remake_audio_path:
                             import shutil
