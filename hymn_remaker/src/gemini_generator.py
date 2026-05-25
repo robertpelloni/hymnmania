@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class GeminiContentGenerator:
     def __init__(self, api_key=None, client_secrets_file="client_secrets.json"):
         """Initialize the GeminiContentGenerator."""
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or os.environ.get("MCP_LLM_GOOGLE_API_KEY")
         self.client_secrets_file = client_secrets_file
         self.model_name = "gemini-2.0-flash"
         self.image_model_name = "imagen-3.0-generate-001"
@@ -60,20 +60,20 @@ class GeminiContentGenerator:
                 
         return genai.Client(credentials=creds)
 
-    def analyze_audio_for_content(self, audio_path, hymn_name):
+    def analyze_audio_for_content(self, audio_path, hymn_name, style=None):
         """Analyze audio to generate visual prompts and themes."""
         client = self._get_client()
         if not client: return None
         
         from google.genai import types
-        logger.info(f"Analyzing audio content for {hymn_name}...")
+        logger.info(f"Analyzing audio content for {hymn_name} (Style: {style})...")
         
         try:
             # Upload audio to Gemini
             with open(audio_path, 'rb') as f:
                 audio_file = client.files.upload(file=f, config={"mime_type": "audio/wav"})
             
-            prompt = f"Analyze this hymn remake '{hymn_name}' and provide: 1. A short cinematic visual prompt. 2. A central theme quote."
+            prompt = f"Analyze this hymn remake '{hymn_name}' in the style of '{style}' and provide: 1. A short cinematic visual prompt. 2. A central theme quote."
             
             response = client.models.generate_content(
                 model=self.model_name,
@@ -91,29 +91,35 @@ class GeminiContentGenerator:
             logger.error(f"Audio analysis failed: {e}")
             return None
 
+    def generate_art_prompt(self, analysis_data, style=None):
+        """Synthesize analysis data into a high-quality art prompt."""
+        visual = analysis_data.get("visual_prompt", "Abstract representation")
+        theme = analysis_data.get("theme", "Peaceful")
+        return f"Professional album art, {visual}. Theme: {theme}. Style: {style}. 4k, cinematic lighting."
+
     def generate_image(self, prompt, output_path):
         """Generate a high-quality cover art image."""
         client = self._get_client()
         if not client: return None
-        
+
         from google.genai import types
         logger.info(f"Generating image for prompt: {prompt[:50]}...")
-        
+
         try:
-            response = client.models.generate_image(
+            response = client.models.generate_images(
                 model=self.image_model_name,
                 prompt=prompt,
-                config=types.GenerateImageConfig(
+                config=types.GenerateImagesConfig(
                     number_of_images=1,
                     include_rai_reasoning=True,
                     output_mime_type='image/png'
                 )
             )
-            
-            for i, image in enumerate(response.generated_images):
+
+            for i, generated_image in enumerate(response.generated_images):
                 with open(output_path, 'wb') as f:
-                    f.write(image.image_bytes)
-            
+                    f.write(generated_image.image_bytes)
+
             logger.info(f"Image generated and saved to {output_path}")
             return output_path
         except Exception as e:

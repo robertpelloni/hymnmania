@@ -1,7 +1,5 @@
 """
 Udio AI Music Remaker - Deep House generation via Udio.
-Uses the udio-wrapper library with monkey-patched headers for 2026 session compatibility,
-and supports CDP-based Edge automation for the most robust advanced control.
 """
 import os
 import time
@@ -11,7 +9,6 @@ import glob
 import json
 import requests
 from pathlib import Path
-from hymn_remaker.src.udio_browser_automation import UdioBrowserAutomation
 from hymn_remaker import settings
 
 logger = logging.getLogger(__name__)
@@ -29,10 +26,16 @@ class UdioRemaker:
                 self._apply_2026_patches()
                 logger.info("UdioRemaker initialized with Auth Token and 2026 patches.")
             except Exception as e:
-                logger.warning(f"Failed to initialize UdioWrapper: {e}")
+                try: logger.warning(f"Failed to initialize UdioWrapper: {e}")
+                except: print(f"Failed to initialize UdioWrapper: {e}")
         
         # Initialize CDP automation for Edge
-        self.edge_auto = UdioBrowserAutomation()
+        try:
+            from hymn_remaker.src.udio_browser_automation import UdioBrowserAutomation
+            self.edge_auto = UdioBrowserAutomation()
+        except Exception as e:
+            try: logger.error(f"Failed to load UdioBrowserAutomation: {e}")
+            except: print(f"Failed to load UdioBrowserAutomation: {e}")
 
     def _apply_2026_patches(self):
         """Monkey-patch the udio-wrapper to use correct 2026 cookie naming and headers."""
@@ -86,15 +89,16 @@ class UdioRemaker:
             return None
 
     def remake(self, wav_path, prompt, variance=0.35, mode="auto", prompt_strength=0.65, manual_mode=True, extension_hack=False):
+        unique_prompt = f"HYMNMANIA: {prompt}"
         if mode == "browser":
-            return self.remake_edge(wav_path, prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
+            return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
         try:
-            if self.client: return self.remake_api(wav_path, prompt, variance=variance)
-            else: return self.remake_edge(wav_path, prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
+            if self.client: return self.remake_api(wav_path, unique_prompt, variance=variance)
+            else: return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
         except Exception as e:
             if mode == "auto":
                 logger.warning(f"Standard remake failed: {e}. Falling back to Edge Automation mode...")
-                return self.remake_edge(wav_path, prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
+                return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
             raise
 
     def remake_api(self, wav_path, prompt, variance=0.35):
@@ -126,9 +130,12 @@ class UdioRemaker:
             cropped_path = wav_path.replace(".wav", "_crop15.wav")
             subprocess.run([settings.FFMPEG_BIN, "-y", "-i", wav_path, "-t", "15", cropped_path], check=True, capture_output=True)
             source_audio = cropped_path
-        mp3_upload_path = source_audio.replace(".wav", "_upload.mp3")
+
+        timestamp = int(time.time())
+        mp3_upload_path = source_audio.replace(".wav", f"_upload_{timestamp}.mp3")
         if not mp3_upload_path.endswith(".mp3"): mp3_upload_path += ".mp3"
         subprocess.run([settings.FFMPEG_BIN, "-y", "-i", source_audio, "-codec:a", "libmp3lame", "-q:a", "2", mp3_upload_path], check=True, capture_output=True)
+        
         try:
             logger.info("Triggering Edge Automation (CDP)...")
             success = self.edge_auto.trigger_generation(prompt=prompt, audio_path=mp3_upload_path, variance=variance)

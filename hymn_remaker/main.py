@@ -104,6 +104,7 @@ def generate_fallback_gradient(output_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Hymn Remaker Pipeline")
+    # ... (parser arguments same as before)
     parser.add_argument("--input-dir", default="hymn_remaker/input", help="Directory containing input MIDI files")
     parser.add_argument("--output-dir", default="hymn_remaker/output", help="Directory for output files")
     parser.add_argument("--soundfont", help="Path to custom soundfont")
@@ -139,21 +140,38 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
 
-    try:
-        renderer = MidiRenderer(soundfont_path=args.soundfont)
-        remaker = MusicRemaker()
-        suno_remaker = SunoRemaker(session_token=args.suno_session)
-        udio_remaker = UdioRemaker(auth_token=args.udio_token, cookie_string=args.udio_cookie)
-        udio_oauth_remaker = UdioOAuthRemaker() # Uses env vars if available
-        content_gen = GeminiContentGenerator()
-        ai_video_gen = AIVideoGenerator()
-        video_producer = VideoProducer()
-        mxl_parser = MusicXMLParser()
-        omr_processor = OMRProcessor()
-        stem_separator = StemSeparator()
-    except Exception as e:
-        logger.error(f"Failed to initialize pipeline: {e}")
-        sys.exit(1)
+    # Lazy-loaded component holders
+    components = {
+        'renderer': None,
+        'remaker': None,
+        'suno_remaker': None,
+        'udio_remaker': None,
+        'udio_oauth_remaker': None,
+        'content_gen': None,
+        'ai_video_gen': None,
+        'video_producer': None,
+        'mxl_parser': None,
+        'omr_processor': None,
+        'stem_separator': None,
+        'radio_streamer': None
+    }
+
+    def get_comp(name):
+        if components[name]: return components[name]
+        logger.info(f"Initializing {name}...")
+        if name == 'renderer': components[name] = MidiRenderer(soundfont_path=args.soundfont)
+        elif name == 'remaker': components[name] = MusicRemaker()
+        elif name == 'suno_remaker': components[name] = SunoRemaker(session_token=args.suno_session)
+        elif name == 'udio_remaker': components[name] = UdioRemaker(auth_token=args.udio_token, cookie_string=args.udio_cookie)
+        elif name == 'udio_oauth_remaker': components[name] = UdioOAuthRemaker()
+        elif name == 'content_gen': components[name] = GeminiContentGenerator()
+        elif name == 'ai_video_gen': components[name] = AIVideoGenerator()
+        elif name == 'video_producer': components[name] = VideoProducer()
+        elif name == 'mxl_parser': components[name] = MusicXMLParser()
+        elif name == 'omr_processor': components[name] = OMRProcessor()
+        elif name == 'stem_separator': components[name] = StemSeparator()
+        elif name == 'radio_streamer': components[name] = RadioStreamer()
+        return components[name]
 
     import concurrent.futures
 
@@ -171,25 +189,25 @@ def main():
                     args.skip_render,
                     args.skip_remake,
                     args.upload,
-                    renderer,
-                    remaker,
-                    suno_remaker=suno_remaker,
-                    udio_remaker=udio_remaker,
-                    udio_oauth_remaker=udio_oauth_remaker,
+                    get_comp('renderer'),
+                    get_comp('remaker'),
+                    suno_remaker=get_comp('suno_remaker'),
+                    udio_remaker=get_comp('udio_remaker'),
+                    udio_oauth_remaker=get_comp('udio_oauth_remaker'),
                     remake_priority=args.remake_priority,
-                    content_gen=content_gen,
-                    video_producer=video_producer,
-                    mxl_parser=mxl_parser,
-                    omr_processor=omr_processor,
+                    content_gen=get_comp('content_gen'),
+                    video_producer=get_comp('video_producer'),
+                    mxl_parser=get_comp('mxl_parser'),
+                    omr_processor=get_comp('omr_processor'),
                     tts_generator=None,
-                    stem_separator=stem_separator,
+                    stem_separator=get_comp('stem_separator'),
                     voice_id=args.voice_id,
                     model=args.model,
                     video_format=args.video_format,
                     create_shorts=args.create_shorts,
                     enable_visualizer=args.visualizer,
                     visualizer_mode=args.visualizer_mode,
-                    ai_video_gen=ai_video_gen if args.ai_video else None,
+                    ai_video_gen=get_comp('ai_video_gen') if args.ai_video else None,
                     use_quotes=args.use_quotes,
                     local_video=args.local_video,
                     video_model=args.video_model,
@@ -588,6 +606,10 @@ def process_single_midi(
             art_prompt = metadata.get("art_prompt", f"Abstract album art for {metadata.get('title', name_no_ext)}, {style} style, high quality, 4k")
         else:
             analysis_data = content_gen.analyze_audio_for_content(base_audio_path, name_no_ext, style=style)
+            if not analysis_data:
+                logger.warning(f"Audio analysis failed for {name_no_ext}. Using fallbacks.")
+                analysis_data = {"metadata": {}, "lyrics": [], "theme": "Peaceful reflection", "visual_prompt": f"Peaceful landscape, {style}"}
+                
             metadata = analysis_data.get("metadata", {})
             lyrics = analysis_data.get("lyrics", [])
             extracted_lyrics = pre_extracted_metadata.get("lyrics")
@@ -616,7 +638,8 @@ def process_single_midi(
 
         # Generate Art
         update_status(f"Generating Album Art via Gemini Imagen 3 ({filename})...", 79)
-        art_url = content_gen.generate_image(art_prompt)
+        art_path = os.path.join(output_dir, f"{name_no_ext}_art.png")
+        art_url = content_gen.generate_image(art_prompt, art_path)
         if not art_url:
             fallback_art_path = os.path.join(output_dir, f"{name_no_ext}_fallback_art.png")
             art_url = generate_fallback_gradient(fallback_art_path)
