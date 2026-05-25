@@ -93,27 +93,35 @@ class UdioRemaker:
         if mode == "browser":
             return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
         try:
-            if self.client: return self.remake_api(wav_path, unique_prompt, variance=variance)
-            else: return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
+            if self.client:
+                return self.remake_api(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
+            else:
+                return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
         except Exception as e:
             if mode == "auto":
                 logger.warning(f"Standard remake failed: {e}. Falling back to Edge Automation mode...")
                 return self.remake_edge(wav_path, unique_prompt, variance=variance, prompt_strength=prompt_strength, manual_mode=manual_mode, extension_hack=extension_hack)
             raise
 
-    def remake_api(self, wav_path, prompt, variance=0.35):
-        if not self.client: raise RuntimeError("Udio client not initialized.")
+    def remake_api(self, wav_path, prompt, variance=0.35, prompt_strength=0.65, manual_mode=True, extension_hack=False):
+        if not self.client:
+            raise RuntimeError("Udio client not initialized for API mode.")
+
         mp3_upload_path = wav_path.replace(".wav", "_upload.mp3")
         subprocess.run([settings.FFMPEG_BIN, "-y", "-i", wav_path, "-codec:a", "libmp3lame", "-q:a", "2", mp3_upload_path], check=True, capture_output=True)
         try:
             public_url = self._upload_to_bridge(mp3_upload_path)
             if not public_url: raise RuntimeError("Failed to obtain public URL.")
+
             full_prompt = f"{prompt}. [Audio Influence: {variance}]"
             self.client.extend(prompt=full_prompt, audio_conditioning_path=public_url, seed=-1)
+            
+            download_dir = "extend_songs"
             time.sleep(10) 
-            files = glob.glob(os.path.join("extend_songs", "*.mp3"))
+            files = glob.glob(os.path.join(download_dir, "*.mp3"))
             if not files: raise RuntimeError("No downloaded MP3 found.")
             latest_mp3 = max(files, key=os.path.getmtime)
+            
             output_dir = os.path.dirname(wav_path)
             hymn_name = os.path.basename(wav_path).replace("_base.wav", "")
             final_path = os.path.join(output_dir, f"{hymn_name}_remake.wav")
@@ -138,11 +146,14 @@ class UdioRemaker:
         
         try:
             logger.info("Triggering Edge Automation (CDP)...")
+            # tag_prompt used if prompt is generic, otherwise use provided prompt
             success = self.edge_auto.trigger_generation(prompt=prompt, audio_path=mp3_upload_path, variance=variance)
             if not success: raise RuntimeError("Edge automation failed.")
+            
             logger.info("Generation triggered! Waiting for completion...")
             download_triggered = self.edge_auto.wait_for_completion_and_download(timeout=300)
             if not download_triggered: raise RuntimeError("Edge automation failed to trigger download.")
+            
             download_dir = os.path.join(os.path.expanduser("~"), "Downloads")
             start_time = time.time()
             final_path = None
@@ -154,7 +165,9 @@ class UdioRemaker:
                         final_path = latest_mp3
                         break
                 time.sleep(5)
+            
             if not final_path: raise RuntimeError("Timed out waiting for file in Downloads.")
+            
             output_dir = os.path.dirname(wav_path)
             hymn_name = os.path.basename(wav_path).replace("_base.wav", "")
             remake_path = os.path.join(output_dir, f"{hymn_name}_remake.wav")
