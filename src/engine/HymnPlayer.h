@@ -21,6 +21,11 @@ public:
     void set_gain(float gain);
     void set_channel_volume(int channel, float volume);
 
+    // Real-time Event methods
+    void send_cc(int channel, int control, int value);
+    void send_note_on(int channel, int key, int velocity);
+    void send_note_off(int channel, int key);
+
     // Real-time methods
     void start_realtime();
     void stop_realtime();

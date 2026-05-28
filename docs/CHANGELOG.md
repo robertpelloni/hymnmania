@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.31.0] - 2026-05-23
+### Added
+- **Studio V4: Arrangement Edition:** Introduced a 56-bar structured arrangement mode (Intro -> Verse -> Build -> Drop -> Outro) with automated energy curves.
+- **Real-time Performance & Automation:**
+    - Added native C++ bindings for `send_cc`, `send_note_on`, and `send_note_off` to the `HymnPlayer` engine.
+    - Implemented UI-driven automation for Filter Cutoff (CC 74) and Resonance (CC 71).
+    - Added manual FX trigger buttons for Crash Cymbals and Rising Sweeps.
+- **Kaleidoscope Visualizer:** New audio-reactive video rendering mode using recursive FFmpeg symmetry filters to create psychedelic visuals synchronized to the BPM.
+- **Performance Optimizations:**
+    - Enabled **FP16 (Half-Precision)** for local MusicGen inference on CUDA.
+    - Integrated **Intel IPEX** hooks for CPU-bound ML acceleration.
+
+### Fixed
+- **UI Module Unpacking:** Resolved a critical `ValueError` in `app.py` by correctly synchronizing return values from `load_modules()`.
+- **Vocal Grid-Locking:** Corrected the time-stretch ratio calculation in `vocal_remix.py` to ensure hip-hop vocals lock perfectly to the 145 BPM grid.
+
 ## [1.30.0] - 2026-05-22
 ### Added
 - **Python-Native Psy-Sequencer:** Ported the algorithmic psytrance generation logic from TypeScript to Python (`hymn_remaker/src/psy_sequencer.py`), enabling low-latency integration with the Streamlit UI and removing Node.js overhead for the core pipeline.

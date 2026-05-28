@@ -143,6 +143,24 @@ void HymnPlayer::set_channel_volume(int channel, float volume) {
     }
 }
 
+void HymnPlayer::send_cc(int channel, int control, int value) {
+    if (synth) {
+        fluid_synth_cc(synth, channel, control, value);
+    }
+}
+
+void HymnPlayer::send_note_on(int channel, int key, int velocity) {
+    if (synth) {
+        fluid_synth_noteon(synth, channel, key, velocity);
+    }
+}
+
+void HymnPlayer::send_note_off(int channel, int key) {
+    if (synth) {
+        fluid_synth_noteoff(synth, channel, key);
+    }
+}
+
 void HymnPlayer::renderAudio(float* buffer, int numFrames) {
     if (isPlaying() && synth) {
         // Ensure buffer is cleared before writing

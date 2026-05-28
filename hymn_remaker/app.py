@@ -72,7 +72,7 @@ def load_modules():
         import traceback
         st.error(f"Failed to initialize modules: {e}")
         st.code(traceback.format_exc())
-        return None, None, None, None, None, None, None, None, None, None, None
+        return [None] * 11
 
 renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker = load_modules()
 
@@ -115,12 +115,14 @@ with st.sidebar.expander("Udio/Suno Optimizers", expanded=False):
 st.sidebar.markdown("### Pipeline Options")
 video_format = st.sidebar.selectbox("Video Format", ["Standard 16:9", "Vertical 9:16"])
 enable_visualizer = st.sidebar.checkbox("Audio-Reactive Visualizer", value=False)
+visualizer_mode = "cline"
+if enable_visualizer:
+    visualizer_mode = st.sidebar.selectbox("Visualizer Mode", ["kaleidoscope", "cline", "line", "p2p", "avectorscope"], index=0)
 generate_vocals = st.sidebar.checkbox("Generate Vocals (ElevenLabs)", value=False)
 remake_priority = st.sidebar.selectbox("AI Remake Service", ["udio-oauth", "udio", "suno", "replicate"], index=0)
 udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.25)
 
 upload = st.sidebar.checkbox("Upload to YouTube", value=False)
-interactive_mode = st.sidebar.checkbox("Interactive Review Mode", value=False)
 
 tab1, tab2, tab3 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)", "🌀 Live Psy-Mono Studio"])
 
@@ -128,7 +130,6 @@ with tab1:
     uploaded_files = st.file_uploader("Upload MIDI/MusicXML", type=["mid", "midi", "mxl", "xml"], accept_multiple_files=True)
     if st.button("Start Processing", type="primary"):
         st.session_state["is_processing"] = True
-        st.session_state["completed_files"] = []
         st.session_state["uploaded_files_data"] = []
         if uploaded_files:
             for uf in uploaded_files:
@@ -203,7 +204,7 @@ with tab2:
             st.audio(out_audio)
 
 with tab3:
-    st.header("🌀 Live Psy-Mono Studio V3")
+    st.header("🌀 Live Psy-Mono Studio V4: Arrangement Edition")
     from streamlit_mic_recorder import mic_recorder
     from hymn_remaker.src.audio_to_midi import transcribe_audio_to_midi
     from hymn_remaker.src.psy_sequencer import PsyGenerator
@@ -216,7 +217,10 @@ with tab3:
 
     col1, col2 = st.columns([1, 2])
     with col1:
+        st.subheader("1. Input & Mode")
         source_mode = st.radio("Input Source", ["Hymn MIDI", "Mic Input"], key="psy_source")
+        gen_mode = st.radio("Generation Mode", ["Loop (8 bars)", "Arrangement (56 bars)"], key="psy_mode")
+
         input_midi_path = None
         if source_mode == "Hymn MIDI":
             live_midi = st.file_uploader("Upload MIDI", type=["mid", "midi"], key="live_up")
@@ -233,30 +237,52 @@ with tab3:
                     f.write(audio_rec['bytes'])
                 transcribe_audio_to_midi(temp_audio, input_midi_path)
 
+        st.subheader("2. Sequencer Config")
         bpm = st.slider("Target BPM", 120, 160, 145, key="psy_bpm")
         density = st.slider("Euclidean Density", 1, 16, 5, key="psy_density")
         gallop = st.selectbox("Gallop Variant", ["classic", "triplet", "rolling"], key="psy_gallop")
 
-        st.subheader("Master Gain")
+        st.subheader("3. Live Performance Mixer")
         master_gain = st.slider("Global Gain", 0.0, 5.0, 1.0, key="psy_gain")
         st.session_state.psy_player.set_gain(master_gain)
 
-        st.subheader("Track Mixer")
-        vol_k = st.slider("Kick", 0.0, 1.0, 0.9, key="psy_vol_k")
-        vol_b = st.slider("Bass", 0.0, 1.0, 0.7, key="psy_vol_b")
-        vol_l = st.slider("Lead", 0.0, 1.0, 0.8, key="psy_vol_l")
+        vol_k = st.slider("Kick (Ch 0)", 0.0, 1.0, 0.9, key="psy_vol_k")
+        vol_b = st.slider("Bass (Ch 1)", 0.0, 1.0, 0.7, key="psy_vol_b")
+        vol_l = st.slider("Lead (Ch 2)", 0.0, 1.0, 0.8, key="psy_vol_l")
+
         st.session_state.psy_player.set_channel_volume(0, vol_k)
         st.session_state.psy_player.set_channel_volume(1, vol_b)
         st.session_state.psy_player.set_channel_volume(2, vol_l)
 
+        st.subheader("4. Real-time Automation")
+        cutoff = st.slider("Filter Cutoff (CC 74)", 0, 127, 100)
+        st.session_state.psy_player.send_cc(2, 74, cutoff) # Lead channel filter
+
+        res = st.slider("Resonance (CC 71)", 0, 127, 40)
+        st.session_state.psy_player.send_cc(2, 71, res)
+
     with col2:
-        st.subheader("Pattern Preview")
+        st.subheader("Performance Monitor")
         preview_placeholder = st.empty()
+
+        if gen_mode == "Arrangement (56 bars)":
+            st.info("Arrangement Map: Intro -> Verse -> Build -> Drop -> Outro")
+            # Draw a simple progress bar based on hypothetical playback (Streamlit doesn't track C++ playback time easily)
+            # but we can show the static arrangement visual.
+            fig_arr = go.Figure()
+            fig_arr.add_trace(go.Bar(x=["Intro", "Verse", "Build", "Drop", "Outro"], y=[8, 16, 8, 16, 8], marker_color='indigo'))
+            fig_arr.update_layout(title="Arrangement Timeline (Bars)", height=250)
+            st.plotly_chart(fig_arr, use_container_width=True)
+
         c1, c2, c3 = st.columns(3)
-        if c1.button("▶️ Generate & Play"):
+        if c1.button("▶️ GENERATE & PLAY"):
             if input_midi_path:
                 temp_output = os.path.join(output_dir, "studio_output.mid")
-                st.session_state.psy_gen.generate(input_midi_path, temp_output, {"targetBpm": bpm, "euclideanDensity": density, "gallopVariant": gallop})
+                mode_str = "arrangement" if gen_mode == "Arrangement (56 bars)" else "loop"
+                st.session_state.psy_gen.generate(input_midi_path, temp_output, {
+                    "targetBpm": bpm, "euclideanDensity": density, "gallopVariant": gallop,
+                    "mode": mode_str, "kickVelocity": vol_k, "bassVelocity": vol_b, "leadVelocity": vol_l
+                })
 
                 mid = mido.MidiFile(temp_output)
                 notes = []
@@ -269,17 +295,28 @@ with tab3:
                 if notes:
                     fig = go.Figure()
                     for t_name in ['Kick', 'Bass', 'Lead']:
-                        t_notes = [n for n in notes if n['track'] == t_name and n['t'] < 1920 * 2]
+                        # Show first 4 bars in preview
+                        t_notes = [n for n in notes if n['track'] == t_name and n['t'] < 1920 * 4]
                         fig.add_trace(go.Scatter(x=[n['t'] for n in t_notes], y=[n['n'] for n in t_notes], mode='markers', name=t_name))
-                    fig.update_layout(height=300, margin=dict(l=0,r=0,t=0,b=0))
+                    fig.update_layout(height=350, margin=dict(l=0,r=0,t=0,b=0), title="Preview (First 4 Bars)")
                     preview_placeholder.plotly_chart(fig, use_container_width=True)
 
                 st.session_state.psy_player.stop_realtime()
                 st.session_state.psy_player.load(temp_output)
                 st.session_state.psy_player.start_realtime()
                 st.session_state.psy_player.play()
-                st.success("Playing live!")
+                st.success(f"Playing {mode_str} live!")
 
-        if c2.button("⏹️ Stop"):
+        if c2.button("⏹️ STOP"):
             st.session_state.psy_player.stop()
             st.session_state.psy_player.stop_realtime()
+            st.info("Performance stopped.")
+
+        st.subheader("Manual FX Trigger")
+        fc1, fc2 = st.columns(2)
+        if fc1.button("💥 Crash Cymbal"):
+             st.session_state.psy_player.send_note_on(9, 49, 120) # MIDI Ch 10 is usually percussion
+        if fc2.button("🚀 Rising Sweep"):
+            # Trigger a long note on a synth channel reserved for FX
+            st.session_state.psy_player.send_note_on(3, 72, 100)
+            # We'd ideally sweep CC 74 here in a separate thread, but this is a manual trigger demo.

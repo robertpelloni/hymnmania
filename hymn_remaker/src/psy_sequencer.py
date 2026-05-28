@@ -10,12 +10,11 @@ class PsyGenerator:
 
     def generate(self, input_midi_path, output_midi_path, config):
         """
-        Generates a 145 BPM Psytrance pattern based on input MIDI.
+        Generates a 145 BPM Psytrance pattern or full arrangement based on input MIDI.
         """
         try:
             input_mid = MidiFile(input_midi_path)
         except Exception:
-            # Fallback if no input file
             input_mid = None
 
         output_mid = MidiFile(ticks_per_beat=self.ticks_per_beat)
@@ -23,20 +22,155 @@ class PsyGenerator:
         bpm = config.get("targetBpm", 145)
         tempo = mido.bpm2tempo(bpm)
 
-        # Extract melody and chords from input
+        # Extract melody and chords from input DNA
         melody_notes, root_notes = self._extract_dna(input_mid)
 
-        # 1. Kick Track
-        output_mid.tracks.append(self._generate_kick(tempo, config))
+        mode = config.get("mode", "loop")
 
-        # 2. Bass Track
-        output_mid.tracks.append(self._generate_bass(root_notes, config))
+        if mode == "arrangement":
+            sections = [
+                {"name": "Intro", "bars": 8, "kick": True, "bass": True, "lead": False, "intensity": 0.5},
+                {"name": "Verse", "bars": 16, "kick": True, "bass": True, "lead": True, "intensity": 0.7},
+                {"name": "Build", "bars": 8, "kick": True, "bass": True, "lead": True, "intensity": 0.9, "sweep": True},
+                {"name": "Drop", "bars": 16, "kick": True, "bass": True, "lead": True, "intensity": 1.2, "markov": True},
+                {"name": "Outro", "bars": 8, "kick": True, "bass": True, "lead": False, "intensity": 0.4}
+            ]
+        else:
+            # Single 8-bar loop
+            sections = [{"name": "Loop", "bars": 8, "kick": True, "bass": True, "lead": True, "intensity": 1.0}]
 
-        # 3. Lead Track
-        output_mid.tracks.append(self._generate_lead(melody_notes, config))
+        # Initialize Tracks
+        kick_track = MidiTrack()
+        kick_track.append(MetaMessage('set_tempo', tempo=tempo))
+        kick_track.append(MetaMessage('track_name', name='Kick'))
 
+        bass_track = MidiTrack()
+        bass_track.append(MetaMessage('track_name', name='Bass'))
+
+        lead_track = MidiTrack()
+        lead_track.append(MetaMessage('track_name', name='Lead'))
+
+        abs_bar = 0
+        for sec in sections:
+            num_bars = sec["bars"]
+            for b in range(num_bars):
+                # Calculate section-based intensity modifiers
+                current_config = config.copy()
+                current_config["euclideanDensity"] = int(config.get("euclideanDensity", 5) * sec.get("intensity", 1.0))
+                if sec.get("markov"):
+                    current_config["useMarkovLeads"] = True
+
+                # 1. Generate Kick Bar
+                if sec["kick"]:
+                    self._add_kick_bar(kick_track, current_config)
+                else:
+                    self._add_silence_bar(kick_track)
+
+                # 2. Generate Bass Bar
+                if sec["bass"]:
+                    root = self._get_root_for_bar(root_notes, abs_bar)
+                    self._add_bass_bar(bass_track, root, current_config, abs_bar)
+                else:
+                    self._add_silence_bar(bass_track)
+
+                # 3. Generate Lead Bar
+                if sec["lead"]:
+                    melody = self._get_melody_for_bar(melody_notes, abs_bar)
+                    # Handle automation sweep in Build
+                    if sec.get("sweep"):
+                        # Sweep filter cutoff (CC 74) from 30 to 127 over the section
+                        cutoff = int(30 + (b / num_bars) * 97)
+                        lead_track.append(Message('control_change', channel=2, control=74, value=cutoff, time=0))
+
+                    self._add_lead_bar(lead_track, melody, current_config)
+                else:
+                    self._add_silence_bar(lead_track)
+
+                abs_bar += 1
+
+        output_mid.tracks.extend([kick_track, bass_track, lead_track])
         output_mid.save(output_midi_path)
         return True
+
+    def _get_root_for_bar(self, root_notes, bar_idx):
+        if not root_notes: return 36
+        # Map bar_idx to DNA index (DNA usually 1 note per bar)
+        idx = bar_idx % len(root_notes)
+        return (root_notes[idx][1] % 12) + 36
+
+    def _get_melody_for_bar(self, melody_notes, bar_idx):
+        if not melody_notes: return 60
+        idx = bar_idx % len(melody_notes)
+        return (melody_notes[idx][1] % 24) + 60
+
+    def _add_silence_bar(self, track):
+        track.append(Message('note_on', note=0, velocity=0, time=0))
+        track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_beat * 4))
+
+    def _add_kick_bar(self, track, config):
+        vel = int(config.get("kickVelocity", 0.9) * 127)
+        for _ in range(4): # 4 beats
+            track.append(Message('note_on', note=36, velocity=vel, time=0))
+            track.append(Message('note_off', note=36, velocity=0, time=self.ticks_per_sixteenth))
+            track.append(Message('note_on', note=0, velocity=0, time=0))
+            track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_sixteenth * 3))
+
+    def _add_bass_bar(self, track, root, config, bar_idx):
+        vel = int(config.get("bassVelocity", 0.7) * 127)
+        variant = config.get("gallopVariant", "classic")
+        octave_freq = config.get("octaveJumpBarFrequency", 2)
+
+        for _ in range(4): # 4 beats
+            # Slot 1: Silence (Kick)
+            track.append(Message('note_on', note=0, velocity=0, time=0))
+            track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_sixteenth))
+
+            for slot in range(2, 5):
+                note = root
+                if slot == 4 and octave_freq > 0 and bar_idx % octave_freq == 0:
+                    note += 12
+
+                if variant == "triplet" and slot == 2:
+                    track.append(Message('note_on', note=0, velocity=0, time=0))
+                    track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_sixteenth))
+                else:
+                    track.append(Message('note_on', note=note, velocity=vel, time=0))
+                    track.append(Message('note_off', note=note, velocity=0, time=self.ticks_per_sixteenth))
+
+    def _add_lead_bar(self, track, anchor_note, config):
+        vel = int(config.get("leadVelocity", 0.8) * 127)
+        density = config.get("euclideanDensity", 5)
+        use_markov = config.get("useMarkovLeads", True)
+
+        pattern = [0] * 16
+        if density > 0:
+            for i in range(min(density, 16)):
+                pattern[(i * 16 // density) % 16] = 1
+
+        # State persistence for Markov could be added but here we just seed it with anchor
+        last_note = anchor_note
+
+        for slot in range(16):
+            if pattern[slot]:
+                note = last_note
+                if use_markov:
+                    r = random.random()
+                    if r < 0.7:
+                        note = last_note + random.choice([-1, 0, 1, 2])
+                    elif r < 0.9:
+                        note = last_note + random.choice([3, 7, 12, -12])
+                    else:
+                        note = anchor_note
+                    note = max(48, min(84, note))
+                else:
+                    note = anchor_note
+
+                track.append(Message('note_on', note=note, velocity=vel, time=0, channel=2))
+                track.append(Message('note_off', note=note, velocity=0, time=self.ticks_per_sixteenth, channel=2))
+                last_note = note
+            else:
+                track.append(Message('note_on', note=0, velocity=0, time=0, channel=2))
+                track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_sixteenth, channel=2))
 
     def _extract_dna(self, mid):
         melody = [] # list of (start_tick, note, duration_tick)
@@ -45,7 +179,6 @@ class PsyGenerator:
         if not mid:
             return melody, roots
 
-        # Simplistic extraction: Highest notes for melody, lowest for roots
         all_notes = []
         for track in mid.tracks:
             abs_tick = 0
@@ -63,7 +196,6 @@ class PsyGenerator:
 
         all_notes.sort(key=lambda x: x['start'])
 
-        # Segment by 4-bar blocks (assuming 4/4)
         total_ticks = max(n['end'] for n in all_notes)
         ticks_per_bar = self.ticks_per_beat * 4
 
@@ -76,109 +208,3 @@ class PsyGenerator:
                 roots.append((bar_start, lowest['note']))
 
         return melody, roots
-
-    def _generate_kick(self, tempo, config):
-        track = MidiTrack()
-        track.append(MetaMessage('set_tempo', tempo=tempo))
-        track.append(MetaMessage('track_name', name='Kick'))
-
-        vel = int(config.get("kickVelocity", 0.9) * 127)
-        for _ in range(8): # 8 bars
-            for _ in range(4): # 4 beats
-                track.append(Message('note_on', note=36, velocity=vel, time=0))
-                track.append(Message('note_off', note=36, velocity=0, time=self.ticks_per_sixteenth))
-                track.append(Message('note_on', note=0, velocity=0, time=0)) # Dummy padding
-                track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_sixteenth * 3))
-        return track
-
-    def _generate_bass(self, root_notes, config):
-        track = MidiTrack()
-        track.append(MetaMessage('track_name', name='Bass'))
-
-        vel = int(config.get("bassVelocity", 0.7) * 127)
-        variant = config.get("gallopVariant", "classic")
-        octave_freq = config.get("octaveJumpBarFrequency", 2)
-
-        curr_root = 36 # Default C1
-        root_idx = 0
-
-        for bar in range(8):
-            if root_idx < len(root_notes):
-                curr_root = (root_notes[root_idx][1] % 12) + 36
-                root_idx += 1
-
-            for beat in range(4):
-                # Psytrance bass is on the offbeats (16th slots 2, 3, 4)
-                # Slot 1: Silence (Kick)
-                track.append(Message('note_on', note=0, velocity=0, time=0))
-                track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_sixteenth))
-
-                for slot in range(2, 5):
-                    note = curr_root
-                    # Octave jump on slot 4 occasionally
-                    if slot == 4 and octave_freq > 0 and bar % octave_freq == 0:
-                        note += 12
-
-                    if variant == "triplet" and slot == 2:
-                        # Skip first bass note for triplet feel
-                        track.append(Message('note_on', note=0, velocity=0, time=0))
-                        track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_sixteenth))
-                    else:
-                        track.append(Message('note_on', note=note, velocity=vel, time=0))
-                        track.append(Message('note_off', note=note, velocity=0, time=self.ticks_per_sixteenth))
-        return track
-
-    def _generate_lead(self, melody_notes, config):
-        track = MidiTrack()
-        track.append(MetaMessage('track_name', name='Lead'))
-
-        vel = int(config.get("leadVelocity", 0.8) * 127)
-        density = config.get("euclideanDensity", 5)
-        use_markov = config.get("useMarkovLeads", True)
-
-        # Simple Euclidean pattern E(density, 16)
-        pattern = [0] * 16
-        if density > 0:
-            for i in range(density):
-                pattern[(i * 16 // density) % 16] = 1
-
-        curr_melody_note = 60 # C3
-        melody_idx = 0
-
-        # Markov Chain state
-        last_note = curr_melody_note
-
-        for bar in range(8):
-            if melody_idx < len(melody_notes):
-                curr_melody_note = (melody_notes[melody_idx][1] % 24) + 60
-                melody_idx += 1
-
-            # Simple Psytrance Markov Transition Rules:
-            # - 70% chance to stay on current note or move by small interval
-            # - 20% chance to jump by +3, +7, or +12 (perfect intervals/octave)
-            # - 10% chance to jump back to hymn's current anchor note
-
-            for slot in range(16):
-                if pattern[slot]:
-                    note = last_note
-                    if use_markov:
-                        r = random.random()
-                        if r < 0.7:
-                            note = last_note + random.choice([-1, 0, 1, 2])
-                        elif r < 0.9:
-                            note = last_note + random.choice([3, 7, 12, -12])
-                        else:
-                            note = curr_melody_note
-
-                        # Clamp to reasonable range (C3 to C5)
-                        note = max(48, min(84, note))
-                    else:
-                        note = curr_melody_note
-
-                    track.append(Message('note_on', note=note, velocity=vel, time=0))
-                    track.append(Message('note_off', note=note, velocity=0, time=self.ticks_per_sixteenth))
-                    last_note = note
-                else:
-                    track.append(Message('note_on', note=0, velocity=0, time=0))
-                    track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_sixteenth))
-        return track
