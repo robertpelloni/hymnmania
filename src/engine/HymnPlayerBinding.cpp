@@ -29,5 +29,9 @@ PYBIND11_MODULE(hymn_player_ext, m) {
         .def("pause", &HymnPlayer::pause, "Pause playback")
         .def("stop", &HymnPlayer::stop, "Stop playback")
         .def("is_playing", &HymnPlayer::isPlaying, "Check if the player is currently playing")
+        .def("set_gain", &HymnPlayer::set_gain, "Set global synthesizer gain (0.0 to 10.0)", py::arg("gain"))
+        .def("set_channel_volume", &HymnPlayer::set_channel_volume, "Set volume for a specific MIDI channel (0.0 to 1.0)", py::arg("channel"), py::arg("volume"))
+        .def("start_realtime", &HymnPlayer::start_realtime, "Start real-time audio output")
+        .def("stop_realtime", &HymnPlayer::stop_realtime, "Stop real-time audio output")
         .def("render_audio", &renderAudioWrapper, "Render audio into a numpy array of floats (stereo interleaved)", py::arg("numFrames"));
 }

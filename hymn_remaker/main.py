@@ -26,6 +26,8 @@ from hymn_remaker.src.stem_separator import StemSeparator
 from hymn_remaker.src.radio_streamer import RadioStreamer
 from hymn_remaker.src.utils import process_audio
 from hymn_remaker.src.midi_analyzer import MidiAnalyzer
+from hymn_remaker.src.psy_sequencer import PsyGenerator
+from hymn_remaker.src.vocal_remix import VocalRemixer
 
 # Load environment variables
 load_dotenv()
@@ -116,6 +118,10 @@ def main():
     parser.add_argument("--udio-token", default=None, help="Udio AI auth token (overrides UDIO_AUTH_TOKEN env var)")
     parser.add_argument("--udio-cookie", default=None, help="Udio AI full cookie string (most reliable)")
     parser.add_argument("--udio-variance", type=float, default=0.25, help="Udio remix variance (0.1 to 1.0). Lower is stricter.")
+    parser.add_argument("--sonic-vacuum", action="store_true", help="Use Sonic Vacuum preprocessor (dry render)")
+    parser.add_argument("--symbolic-norm", action="store_true", help="Use Symbolic Normalizer (velocity flattening)")
+    parser.add_argument("--house-quantizer", action="store_true", help="Use House Structural Quantizer (snap to 124 BPM grid)")
+    parser.add_argument("--mix-vocals", help="Path to hip-hop audio track or YouTube URL to isolate and mix vocals from")
     parser.add_argument("--convert-mp3", action="store_true", help="Batch convert all base WAV files to MP3 and exit")
     parser.add_argument("--voice-id", default=settings.DEFAULT_ELEVENLABS_VOICE_ID, help="ElevenLabs Voice ID")
     parser.add_argument("--model", default=settings.DEFAULT_ELEVENLABS_MODEL, help="ElevenLabs Model")
@@ -189,7 +195,11 @@ def main():
                     local_video=args.local_video,
                     video_model=args.video_model,
                     video_model_size=args.video_model_size,
-                    udio_variance=args.udio_variance
+                    udio_variance=args.udio_variance,
+                    sonic_vacuum=args.sonic_vacuum,
+                    symbolic_norm=args.symbolic_norm,
+                    house_quantizer=args.house_quantizer,
+                    hiphop_vocal_path=args.mix_vocals
                 ): midi_path
                 for midi_path in midi_file_list
             }
@@ -357,7 +367,11 @@ def process_single_midi(
     local_video=False,
     video_model="ltx-video",
     video_model_size="1.3b",
-    udio_variance=0.25):
+    udio_variance=0.25,
+    sonic_vacuum=False,
+    symbolic_norm=False,
+    house_quantizer=False,
+    hiphop_vocal_path=None):
 
     base_audio_path = remake_audio_path = metadata_path = vocal_track_path = None
     try:
@@ -397,9 +411,72 @@ def process_single_midi(
             update_status(f"Step 0/4: Parsing MIDI metadata and lyrics ({filename})...", 15)
             pre_extracted_metadata = MidiAnalyzer.extract_all_metadata(midi_path)
 
+        # Apply Experimental Preprocessors
+        if symbolic_norm:
+            update_status("Experiment: Applying Symbolic Normalization...", 16)
+            from pipeline.processing.symbolic_norm import SymbolicNormalizer
+            norm_path = os.path.join(output_dir, f"{name_no_ext}_norm.mid")
+            SymbolicNormalizer(target_midi_path).normalize(norm_path)
+            target_midi_path = norm_path
+
+        if house_quantizer:
+            update_status("Experiment: Applying House Structural Quantization...", 17)
+            from pipeline.processing.house_quantizer import HouseStructuralQuantizer
+            hq_path = os.path.join(output_dir, f"{name_no_ext}_house.mid")
+            HouseStructuralQuantizer(target_midi_path).quantize(hq_path)
+            target_midi_path = hq_path
+
         # 1. Render MIDI to Audio (WAV)
         update_status(f"Step 1/4: Rendering MIDI ({filename})...", 20)
         base_audio_path = os.path.join(output_dir, f"{name_no_ext}_base.wav")
+
+        # Experimental Pipeline modules
+        is_sonic_vacuum = "sonic vacuum" in style.lower() or sonic_vacuum
+        is_symbolic_norm = "symbolic norm" in style.lower() or symbolic_norm
+        is_house_quantizer = "house quantizer" in style.lower() or house_quantizer
+        is_psytrance = "psytrance" in style.lower()
+
+        transient_only = False
+
+        if is_sonic_vacuum or is_symbolic_norm or is_house_quantizer:
+            update_status(f"Running Experimental Pipeline for {style}...", 21)
+            try:
+                import subprocess
+                # Ensure output directories exist for the manual script run
+                os.makedirs(os.path.join(output_dir, "dry_render"), exist_ok=True)
+                os.makedirs(os.path.join(output_dir, "symbolic_midi"), exist_ok=True)
+                os.makedirs(os.path.join(output_dir, "house_skeletons"), exist_ok=True)
+
+                if is_sonic_vacuum:
+                    from pipeline.processing.sonic_vacuum import SonicVacuumProcessor
+                    base_audio_path = os.path.join(output_dir, "dry_render", f"{name_no_ext}_dry.wav")
+                    SonicVacuumProcessor(target_midi_path).render_dry_piano(base_audio_path)
+
+                if is_symbolic_norm:
+                    from pipeline.processing.symbolic_norm import SymbolicNormalizer
+                    target_midi_path_norm = os.path.join(output_dir, "symbolic_midi", f"{name_no_ext}_norm.mid")
+                    SymbolicNormalizer(target_midi_path).normalize(target_midi_path_norm)
+                    target_midi_path = target_midi_path_norm
+
+                if is_house_quantizer:
+                    from pipeline.processing.house_quantizer import HouseStructuralQuantizer
+                    target_midi_path_house = os.path.join(output_dir, "house_skeletons", f"{name_no_ext}_house.mid")
+                    HouseStructuralQuantizer(target_midi_path).quantize(target_midi_path_house)
+                    target_midi_path = target_midi_path_house
+
+            except Exception as e:
+                logger.error(f"Experimental pipeline failed: {e}")
+
+        if is_psytrance:
+            update_status("Psy-Mono: Invoking Python Algorithmic Psytrance Sequencer...", 22)
+            psy_midi_path = os.path.join(output_dir, f"{name_no_ext}_psy.mid")
+            try:
+                psy_gen = PsyGenerator()
+                psy_gen.generate(target_midi_path, psy_midi_path, config={"targetBpm": 145})
+                target_midi_path = psy_midi_path
+                transient_only = True
+            except Exception as e:
+                logger.error(f"Psytrance sequencer failed: {e}")
 
         # Extract precise BPM to prevent AI tempo drift
         target_bpm = 120.0
@@ -408,7 +485,7 @@ def process_single_midi(
             update_status(f"Extracted dynamic tempo: {target_bpm:.1f} BPM", 25)
 
         if not skip_render or not os.path.exists(base_audio_path):
-            renderer.render(target_midi_path, base_audio_path)
+            renderer.render(target_midi_path, base_audio_path, transient_only=(transient_only or sonic_vacuum))
         else:
             update_status(f"Skipping render for {filename}, {base_audio_path} exists.", 30)
 
@@ -550,7 +627,28 @@ def process_single_midi(
 
         # Vocals
         vocal_track_path = None
-        if generate_vocals and tts_generator and lyrics:
+
+        # Hip-Hop Vocal Remix Integration
+        if hiphop_vocal_path:
+            update_status(f"Step 3.5/4: Isolating and Grid-locking Hip-Hop Vocals (Python)...", 82)
+            try:
+                vocal_remixer = VocalRemixer()
+                vocal_track_path = os.path.join(output_dir, f"{name_no_ext}_hiphop_vocal.wav")
+                # Attempt to determine key from hymn DNA if possible
+                root_key = 0 # Default C
+                if pre_extracted_metadata and 'root_key' in pre_extracted_metadata:
+                    root_key = pre_extracted_metadata['root_key']
+
+                vocal_remixer.process_remix(hiphop_vocal_path, vocal_track_path, target_bpm=target_bpm, target_key_root=root_key)
+
+                if os.path.exists(vocal_track_path):
+                    logger.info(f"Isolated hip-hop vocals ready at: {vocal_track_path}")
+                else:
+                    logger.error("Vocal processing failed.")
+            except Exception as e:
+                logger.error(f"Hip-hop vocal integration failed: {e}")
+
+        if not vocal_track_path and generate_vocals and tts_generator and lyrics:
             vocal_track_path = os.path.join(output_dir, f"{name_no_ext}_vocals.wav")
             try:
                 tts_generator.generate_vocals(lyrics, vocal_track_path, voice_id=voice_id, model=model, status_callback=status_callback)

@@ -1,18 +1,35 @@
-# Handoff - v1.27.0
+# Handoff - Version 1.30.0 (Python-Native Psy-Mono Studio & Mixer)
 
-## Session Achievements
-- **UI Polish**: Integrated `st.spinner` and granular status updates for high-latency AI calls (DALL-E 3, ElevenLabs) in `hymn_remaker/app.py` and `main.py`.
-- **Docker Optimization**:
-  - Added `.dockerignore` to reduce build context.
-  - Optimized `Dockerfile` with necessary system libraries (`libgl1`, `libglib`) for ML inference.
-  - Synchronized package versions (`Pillow 11.1.0`, `python-dotenv 1.0.1`) to ensure build stability.
-- **Documentation**: Updated `ROADMAP.md`, `TODO.md`, and `CHANGELOG.md`. Bumped version to `1.27.0`.
-- **Verification**: Validated UI via Playwright (screenshots taken) and passed all unit tests for `tts_generator` and `utils`.
+## Session Summary
+Successfully transitioned the core "Psy-Mono" pipeline to a high-performance Python-native implementation, eliminating Node.js overhead for the real-time studio. Upgraded the C++ audio engine with multi-channel volume control and implemented a sophisticated vocal alignment pipeline for hip-hop remixes.
 
-## Technical Observations
-- The environment has strict limits on `overlayfs` and Docker rate limits, making full local container builds difficult; however, the `Dockerfile` structure is now verified for slim deployments.
-- Replaced redundant `docs/VERSION.md` with a single source of truth in the root `VERSION` file.
+## Major Changes
+- **Python-Native Psy-Sequencer:**
+    - `hymn_remaker/src/psy_sequencer.py`: Ported TypeScript logic to Python using `mido`. Supports instant pattern generation for Kick, Rolling Bass (3 variants), and Euclidean Arpeggios.
+- **Enhanced C++ Engine (`hymn_player_ext`):**
+    - Added `set_gain(float)` and `set_channel_volume(int, float)` bindings.
+    - Enables real-time mixing of separate tracks directly from the Streamlit UI.
+- **Vocal Remix Pipeline:**
+    - `hymn_remaker/src/vocal_remix.py`: Uses `yt-dlp` for downloads, `Demucs` for isolation, and `librosa` for grid-locking.
+    - **Grid-Locking:** Automated calculation of time-stretch ratios to snap vocals to 145 BPM.
+    - **Harmonic Alignment:** Automated pitch-shifting of vocals to match the detected hymn root key.
+- **Live Studio V3:**
+    - `hymn_remaker/app.py`: Integrated **Plotly Piano Roll** for visual feedback.
+    - Interactive Mixer: Real-time volume sliders for Kick, Bass, and Lead tracks.
+- **Unified Versioning:**
+    - Centrally managed version `1.30.0` in root `VERSION` and `hymn_remaker/VERSION.md`.
 
-## Next Steps for Successor Agent
-- **Roadmap Phase 6 (Microservices)**: Continue the transition towards a microservice architecture by extracting the ML dependencies into a separate worker container (started in `services/renderer/worker.py`).
-- **Interactive Review Improvements**: Enhance the "Interactive Mode" to allow users to regenerate specific stems or segments without restarting the entire pipeline.
+## Environment Updates
+- **Python:** Added `mido`, `plotly`.
+- **C++:** Recompiled `hymn_player_ext.so` with new Mixer API.
+
+## Verification Status
+- Verified Python sequencer MIDI output via `verify_midi.py`.
+- Verified C++ Mixer bindings via `verify_bindings.py`.
+- Verified `main.py` integration with the new Python pipeline.
+- Verified file presence and version consistency across the repo.
+
+## Outstanding Items / Next Steps
+- Implement LALAL.AI REST API as a fallback for cloud-based stem isolation.
+- Optimize local AI model weights to INT8/FP16 for reduced latency.
+- Integrate a VST3 host into the C++ engine for high-end local instrument rendering.

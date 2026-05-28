@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stdexcept>
 
-HymnPlayer::HymnPlayer(const std::string& soundfontPath) : playing(false), soundfontId(-1) {
+HymnPlayer::HymnPlayer(const std::string& soundfontPath) : playing(false), soundfontId(-1), adriver(nullptr) {
     // Initialize FluidSynth settings
     settings = new_fluid_settings();
     if (!settings) {
@@ -37,6 +37,9 @@ HymnPlayer::HymnPlayer(const std::string& soundfontPath) : playing(false), sound
 }
 
 HymnPlayer::~HymnPlayer() {
+    if (adriver) {
+        delete_fluid_audio_driver(adriver);
+    }
     if (player) {
         fluid_player_stop(player);
         delete_fluid_player(player);
@@ -102,6 +105,42 @@ void HymnPlayer::stop() {
 
 bool HymnPlayer::isPlaying() const {
     return playing && fluid_player_get_status(player) == FLUID_PLAYER_PLAYING;
+}
+
+void HymnPlayer::start_realtime() {
+    if (!adriver && synth && settings) {
+        // Switch timing source to system for real-time
+        fluid_settings_setstr(settings, "player.timing-source", "system");
+        adriver = new_fluid_audio_driver(settings, synth);
+        if (!adriver) {
+            std::cerr << "Error: Failed to create FluidSynth audio driver." << std::endl;
+        } else {
+            std::cout << "Real-time audio driver started." << std::endl;
+        }
+    }
+}
+
+void HymnPlayer::stop_realtime() {
+    if (adriver) {
+        delete_fluid_audio_driver(adriver);
+        adriver = nullptr;
+        // Switch back to sample timing for offline rendering
+        fluid_settings_setstr(settings, "player.timing-source", "sample");
+        std::cout << "Real-time audio driver stopped." << std::endl;
+    }
+}
+
+void HymnPlayer::set_gain(float gain) {
+    if (synth) {
+        fluid_synth_set_gain(synth, gain);
+    }
+}
+
+void HymnPlayer::set_channel_volume(int channel, float volume) {
+    if (synth) {
+        // volume is 0.0 to 1.0, MIDI CC 7 is 0 to 127
+        fluid_synth_cc(synth, channel, 7, (int)(volume * 127));
+    }
 }
 
 void HymnPlayer::renderAudio(float* buffer, int numFrames) {

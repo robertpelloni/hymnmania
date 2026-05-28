@@ -179,18 +179,29 @@ class MidiRenderer:
 
         logger.info(f"FluidSynth CLI rendering complete: {output_path}")
 
-    def render(self, midi_path, output_path):
+    def render(self, midi_path, output_path, transient_only=False):
         """
         Render a MIDI file to audio (WAV/MP3/FLAC depending on extension).
 
         Args:
             midi_path (str): Path to the input MIDI file.
             output_path (str): Path to the output audio file.
+            transient_only (bool): If True, use a sharp, staccato sine-wave sound for AI conditioning.
         """
         if not os.path.exists(midi_path):
             raise FileNotFoundError(f"MIDI file not found: {midi_path}")
 
         logger.info(f"Rendering {midi_path} to {output_path}...")
+
+        if transient_only:
+            logger.info("Transient-only rendering requested. Routing to SonicVacuum (Staccato Sines).")
+            try:
+                from pipeline.processing.sonic_vacuum import SonicVacuumProcessor
+                vacuum = SonicVacuumProcessor(midi_path)
+                vacuum.render_dry_piano(output_path)
+                return
+            except Exception as e:
+                logger.error(f"SonicVacuum failed: {e}. Falling back to standard render.")
 
         try:
             if NATIVE_ENGINE_AVAILABLE:
