@@ -124,8 +124,10 @@ visualizer_mode = "cline"
 if enable_visualizer:
     visualizer_mode = st.sidebar.selectbox("Visualizer Mode", ["kaleidoscope", "cline", "line", "p2p", "avectorscope"], index=0)
 generate_vocals = st.sidebar.checkbox("Generate Vocals (ElevenLabs)", value=False)
-remake_priority = st.sidebar.selectbox("AI Remake Service", ["udio-oauth", "udio", "suno", "replicate"], index=0)
+remake_priority = st.sidebar.selectbox("AI Remake Service", ["udio-oauth", "udio", "suno", "replicate", "local"], index=0)
 udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.25)
+local_guidance = st.sidebar.slider("Local Guidance Scale", 1.0, 10.0, 3.0)
+local_temperature = st.sidebar.slider("Local Temperature", 0.1, 2.0, 1.0)
 
 upload = st.sidebar.checkbox("Upload to YouTube", value=False)
 
@@ -174,6 +176,7 @@ with tab1:
                             udio_remaker=udio_remaker,
                             remake_priority=remake_priority,
                             udio_oauth_remaker=udio_oauth_remaker,
+                            local_remaker=local_remaker,
                             content_gen=content_gen,
                             video_producer=video_producer,
                             mxl_parser=mxl_parser,
@@ -184,6 +187,8 @@ with tab1:
                             video_format=video_format,
                             enable_visualizer=enable_visualizer,
                             udio_variance=udio_variance,
+                            local_guidance=local_guidance,
+                            local_temperature=local_temperature,
                             sonic_vacuum=sonic_vacuum,
                             symbolic_norm=symbolic_norm,
                             house_quantizer=house_quantizer,
@@ -353,7 +358,7 @@ with tab4:
 
             for f in files:
                 f_path = os.path.join(output_dir, f)
-                c1, c2, c3 = st.columns([2, 1, 1])
+                c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
                 c1.write(f"**{f}**")
 
                 # Show score if audio
@@ -362,11 +367,28 @@ with tab4:
                     c2.metric("Quality Score", f"{score}")
                     with c1:
                         st.audio(f_path)
+
+                    if c3.button("🎹 Load Studio", key=f"load_{f}"):
+                        if f.endswith('.wav'):
+                            # Check if there is a matching MIDI for playback or just load the WAV
+                            # For simplicity we just stop existing and load
+                            st.session_state.psy_player.stop_realtime()
+                            # We need a MIDI for the player load, if we only have WAV we can't play via FluidSynth
+                            # but we can at least show it was clicked.
+                            st.info(f"Loading {f} to studio player...")
+                            # If it's studio_output.mid's render, we can load the mid
+                            name_base = f.replace(".wav", "")
+                            possible_mid = os.path.join(output_dir, f"{name_base}.mid")
+                            if os.path.exists(possible_mid):
+                                st.session_state.psy_player.load(possible_mid)
+                                st.session_state.psy_player.start_realtime()
+                                st.session_state.psy_player.play()
+                                st.success(f"Playing {name_base}.mid")
                 else:
                     with c1:
                         st.video(f_path)
 
-                if c3.button("🗑️ Delete", key=f"del_{f}"):
+                if c4.button("🗑️ Delete", key=f"del_{f}"):
                     os.remove(f_path)
                     st.rerun()
                 st.divider()

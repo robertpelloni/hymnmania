@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.32.0] - 2026-05-28
+### Added
+- **Studio V5: Live Jam Edition:**
+    - Integrated **Novel AI Generation** (Local MusicGen) directly into the studio for text-to-audio production.
+    - Added **Manual FX & Jam Triggers** (Crash Cymbal, Rising Sweep, Acid Fill) for real-time performance.
+    - Enhanced the **Real-time Mixer** with Global Gain control.
+- **Output Library Management:**
+    - New "Library" tab to manage generated tracks.
+    - Integrated **Quality Evaluator** providing a 0-100 score for tracks based on brightness, rhythmic clarity, and dynamic range.
+    - "Load Studio" functionality to instantly bring library tracks into the live Jam environment.
+- **C++ Engine Optimization:**
+    - Optimized `HymnPlayer` for 128-voice polyphony and multi-core CPU utilization.
+    - Improved thread safety for high-frequency MIDI event handling.
+- **Automated Verification Suite:** Integrated Playwright-based frontend testing and comprehensive module verification scripts.
+
 ## [1.31.0] - 2026-05-23
 ### Added
 - **Studio V4: Arrangement Edition:** Introduced a 56-bar structured arrangement mode (Intro -> Verse -> Build -> Drop -> Outro) with automated energy curves.

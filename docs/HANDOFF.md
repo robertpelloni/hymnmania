@@ -1,3 +1,20 @@
+# Handoff - Version 1.32.0 (Studio V5 & Library Management)
+
+## Session Summary
+Completed the "Live Jam" evolution of the Hymnmania pipeline. Studio V5 now supports real-time FX triggers, text-to-audio novel generation, and a comprehensive library management system with automated quality scoring. The C++ engine has been tuned for high polyphony, and the UI is fully synchronized for multi-track mixing and live performance.
+
+## Major Changes
+- **Studio V5: Live Jam Edition:**
+    - Real-time manual triggers for Acid Fills, Rising Sweeps, and Crash Cymbals via MIDI CC/Note events in the C++ engine.
+    - Integrated "Novel AI" mode for pure text-to-psytrance generation using local MusicGen.
+- **Library & Quality Evaluator:**
+    - `hymn_remaker/src/quality_evaluator.py`: Automated 0-100 scoring based on spectral/rhythmic features.
+    - Persistent library UI with "Load Studio" and deletion capabilities.
+- **Optimized Local ML:**
+    - MusicGen now runs in FP16 with IPEX/CUDA optimizations, supporting faster iterations.
+- **Frontend Verification:**
+    - Established a Playwright-based verification suite for UI regression testing.
+
 # Handoff - Version 1.30.0 (Python-Native Psy-Mono Studio & Mixer)
 
 ## Session Summary

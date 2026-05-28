@@ -28,6 +28,7 @@ from hymn_remaker.src.utils import process_audio
 from hymn_remaker.src.midi_analyzer import MidiAnalyzer
 from hymn_remaker.src.psy_sequencer import PsyGenerator
 from hymn_remaker.src.vocal_remix import VocalRemixer
+from hymn_remaker.src.local_remaker import LocalMusicRemaker
 
 # Load environment variables
 load_dotenv()
@@ -113,7 +114,9 @@ def main():
     parser.add_argument("--upload", action="store_true", help="Upload to YouTube after generation")
     parser.add_argument("--skip-render", action="store_true", help="Skip MIDI rendering if WAV exists")
     parser.add_argument("--skip-remake", action="store_true", help="Skip music generation if output audio exists")
-    parser.add_argument("--remake-priority", default=settings.REMAKE_PRIORITY, choices=["suno", "udio", "udio-oauth", "replicate"], help="AI service priority for Step 2 remake (default: suno)")
+    parser.add_argument("--remake-priority", default=settings.REMAKE_PRIORITY, choices=["suno", "udio", "udio-oauth", "replicate", "local"], help="AI service priority for Step 2 remake (default: suno)")
+    parser.add_argument("--local-guidance", type=float, default=3.0, help="Local MusicGen guidance scale")
+    parser.add_argument("--local-temperature", type=float, default=1.0, help="Local MusicGen temperature")
     parser.add_argument("--suno-session", default=None, help="Suno AI session token (overrides SUNO_SESSION_TOKEN env var)")
     parser.add_argument("--udio-token", default=None, help="Udio AI auth token (overrides UDIO_AUTH_TOKEN env var)")
     parser.add_argument("--udio-cookie", default=None, help="Udio AI full cookie string (most reliable)")
@@ -149,6 +152,7 @@ def main():
         content_gen = GeminiContentGenerator()
         ai_video_gen = AIVideoGenerator()
         video_producer = VideoProducer()
+        local_remaker = LocalMusicRemaker()
         mxl_parser = MusicXMLParser()
         omr_processor = OMRProcessor()
         stem_separator = StemSeparator()
@@ -177,6 +181,7 @@ def main():
                     suno_remaker=suno_remaker,
                     udio_remaker=udio_remaker,
                     udio_oauth_remaker=udio_oauth_remaker,
+                    local_remaker=local_remaker,
                     remake_priority=args.remake_priority,
                     content_gen=content_gen,
                     video_producer=video_producer,
@@ -196,6 +201,8 @@ def main():
                     video_model=args.video_model,
                     video_model_size=args.video_model_size,
                     udio_variance=args.udio_variance,
+                    local_guidance=args.local_guidance,
+                    local_temperature=args.local_temperature,
                     sonic_vacuum=args.sonic_vacuum,
                     symbolic_norm=args.symbolic_norm,
                     house_quantizer=args.house_quantizer,
@@ -338,6 +345,7 @@ def process_single_midi(
     suno_remaker=None,
     udio_remaker=None,
     udio_oauth_remaker=None,
+    local_remaker=None,
     remake_priority="suno",
     content_gen=None,
     video_producer=None,
@@ -368,6 +376,8 @@ def process_single_midi(
     video_model="ltx-video",
     video_model_size="1.3b",
     udio_variance=0.25,
+    local_guidance=3.0,
+    local_temperature=1.0,
     sonic_vacuum=False,
     symbolic_norm=False,
     house_quantizer=False,
@@ -494,8 +504,21 @@ def process_single_midi(
         if not skip_remake or not os.path.exists(remake_audio_path):
             remake_success = False
 
+            # --- Priority 0: Local MusicGen ---
+            if remake_priority == "local" and local_remaker:
+                update_status(f"Step 2/4: Remaking Audio via Local MusicGen ({filename})...", 40)
+                try:
+                    local_remaker.generate(style, melody_path=base_audio_path, duration=30, output_path=remake_audio_path, guidance_scale=local_guidance, temperature=local_temperature)
+                    update_status(f"Local MusicGen remake complete for {filename}", 55)
+                    process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms)
+                    remake_success = True
+                    logger.info(f"Local MusicGen remake succeeded for {filename}")
+                except Exception as local_err:
+                    logger.warning(f"Local MusicGen failed for {filename}: {local_err}")
+                    update_status(f"Local MusicGen error, trying fallbacks...", 42)
+
             # --- Priority 1: Udio AI (Official OAuth API) ---
-            if remake_priority == "udio-oauth" and udio_oauth_remaker and udio_oauth_remaker.is_available():
+            if not remake_success and remake_priority == "udio-oauth" and udio_oauth_remaker and udio_oauth_remaker.is_available():
                 update_status(f"Step 2/4: Remaking Audio via Udio OAuth API ({filename})...", 40)
                 try:
                     udio_result = udio_oauth_remaker.remake(base_audio_path, style, variance=udio_variance)

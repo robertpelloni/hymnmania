@@ -8,3 +8,5 @@
 - **FFmpeg for Audio-Visuals:** FFmpeg remains the backbone for final assembly and vocal processing.
 - **Native C++ Engine:** The `HymnPlayer` engine (pybind11 wrapper around FluidSynth) provides fast, thread-safe rendering and is optimized for the Python `PsyGenerator` output.
 - **Vocal Alignment:** Vocal grid-locking uses automated ratio-based time-stretching to snap any input BPM to the 145 BPM project grid without pitch artifacts.
+- **Quality Metrics:** The `QualityEvaluator` uses a weighted heuristic (50% Rhythm, 30% Brightness, 20% Dynamics) to score tracks, ensuring generated psytrance meets festival-grade spectral profiles.
+- **Live Performance State:** Studio V5 maintains an ephemeral state for live jams; using "Load Studio" from the Library hydrates this state with specific track metadata and pre-calculated quality scores.
