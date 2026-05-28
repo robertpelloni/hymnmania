@@ -4,10 +4,11 @@
 ### Added
 - **Python-Native Psy-Sequencer:** Ported the algorithmic psytrance generation logic from TypeScript to Python (`hymn_remaker/src/psy_sequencer.py`), enabling low-latency integration with the Streamlit UI and removing Node.js overhead for the core pipeline.
 - **Enhanced C++ Audio Engine:** Added real-time `set_gain()` and `set_channel_volume()` bindings to the `hymn_player_ext` FluidSynth wrapper, enabling dynamic mixing during playback.
-- **Vocal Grid-Locking & Harmonics:** Implemented a dedicated `VocalRemixPipeline` in Python (`hymn_remaker/src/vocal_remix.py`) with automated time-stretching (ratio-based alignment to 145 BPM) and pitch-shifting to match the detected hymn root key.
+- **Vocal Grid-Locking & LALAL.AI Integration:** Implemented a dedicated `VocalRemixPipeline` in Python (`hymn_remaker/src/vocal_remix.py`) with automated time-stretching and pitch-shifting. Integrated the LALAL.AI REST API (`hymn_remaker/src/lalal_api.py`) as a high-fidelity cloud fallback for vocal isolation.
 - **Live Studio V3:**
     - Integrated a **Plotly Piano Roll** visualizer for real-time pattern inspection.
     - Added a **Multi-Channel Mixer** in the UI to control individual volume levels for Kick, Bass, and Lead tracks via the upgraded C++ engine.
+    - Enhanced the arpeggiator with **Markov-Chain transition rules** for more organic and evolving lead melodies.
 - **Unified Versioning:** Centralized version control to `VERSION` and mirrored in `hymn_remaker/VERSION.md`.
 
 ### Changed

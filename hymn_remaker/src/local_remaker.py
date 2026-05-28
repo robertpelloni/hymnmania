@@ -9,10 +9,27 @@ from scipy.io import wavfile
 logger = logging.getLogger(__name__)
 
 class LocalMusicRemaker:
-    def __init__(self, model_id="facebook/musicgen-melody"):
+    def __init__(self, model_id="facebook/musicgen-melody", use_half=True):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.info(f"Loading Local MusicGen model ({model_id}) on {self.device}...")
-        self.model = MusicgenMelodyForConditionalGeneration.from_pretrained(model_id).to(self.device)
+
+        # Load model
+        self.model = MusicgenMelodyForConditionalGeneration.from_pretrained(
+            model_id,
+            torch_dtype=torch.float16 if (use_half and self.device == "cuda") else torch.float32
+        ).to(self.device)
+
+        # Enable CPU offload or other optimizations if on CPU
+        if self.device == "cpu":
+            # Optional: dynamic quantization for CPU speedup
+            # Note: MusicGen may have mixed results with standard dynamic quantization
+            try:
+                import intel_extension_for_pytorch as ipex
+                self.model = ipex.optimize(self.model)
+                logger.info("IPEX optimization applied for CPU inference.")
+            except ImportError:
+                pass
+
         self.processor = AutoProcessor.from_pretrained(model_id)
 
     def generate(self, melody_path, prompt, duration=30, output_path=None):

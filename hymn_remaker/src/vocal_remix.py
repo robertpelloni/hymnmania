@@ -3,6 +3,7 @@ import subprocess
 import librosa
 import soundfile as sf
 import numpy as np
+from hymn_remaker.src.lalal_api import LalalAPI
 
 class VocalRemixer:
     def __init__(self):
@@ -21,16 +22,23 @@ class VocalRemixer:
             work_path = "vocal_download.wav"
             subprocess.run(["yt-dlp", "-x", "--audio-format", "wav", "-o", work_path, input_path], check=True)
 
-        # 2. Separate Stems (using Demucs)
+        # 2. Separate Stems (using Demucs with LALAL.AI fallback)
         # Note: In a production environment, we'd check if it's already an acapella
         vocal_path = work_path
         if not input_path.endswith("_vocals.wav"):
-            print("Running Demucs separation...")
-            subprocess.run(["python", "-m", "demucs.separate", "--two-stems=vocals", work_path, "-o", "separated"], check=True)
-            # Find the vocal file (structure varies by demucs version)
-            # Usually: separated/htdemucs/vocal_download/vocals.wav
-            filename = os.path.splitext(os.path.basename(work_path))[0]
-            vocal_path = os.path.join("separated", "htdemucs", filename, "vocals.wav")
+            print("Attempting vocal separation...")
+            try:
+                print("Running local Demucs separation...")
+                subprocess.run(["python", "-m", "demucs.separate", "--two-stems=vocals", work_path, "-o", "separated"], check=True)
+                filename = os.path.splitext(os.path.basename(work_path))[0]
+                vocal_path = os.path.join("separated", "htdemucs", filename, "vocals.wav")
+            except Exception as e:
+                print(f"Local Demucs failed: {e}. Checking LALAL.AI fallback...")
+                lalal = LalalAPI()
+                if lalal.is_available():
+                    vocal_path = lalal.separate_vocals(work_path, os.path.dirname(output_path))
+                else:
+                    print("LALAL.AI not configured. Proceeding with original audio (remix may be noisy).")
 
         # 3. Audio Analysis & Stretching
         print("Analyzing and stretching audio...")

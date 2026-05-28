@@ -134,6 +134,7 @@ class PsyGenerator:
 
         vel = int(config.get("leadVelocity", 0.8) * 127)
         density = config.get("euclideanDensity", 5)
+        use_markov = config.get("useMarkovLeads", True)
 
         # Simple Euclidean pattern E(density, 16)
         pattern = [0] * 16
@@ -144,15 +145,39 @@ class PsyGenerator:
         curr_melody_note = 60 # C3
         melody_idx = 0
 
+        # Markov Chain state
+        last_note = curr_melody_note
+
         for bar in range(8):
             if melody_idx < len(melody_notes):
                 curr_melody_note = (melody_notes[melody_idx][1] % 24) + 60
                 melody_idx += 1
 
+            # Simple Psytrance Markov Transition Rules:
+            # - 70% chance to stay on current note or move by small interval
+            # - 20% chance to jump by +3, +7, or +12 (perfect intervals/octave)
+            # - 10% chance to jump back to hymn's current anchor note
+
             for slot in range(16):
                 if pattern[slot]:
-                    track.append(Message('note_on', note=curr_melody_note, velocity=vel, time=0))
-                    track.append(Message('note_off', note=curr_melody_note, velocity=0, time=self.ticks_per_sixteenth))
+                    note = last_note
+                    if use_markov:
+                        r = random.random()
+                        if r < 0.7:
+                            note = last_note + random.choice([-1, 0, 1, 2])
+                        elif r < 0.9:
+                            note = last_note + random.choice([3, 7, 12, -12])
+                        else:
+                            note = curr_melody_note
+
+                        # Clamp to reasonable range (C3 to C5)
+                        note = max(48, min(84, note))
+                    else:
+                        note = curr_melody_note
+
+                    track.append(Message('note_on', note=note, velocity=vel, time=0))
+                    track.append(Message('note_off', note=note, velocity=0, time=self.ticks_per_sixteenth))
+                    last_note = note
                 else:
                     track.append(Message('note_on', note=0, velocity=0, time=0))
                     track.append(Message('note_off', note=0, velocity=0, time=self.ticks_per_sixteenth))
