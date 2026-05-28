@@ -32,34 +32,40 @@ class LocalMusicRemaker:
 
         self.processor = AutoProcessor.from_pretrained(model_id)
 
-    def generate(self, melody_path, prompt, duration=30, output_path=None):
+    def generate(self, prompt, melody_path=None, duration=30, output_path=None, guidance_scale=3.0, temperature=1.0):
         """
-        Generate audio locally using MusicGen melody-conditioned model.
+        Generate audio locally using MusicGen. Supports both melody-conditioned and text-to-audio.
         """
-        if not os.path.exists(melody_path):
-            raise FileNotFoundError(f"Melody file not found: {melody_path}")
-
-        logger.info(f"Local Generation: prompt='{prompt}', conditioning={melody_path}")
-
-        # Load melody
-        melody, sr = torchaudio.load(melody_path)
-
-        # Prepare inputs
-        inputs = self.processor(
-            audio=melody,
-            sampling_rate=sr,
-            text=[prompt],
-            padding=True,
-            return_tensors="pt",
-        ).to(self.device)
+        if melody_path and os.path.exists(melody_path):
+            logger.info(f"Local Generation (Melody): prompt='{prompt}', conditioning={melody_path}")
+            melody, sr = torchaudio.load(melody_path)
+            inputs = self.processor(
+                audio=melody,
+                sampling_rate=sr,
+                text=[prompt],
+                padding=True,
+                return_tensors="pt",
+            ).to(self.device)
+        else:
+            logger.info(f"Local Generation (Text-only): prompt='{prompt}'")
+            inputs = self.processor(
+                text=[prompt],
+                padding=True,
+                return_tensors="pt",
+            ).to(self.device)
 
         # Generate
-        # duration in seconds corresponds approximately to max_new_tokens
         # MusicGen uses 50 tokens per second
         max_tokens = int(duration * 50)
 
         with torch.no_grad():
-            audio_values = self.model.generate(**inputs, max_new_tokens=max_tokens)
+            audio_values = self.model.generate(
+                **inputs,
+                max_new_tokens=max_tokens,
+                guidance_scale=guidance_scale,
+                do_sample=True,
+                temperature=temperature
+            )
 
         # Post-process
         sampling_rate = self.model.config.audio_encoder.sampling_rate

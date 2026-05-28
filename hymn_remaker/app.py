@@ -47,6 +47,8 @@ from hymn_remaker.src.tts_generator import TTSGenerator
 from hymn_remaker.src.musicxml_parser import MusicXMLParser
 from hymn_remaker.src.omr_processor import OMRProcessor
 from hymn_remaker.src.stem_separator import StemSeparator
+from hymn_remaker.src.local_remaker import LocalMusicRemaker
+from hymn_remaker.src.quality_evaluator import QualityEvaluator
 from hymn_remaker.main import process_single_midi
 
 st.title("🎵 Hymn Remaker Pipeline")
@@ -67,14 +69,17 @@ def load_modules():
         omr_processor = OMRProcessor()
         stem_separator = StemSeparator()
         udio_oauth_remaker = UdioOAuthRemaker()
-        return renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker
+        local_remaker = LocalMusicRemaker()
+        quality_eval = QualityEvaluator()
+        return renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval
     except Exception as e:
         import traceback
         st.error(f"Failed to initialize modules: {e}")
         st.code(traceback.format_exc())
-        return [None] * 11
+        return [None] * 13
 
-renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker = load_modules()
+modules = load_modules()
+renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval = modules
 
 st.sidebar.header("Environment & API")
 missing_keys = []
@@ -124,7 +129,7 @@ udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.25)
 
 upload = st.sidebar.checkbox("Upload to YouTube", value=False)
 
-tab1, tab2, tab3 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)", "🌀 Live Psy-Mono Studio"])
+tab1, tab2, tab3, tab4 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)", "🌀 Live Psy-Mono Studio", "📚 Library"])
 
 with tab1:
     uploaded_files = st.file_uploader("Upload MIDI/MusicXML", type=["mid", "midi", "mxl", "xml"], accept_multiple_files=True)
@@ -204,7 +209,7 @@ with tab2:
             st.audio(out_audio)
 
 with tab3:
-    st.header("🌀 Live Psy-Mono Studio V4: Arrangement Edition")
+    st.header("🌀 Live Psy-Mono Studio V5: Live Jam Edition")
     from streamlit_mic_recorder import mic_recorder
     from hymn_remaker.src.audio_to_midi import transcribe_audio_to_midi
     from hymn_remaker.src.psy_sequencer import PsyGenerator
@@ -312,11 +317,58 @@ with tab3:
             st.session_state.psy_player.stop_realtime()
             st.info("Performance stopped.")
 
-        st.subheader("Manual FX Trigger")
-        fc1, fc2 = st.columns(2)
+        st.subheader("Manual FX & Jam Trigger")
+        fc1, fc2, fc3 = st.columns(3)
         if fc1.button("💥 Crash Cymbal"):
              st.session_state.psy_player.send_note_on(9, 49, 120) # MIDI Ch 10 is usually percussion
         if fc2.button("🚀 Rising Sweep"):
-            # Trigger a long note on a synth channel reserved for FX
             st.session_state.psy_player.send_note_on(3, 72, 100)
-            # We'd ideally sweep CC 74 here in a separate thread, but this is a manual trigger demo.
+        if fc3.button("🥁 Acid Fill"):
+            # Trigger a rapid acid lead sequence on channel 2
+            for i in range(4):
+                st.session_state.psy_player.send_note_on(2, 60 + i*2, 110)
+                time.sleep(0.05)
+                st.session_state.psy_player.send_note_off(2, 60 + i*2)
+            st.toast("Acid Fill triggered!")
+
+    with st.expander("Novel AI Generation (Local MusicGen)"):
+        novel_prompt = st.text_input("Novel Prompt", value="Fast melodic psytrance, 145 BPM, psychedelic leads, high energy")
+        novel_duration = st.slider("Duration (sec)", 5, 30, 10)
+        if st.button("✨ Generate Novel Track"):
+            with st.spinner("Generating novel track..."):
+                out_path = os.path.join(output_dir, f"novel_{uuid.uuid4().hex[:8]}.wav")
+                local_remaker.generate(novel_prompt, duration=novel_duration, output_path=out_path)
+                st.audio(out_path)
+                st.success(f"Novel track generated: {out_path}")
+
+with tab4:
+    st.header("📚 Output Library")
+    if os.path.exists(output_dir):
+        files = [f for f in os.listdir(output_dir) if f.endswith(('.wav', '.mp3', '.mp4'))]
+        if not files:
+            st.info("No files found in output directory.")
+        else:
+            # Sort by modification time (newest first)
+            files.sort(key=lambda x: os.path.getmtime(os.path.join(output_dir, x)), reverse=True)
+
+            for f in files:
+                f_path = os.path.join(output_dir, f)
+                c1, c2, c3 = st.columns([2, 1, 1])
+                c1.write(f"**{f}**")
+
+                # Show score if audio
+                if f.endswith(('.wav', '.mp3')):
+                    score = quality_eval.evaluate(f_path)
+                    c2.metric("Quality Score", f"{score}")
+                    with c1:
+                        st.audio(f_path)
+                else:
+                    with c1:
+                        st.video(f_path)
+
+                if c3.button("🗑️ Delete", key=f"del_{f}"):
+                    os.remove(f_path)
+                    st.rerun()
+                st.divider()
+    else:
+        st.error(f"Output directory not found: {output_dir}")

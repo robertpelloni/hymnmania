@@ -13,6 +13,10 @@ HymnPlayer::HymnPlayer(const std::string& soundfontPath) : playing(false), sound
     fluid_settings_setstr(settings, "player.timing-source", "sample");
     fluid_settings_setnum(settings, "synth.sample-rate", 44100.0);
 
+    // Optimize for low-latency: reduce internal buffer sizes
+    fluid_settings_setint(settings, "synth.polyphony", 128);
+    fluid_settings_setint(settings, "synth.cpu-cores", 2);
+
     // Initialize synthesizer
     synth = new_fluid_synth(settings);
     if (!synth) {
