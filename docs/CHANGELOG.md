@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.33.0] - 2026-05-30
+### Added
+- **Style Presets & Model Refinement:**
+    - Integrated **Algorithmic Style Presets** (Full-On, DarkPsy, Progressive, Morning) into `psy_sequencer.py` to automatically configure Euclidean density and gallop patterns.
+    - Added a **Model Refinement & Feedback** system in the Studio UI to capture star ratings and text feedback, stored in `output/feedback_log.jsonl` for continuous improvement.
+- **Studio Rendering & Export:**
+    - New **Export & Render** suite allows users to render their live studio jams directly to MP4 videos with audio-reactive visuals (Kaleidoscope, Avectorscope, etc.) and download the generated MIDI files.
+- **Enhanced Performance Controls:**
+    - Re-engineered the **Psy-Energy Macro** to simultaneously control Filter Cutoff, Resonance, and Global Gain for high-intensity live performance.
+
 ## [1.32.0] - 2026-05-28
 ### Added
 - **Studio V5: Live Jam Edition:**

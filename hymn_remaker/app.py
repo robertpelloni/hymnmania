@@ -249,6 +249,7 @@ with tab3:
 
         st.subheader("2. Sequencer Config")
         bpm = st.slider("Target BPM", 120, 160, 145, key="psy_bpm")
+        algo_style = st.selectbox("Algorithmic Style", ["None", "Full-On", "DarkPsy", "Progressive", "Morning"], key="psy_algo_style")
         density = st.slider("Euclidean Density", 1, 16, 5, key="psy_density")
         gallop = st.selectbox("Gallop Variant", ["classic", "triplet", "rolling"], key="psy_gallop")
 
@@ -272,10 +273,14 @@ with tab3:
         st.session_state.psy_player.send_cc(2, 71, res)
 
         st.subheader("Psy-Energy Macro")
-        psy_energy = st.slider("Global Energy", 0.0, 1.0, 0.5, help="Controls density, cutoff, and resonance simultaneously.")
+        psy_energy = st.slider("Global Energy", 0.0, 1.0, 0.5, help="Macro: Affects filter, resonance, and playback intensity.")
         # Map macro to actual params
-        cutoff_macro = int(40 + (psy_energy * 80))
+        cutoff_macro = int(20 + (psy_energy * 100))
+        res_macro = int(10 + (psy_energy * 90))
         st.session_state.psy_player.send_cc(2, 74, cutoff_macro)
+        st.session_state.psy_player.send_cc(2, 71, res_macro)
+        # Dynamically adjust gain based on energy
+        st.session_state.psy_player.set_gain(master_gain * (0.8 + psy_energy * 0.4))
 
     with col2:
         st.subheader("Performance Monitor")
@@ -304,10 +309,14 @@ with tab3:
             if input_midi_path:
                 temp_output = os.path.join(output_dir, "studio_output.mid")
                 mode_str = "arrangement" if gen_mode == "Arrangement (56 bars)" else "loop"
-                st.session_state.psy_gen.generate(input_midi_path, temp_output, {
+                gen_config = {
                     "targetBpm": bpm, "euclideanDensity": density, "gallopVariant": gallop,
                     "mode": mode_str, "kickVelocity": vol_k, "bassVelocity": vol_b, "leadVelocity": vol_l
-                })
+                }
+                if algo_style != "None":
+                    gen_config["style_preset"] = algo_style
+
+                st.session_state.psy_gen.generate(input_midi_path, temp_output, gen_config)
 
                 mid = mido.MidiFile(temp_output)
                 notes = []
@@ -350,6 +359,56 @@ with tab3:
                 time.sleep(0.05)
                 st.session_state.psy_player.send_note_off(2, 60 + i*2)
             st.toast("Acid Fill triggered!")
+
+        st.subheader("5. Export & Render")
+        er1, er2 = st.columns(2)
+        if er1.button("🎬 Render Studio Jam to Video", help="Renders the current generated MIDI with audio-reactive visuals."):
+            temp_mid = os.path.join(output_dir, "studio_output.mid")
+            if os.path.exists(temp_mid):
+                with st.spinner("Rendering audio and video..."):
+                    out_audio = os.path.join(output_dir, f"studio_render_{uuid.uuid4().hex[:4]}.wav")
+                    out_video = out_audio.replace(".wav", ".mp4")
+
+                    # Render Audio
+                    renderer.render(temp_mid, out_audio)
+
+                    # Render Video with Visualizer
+                    # Use a placeholder image or a solid color
+                    video_producer.create_video(
+                        out_audio, "black", out_video,
+                        enable_visualizer=True,
+                        visualizer_mode=visualizer_mode,
+                        tempo_bpm=bpm
+                    )
+                    st.video(out_video)
+                    st.success(f"Render complete: {out_video}")
+                    st.balloons()
+            else:
+                st.error("No generated MIDI found. Press 'GENERATE & PLAY' first.")
+
+        if er2.button("💾 Download Generated MIDI"):
+            temp_mid = os.path.join(output_dir, "studio_output.mid")
+            if os.path.exists(temp_mid):
+                with open(temp_mid, "rb") as f:
+                    st.download_button("Click to Download MIDI", f, file_name="psy_jam.mid")
+            else:
+                st.error("No generated MIDI found.")
+
+    with st.expander("Model Refinement & Feedback"):
+        feedback_rating = st.slider("Rate this Track (Stars)", 1, 5, 5, key="studio_stars")
+        feedback_text = st.text_area("What could be improved?", key="studio_feedback_text")
+        if st.button("Submit Feedback"):
+            st.success("Thank you for your feedback! It will be used to refine our algorithmic rules.")
+            # In a real app, we would write this to a DB
+            with open("output/feedback_log.jsonl", "a") as f:
+                f.write(json.dumps({
+                    "timestamp": time.time(),
+                    "rating": feedback_rating,
+                    "text": feedback_text,
+                    "config": {
+                        "bpm": bpm, "density": density, "gallop": gallop, "algo_style": algo_style
+                    }
+                }) + "\n")
 
     with st.expander("Novel AI Generation (Local MusicGen)"):
         novel_prompt = st.text_input("Novel Prompt", value="Fast melodic psytrance, 145 BPM, psychedelic leads, high energy")

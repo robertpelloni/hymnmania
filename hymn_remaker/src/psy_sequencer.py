@@ -7,6 +7,12 @@ class PsyGenerator:
     def __init__(self):
         self.ticks_per_beat = 480
         self.ticks_per_sixteenth = self.ticks_per_beat // 4
+        self.style_presets = {
+            "Full-On": {"euclideanDensity": 8, "gallopVariant": "triplet", "intensity": 1.2, "useMarkovLeads": True},
+            "DarkPsy": {"euclideanDensity": 13, "gallopVariant": "rolling", "intensity": 1.5, "useMarkovLeads": True},
+            "Progressive": {"euclideanDensity": 4, "gallopVariant": "classic", "intensity": 0.8, "useMarkovLeads": False},
+            "Morning": {"euclideanDensity": 6, "gallopVariant": "triplet", "intensity": 1.0, "useMarkovLeads": True}
+        }
 
     def generate(self, input_midi_path, output_midi_path, config):
         """
@@ -21,6 +27,15 @@ class PsyGenerator:
 
         bpm = config.get("targetBpm", 145)
         tempo = mido.bpm2tempo(bpm)
+
+        # Apply style preset if requested
+        style_name = config.get("style_preset")
+        if style_name and style_name in self.style_presets:
+            preset = self.style_presets[style_name]
+            # Use preset values if not explicitly overridden in config
+            for k, v in preset.items():
+                if k not in config:
+                    config[k] = v
 
         # Extract melody and chords from input DNA
         melody_notes, root_notes = self._extract_dna(input_mid)
