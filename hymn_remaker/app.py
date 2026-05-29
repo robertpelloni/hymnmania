@@ -220,6 +220,7 @@ with tab3:
     from hymn_remaker.src.audio_to_midi import transcribe_audio_to_midi
     from hymn_remaker.src.psy_sequencer import PsyGenerator
     import mido
+    import threading
 
     if "psy_player" not in st.session_state:
         import hymn_player_ext
@@ -280,6 +281,38 @@ with tab3:
         st.session_state.psy_player.set_channel_volume(0, vol_k)
         st.session_state.psy_player.set_channel_volume(1, vol_b)
         st.session_state.psy_player.set_channel_volume(2, vol_l)
+
+        st.subheader("External MIDI Control")
+        try:
+            in_ports = mido.get_input_names()
+            out_ports = mido.get_output_names()
+        except Exception:
+            in_ports = []
+            out_ports = []
+
+        midi_in_sel = st.selectbox("MIDI Input (Hardware/Controller)", ["None"] + in_ports)
+        midi_out_sel = st.selectbox("MIDI Output (External VST/Synth)", ["None"] + out_ports)
+
+        if midi_in_sel != "None" and st.session_state.get("last_midi_in") != midi_in_sel:
+            # Setup input callback
+            def midi_callback(message):
+                if message.type == 'control_change':
+                    # Map CC 1 (Mod wheel) to Energy
+                    if message.control == 1:
+                         # This won't update UI directly but can affect engine state
+                         st.session_state.psy_energy_val = message.value / 127.0
+                    # Map CC 74 (Brightness) to Cutoff
+                    elif message.control == 74:
+                         st.session_state.psy_player.send_cc(2, 74, message.value)
+
+            try:
+                if "midi_in_port" in st.session_state:
+                    st.session_state.midi_in_port.close()
+                st.session_state.midi_in_port = mido.open_input(midi_in_sel, callback=midi_callback)
+                st.session_state.last_midi_in = midi_in_sel
+                st.success(f"Connected to {midi_in_sel}")
+            except Exception as e:
+                st.error(f"MIDI In Error: {e}")
 
         st.subheader("4. Real-time Automation")
         cutoff = st.slider("Filter Cutoff (CC 74)", 0, 127, 100)
@@ -347,6 +380,24 @@ with tab3:
 
                 st.session_state.psy_gen.generate(input_midi_path, temp_output, gen_config)
 
+                # Optional: Stream to external MIDI port
+                if midi_out_sel != "None":
+                    try:
+                        if "midi_out_thread" in st.session_state and st.session_state.midi_out_thread.is_alive():
+                             st.session_state.midi_stop_event.set()
+                             st.session_state.midi_out_thread.join()
+
+                        st.session_state.midi_stop_event = threading.Event()
+                        out_port = mido.open_output(midi_out_sel)
+                        st.session_state.midi_out_thread = threading.Thread(
+                            target=st.session_state.psy_gen.stream_to_port,
+                            args=(out_port, input_midi_path, gen_config, st.session_state.midi_stop_event)
+                        )
+                        st.session_state.midi_out_thread.start()
+                        st.info(f"Streaming to external MIDI port: {midi_out_sel}")
+                    except Exception as e:
+                        st.error(f"External MIDI Out Error: {e}")
+
                 mid = mido.MidiFile(temp_output)
                 notes = []
                 for track in mid.tracks:
@@ -373,6 +424,8 @@ with tab3:
         if c2.button("⏹️ STOP"):
             st.session_state.psy_player.stop()
             st.session_state.psy_player.stop_realtime()
+            if "midi_stop_event" in st.session_state:
+                st.session_state.midi_stop_event.set()
             st.info("Performance stopped.")
 
         st.subheader("Manual FX & Jam Trigger")

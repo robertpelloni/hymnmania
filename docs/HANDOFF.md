@@ -1,3 +1,28 @@
+# Handoff - Version 1.34.0 (Real-time MIDI I/O & Streaming)
+
+## Session Summary
+Successfully integrated real-time MIDI I/O capabilities into the Psy-Mono pipeline. The system now supports external hardware controllers and can stream generated sequences to external VSTs/synths. The `PsyGenerator` was upgraded with a streaming engine, and the Streamlit UI now includes a dedicated "External MIDI Control" section.
+
+## Major Changes
+- **MIDI I/O Integration:**
+    - `python-rtmidi` added to dependencies.
+    - `app.py`: Added MIDI Input/Output selection and background callback listeners.
+- **Sequencer Streaming Engine:**
+    - `psy_sequencer.py`: Added `stream_to_port` and `generate_bar_messages`.
+    - Supports live parameter updates (Density, Gallop, Style) by regenerating the sequence bar-by-bar.
+- **Hardware Mapping:**
+    - Pre-configured mapping for CC 1 (Mod Wheel) to Global Energy and CC 74 (Brightness) to Filter Cutoff.
+
+## Verification Status
+- Verified UI elements (dropdowns, info messages) via Playwright.
+- Verified `mido`/`rtmidi` library presence and basic functionality.
+- Unit tests for `generate_bar_messages` passed.
+
+## Outstanding Items / Future Vision
+- Implement a MIDI "Learn" feature in the UI for custom hardware mappings.
+- Optimize streaming thread synchronization for lower jitter.
+- Integrate MPE (Midi Polyphonic Expression) support for advanced lead modulation.
+
 # Handoff - Version 1.33.0 (Optimization, Analytics & Final Refinement)
 
 ## Session Summary

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.34.0] - 2026-05-31
+### Added
+- **Real-time MIDI I/O Integration:**
+    - Integrated `python-rtmidi` and `mido` for external hardware/controller support.
+    - Added MIDI Input & Output port selection to the "Live Psy-Mono Studio" UI.
+    - Implemented a background MIDI listener to map hardware CC messages (e.g., Mod Wheel, Brightness) to engine parameters.
+- **Sequencer Streaming Engine:**
+    - New `stream_to_port` method in `PsyGenerator` for continuous, low-latency MIDI streaming to external VSTs or synths.
+    - Added `generate_bar_messages` for granular bar-by-bar generation, enabling live parameter updates during playback.
+
 ## [1.33.0] - 2026-05-30
 ### Added
 - **Style Presets & Model Refinement:**

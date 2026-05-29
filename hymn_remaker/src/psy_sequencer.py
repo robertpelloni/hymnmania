@@ -1,6 +1,7 @@
 import mido
 import math
 import random
+import time
 from mido import Message, MidiFile, MidiTrack, MetaMessage
 
 class PsyGenerator:
@@ -106,6 +107,82 @@ class PsyGenerator:
         output_mid.tracks.extend([kick_track, bass_track, lead_track])
         output_mid.save(output_midi_path)
         return True
+
+    def generate_bar_messages(self, bar_idx, config, dna):
+        """
+        Generates a list of (time_in_bar_ticks, mido.Message) for a single bar.
+        dna is a tuple of (melody_notes, root_notes).
+        """
+        melody_notes, root_notes = dna
+
+        # Temporary tracks to use existing methods
+        k_track = MidiTrack()
+        b_track = MidiTrack()
+        l_track = MidiTrack()
+
+        root = self._get_root_for_bar(root_notes, bar_idx)
+        melody = self._get_melody_for_bar(melody_notes, bar_idx)
+
+        self._add_kick_bar(k_track, config)
+        self._add_bass_bar(b_track, root, config, bar_idx)
+        self._add_lead_bar(l_track, melody, config)
+
+        messages = []
+        for track in [k_track, b_track, l_track]:
+            abs_tick = 0
+            for msg in track:
+                abs_tick += msg.time
+                if not msg.is_meta:
+                    messages.append((abs_tick, msg))
+
+        # Sort by tick
+        messages.sort(key=lambda x: x[0])
+        return messages
+
+    def stream_to_port(self, port, input_midi_path, config, stop_event=None):
+        """
+        Streams generated MIDI directly to a mido output port.
+        """
+        try:
+            input_mid = MidiFile(input_midi_path)
+        except Exception:
+            input_mid = None
+
+        dna = self._extract_dna(input_mid)
+        bpm = config.get("targetBpm", 145)
+        ticks_per_bar = self.ticks_per_beat * 4
+
+        # Calculate tick duration in seconds
+        # bpm = beats per minute, 4 beats per bar
+        # ticks_per_beat = 480
+        tick_duration = 60.0 / (bpm * self.ticks_per_beat)
+
+        bar_idx = 0
+        while True:
+            if stop_event and stop_event.is_set():
+                break
+
+            # Regenerate messages for every bar to allow live parameter updates
+            # (Note: we pull config from the generator's state or closure in real use)
+            messages = self.generate_bar_messages(bar_idx, config, dna)
+
+            start_time = time.time()
+            for tick, msg in messages:
+                if stop_event and stop_event.is_set():
+                    break
+
+                # Wait until it's time for this message
+                current_tick_time = tick * tick_duration
+                elapsed = time.time() - start_time
+                wait_time = current_tick_time - elapsed
+                if wait_time > 0:
+                    time.sleep(wait_time)
+
+                port.send(msg)
+
+            bar_idx += 1
+            if config.get("mode") == "loop" and bar_idx >= 8:
+                bar_idx = 0
 
     def _get_root_for_bar(self, root_notes, bar_idx):
         if not root_notes: return 36
