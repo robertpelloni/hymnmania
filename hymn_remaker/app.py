@@ -1,6 +1,7 @@
 import time
 import json
 import uuid
+import random
 import streamlit as st
 import os
 import sys
@@ -131,7 +132,7 @@ local_temperature = st.sidebar.slider("Local Temperature", 0.1, 2.0, 1.0)
 
 upload = st.sidebar.checkbox("Upload to YouTube", value=False)
 
-tab1, tab2, tab3, tab4 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)", "🌀 Live Psy-Mono Studio", "📚 Library"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)", "🌀 Live Psy-Mono Studio", "📚 Library", "🔬 Optimization & Analytics"])
 
 with tab1:
     uploaded_files = st.file_uploader("Upload MIDI/MusicXML", type=["mid", "midi", "mxl", "xml"], accept_multiple_files=True)
@@ -225,11 +226,20 @@ with tab3:
         st.session_state.psy_player = hymn_player_ext.HymnPlayer(settings.DEFAULT_SOUNDFONT_PATHS[0])
         st.session_state.psy_gen = PsyGenerator()
 
+    if "event_log" not in st.session_state:
+        st.session_state.event_log = []
+
+    perf_mode = st.toggle("🚀 PERFORMANCE MODE", value=False, help="Hides non-essential sliders for a cleaner live jamming interface.")
+
     col1, col2 = st.columns([1, 2])
     with col1:
-        st.subheader("1. Input & Mode")
+        if not perf_mode:
+            st.subheader("1. Input & Mode")
         source_mode = st.radio("Input Source", ["Hymn MIDI", "Mic Input"], key="psy_source")
         gen_mode = st.radio("Generation Mode", ["Loop (8 bars)", "Arrangement (56 bars)"], key="psy_mode")
+
+        if perf_mode:
+             st.info(f"Mode: {gen_mode} | Gain: {st.session_state.get('psy_gain', 1.0)}")
 
         input_midi_path = None
         if source_mode == "Hymn MIDI":
@@ -247,11 +257,17 @@ with tab3:
                     f.write(audio_rec['bytes'])
                 transcribe_audio_to_midi(temp_audio, input_midi_path)
 
-        st.subheader("2. Sequencer Config")
-        bpm = st.slider("Target BPM", 120, 160, 145, key="psy_bpm")
-        algo_style = st.selectbox("Algorithmic Style", ["None", "Full-On", "DarkPsy", "Progressive", "Morning"], key="psy_algo_style")
-        density = st.slider("Euclidean Density", 1, 16, 5, key="psy_density")
-        gallop = st.selectbox("Gallop Variant", ["classic", "triplet", "rolling"], key="psy_gallop")
+        if not perf_mode:
+            st.subheader("2. Sequencer Config")
+            bpm = st.slider("Target BPM", 120, 160, 145, key="psy_bpm")
+            algo_style = st.selectbox("Algorithmic Style", ["None", "Full-On", "DarkPsy", "Progressive", "Morning"], key="psy_algo_style")
+            density = st.slider("Euclidean Density", 1, 16, 5, key="psy_density")
+            gallop = st.selectbox("Gallop Variant", ["classic", "triplet", "rolling"], key="psy_gallop")
+        else:
+            bpm = st.session_state.get("psy_bpm", 145)
+            algo_style = st.session_state.get("psy_algo_style", "None")
+            density = st.session_state.get("psy_density", 5)
+            gallop = st.session_state.get("psy_gallop", "classic")
 
         st.subheader("3. Live Performance Mixer")
         master_gain = st.slider("Global Gain", 0.0, 5.0, 1.0, key="psy_gain")
@@ -268,9 +284,15 @@ with tab3:
         st.subheader("4. Real-time Automation")
         cutoff = st.slider("Filter Cutoff (CC 74)", 0, 127, 100)
         st.session_state.psy_player.send_cc(2, 74, cutoff) # Lead channel filter
+        if cutoff != st.session_state.get('prev_cutoff'):
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 74 (Cutoff): {cutoff}")
+            st.session_state.prev_cutoff = cutoff
 
         res = st.slider("Resonance (CC 71)", 0, 127, 40)
         st.session_state.psy_player.send_cc(2, 71, res)
+        if res != st.session_state.get('prev_res'):
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 71 (Resonance): {res}")
+            st.session_state.prev_res = res
 
         st.subheader("Psy-Energy Macro")
         psy_energy = st.slider("Global Energy", 0.0, 1.0, 0.5, help="Macro: Affects filter, resonance, and playback intensity.")
@@ -283,7 +305,13 @@ with tab3:
         st.session_state.psy_player.set_gain(master_gain * (0.8 + psy_energy * 0.4))
 
     with col2:
-        st.subheader("Performance Monitor")
+        st.subheader("Performance Monitor & Event Log")
+
+        log_container = st.container(height=150)
+        with log_container:
+            for event in reversed(st.session_state.event_log[-20:]):
+                st.write(f"`{event}`")
+
         preview_placeholder = st.empty()
 
         st.subheader("Live Waveform Visualizer")
@@ -306,6 +334,7 @@ with tab3:
 
         c1, c2, c3 = st.columns(3)
         if c1.button("▶️ GENERATE & PLAY"):
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Trigger: Generate & Play ({algo_style})")
             if input_midi_path:
                 temp_output = os.path.join(output_dir, "studio_output.mid")
                 mode_str = "arrangement" if gen_mode == "Arrangement (56 bars)" else "loop"
@@ -350,9 +379,12 @@ with tab3:
         fc1, fc2, fc3 = st.columns(3)
         if fc1.button("💥 Crash Cymbal"):
              st.session_state.psy_player.send_note_on(9, 49, 120) # MIDI Ch 10 is usually percussion
+             st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Manual FX: Crash Cymbal")
         if fc2.button("🚀 Rising Sweep"):
             st.session_state.psy_player.send_note_on(3, 72, 100)
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Manual FX: Rising Sweep")
         if fc3.button("🥁 Acid Fill"):
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Manual FX: Acid Fill")
             # Trigger a rapid acid lead sequence on channel 2
             for i in range(4):
                 st.session_state.psy_player.send_note_on(2, 60 + i*2, 110)
@@ -468,3 +500,86 @@ with tab4:
                 st.divider()
     else:
         st.error(f"Output directory not found: {output_dir}")
+
+with tab5:
+    st.header("🔬 Optimization & Analytics Dashboard")
+    st.write("Conduct A/B/C/D testing to validate generation quality and adjust parameters.")
+
+    import pandas as pd
+
+    # Section 1: A/B/C/D Testing
+    st.subheader("1. A/B/C/D Variant Testing")
+    test_midi = st.file_uploader("Upload MIDI for A/B Test", type=["mid", "midi"], key="ab_midi")
+
+    if test_midi:
+        if st.button("🚀 Generate 4 Variants"):
+            test_path = os.path.join(settings.INPUT_DIR, "ab_test_input.mid")
+            with open(test_path, "wb") as f:
+                f.write(test_midi.getbuffer())
+
+            variants = []
+            for i, label in enumerate(['A', 'B', 'C', 'D']):
+                out_v = os.path.join(output_dir, f"test_variant_{label}.mid")
+                out_audio = out_v.replace(".mid", ".wav")
+
+                # Randomize params for test
+                v_config = {
+                    "targetBpm": 145,
+                    "euclideanDensity": random.randint(3, 13),
+                    "gallopVariant": random.choice(["classic", "triplet", "rolling"]),
+                    "mode": "loop"
+                }
+                st.session_state.psy_gen.generate(test_path, out_v, v_config)
+                renderer.render(out_v, out_audio)
+                variants.append({"label": label, "audio": out_audio, "config": v_config})
+            st.session_state["ab_variants"] = variants
+
+    if "ab_variants" in st.session_state:
+        cols = st.columns(4)
+        for i, v in enumerate(st.session_state["ab_variants"]):
+            with cols[i]:
+                st.write(f"**Variant {v['label']}**")
+                st.audio(v['audio'])
+                if st.button(f"Vote {v['label']}", key=f"vote_{v['label']}"):
+                    st.success(f"Voted for {v['label']}!")
+                    # Log winning params
+                    with open("output/parameter_optimization.jsonl", "a") as f:
+                        f.write(json.dumps({
+                            "timestamp": time.time(),
+                            "winner": v['label'],
+                            "config": v['config']
+                        }) + "\n")
+
+    # Section 2: Analytics
+    st.subheader("2. Feedback Analytics")
+    feedback_file = "output/feedback_log.jsonl"
+    if os.path.exists(feedback_file):
+        data = []
+        with open(feedback_file, "r") as f:
+            for line in f:
+                data.append(json.loads(line))
+
+        if data:
+            df = pd.DataFrame(data)
+            # Flatten config
+            df_config = pd.json_normalize(df['config'])
+            df = pd.concat([df.drop('config', axis=1), df_config], axis=1)
+
+            st.write("### Rating vs. Euclidean Density")
+            fig = go.Figure(data=go.Scatter(
+                x=df['density'],
+                y=df['rating'],
+                mode='markers',
+                marker=dict(size=12, color=df['rating'], colorscale='Viridis', showscale=True)
+            ))
+            fig.update_layout(xaxis_title="Euclidean Density", yaxis_title="User Rating")
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.write("### Style Preference Distribution")
+            style_counts = df['algo_style'].value_counts()
+            fig_pie = go.Figure(data=[go.Pie(labels=style_counts.index, values=style_counts.values)])
+            st.plotly_chart(fig_pie, use_container_width=True)
+        else:
+            st.info("No feedback data yet.")
+    else:
+        st.info("Log file not found. Submit feedback in the Studio tab first.")
