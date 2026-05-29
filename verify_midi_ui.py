@@ -22,12 +22,12 @@ def verify_midi_ui():
         expect(page.get_by_text("MIDI Input (Hardware/Controller)")).to_be_visible()
         expect(page.get_by_text("MIDI Output (External VST/Synth)")).to_be_visible()
 
-        # 6. Scroll down to External MIDI Control - Try focusing on the element
-        midi_input_label = page.get_by_text("MIDI Input (Hardware/Controller)")
-        midi_input_label.scroll_into_view_if_needed()
+        # 6. Scroll down to PANIC
+        panic_btn = page.get_by_text("🚨 PANIC (Stop All)")
+        panic_btn.scroll_into_view_if_needed()
         time.sleep(2)
         # 7. Take screenshot
-        page.screenshot(path="/home/jules/verification/v134_midi_ui_scrolled.png")
+        page.screenshot(path="/home/jules/verification/v135_panic_ui.png")
 
         browser.close()
 

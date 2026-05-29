@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.35.0] - 2026-06-01
+### Added
+- **Interactive Live Streaming Engine:**
+    - Implemented `InternalMidiPort` wrapper to bridge C++ audio engine with MIDI streaming logic.
+    - Upgraded `PsyGenerator.stream_to_port` to support real-time parameter reactivity via dynamic config getters.
+    - Added "Live Internal Streaming" to the Studio UI, allowing seamless parameter updates (BPM, Density, Style) during playback.
+- **Panic Mechanism:**
+    - New "🚨 PANIC (Stop All)" button in the UI to instantly kill all active notes and stop streaming threads.
+
 ## [1.34.0] - 2026-05-31
 ### Added
 - **Real-time MIDI I/O Integration:**

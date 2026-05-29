@@ -1,3 +1,26 @@
+# Handoff - Version 1.35.0 (Interactive Live Parameters & Internal Streaming)
+
+## Session Summary
+Achieved full real-time interactivity for the Psy-Mono pipeline. Parameters like BPM, Euclidean Density, and Gallop Variant now update the sequence on the next bar without stopping playback. This was accomplished by bridging the C++ engine via an `InternalMidiPort` and upgrading the streaming engine to use dynamic config getters.
+
+## Major Changes
+- **Interactive Streaming:**
+    - `psy_sequencer.py`: Added `InternalMidiPort` and dynamic `config` support in `stream_to_port`.
+    - `app.py`: Integrated `get_live_config` callback into streaming threads.
+- **Panic & Safety:**
+    - Added a global "Panic" button that sends CC 123 (All Notes Off) to the C++ engine and halts all streaming threads.
+- **Workflow Optimization:**
+    - The "GENERATE & PLAY" button now triggers low-latency internal streaming while still generating a persistent MIDI file in the background for download/visuals.
+
+## Verification Status
+- Verified parameter update reactivity via unit tests (`tests/test_psy_live.py`).
+- Verified UI stability and "Panic" button visibility via Playwright screenshots.
+
+## Outstanding Items / Future Vision
+- Implement a "Swing/Shuffle" parameter for more rhythmic variety.
+- Add real-time visual step-sequencer in the UI for per-step note editing.
+- Explore multi-channel internal routing for separate VST processing per track.
+
 # Handoff - Version 1.34.0 (Real-time MIDI I/O & Streaming)
 
 ## Session Summary

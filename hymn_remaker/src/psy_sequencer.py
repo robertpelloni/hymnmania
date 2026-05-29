@@ -4,6 +4,21 @@ import random
 import time
 from mido import Message, MidiFile, MidiTrack, MetaMessage
 
+class InternalMidiPort:
+    """
+    Wraps the C++ HymnPlayer engine to behave like a mido output port.
+    """
+    def __init__(self, player):
+        self.player = player
+
+    def send(self, msg):
+        if msg.type == 'note_on':
+            self.player.send_note_on(msg.channel, msg.note, msg.velocity)
+        elif msg.type == 'note_off':
+            self.player.send_note_off(msg.channel, msg.note)
+        elif msg.type == 'control_change':
+            self.player.send_cc(msg.channel, msg.control, msg.value)
+
 class PsyGenerator:
     def __init__(self):
         self.ticks_per_beat = 480
@@ -142,6 +157,7 @@ class PsyGenerator:
     def stream_to_port(self, port, input_midi_path, config, stop_event=None):
         """
         Streams generated MIDI directly to a mido output port.
+        config can be a dict or a callable that returns the current config for live updates.
         """
         try:
             input_mid = MidiFile(input_midi_path)
@@ -149,22 +165,21 @@ class PsyGenerator:
             input_mid = None
 
         dna = self._extract_dna(input_mid)
-        bpm = config.get("targetBpm", 145)
-        ticks_per_bar = self.ticks_per_beat * 4
-
-        # Calculate tick duration in seconds
-        # bpm = beats per minute, 4 beats per bar
-        # ticks_per_beat = 480
-        tick_duration = 60.0 / (bpm * self.ticks_per_beat)
 
         bar_idx = 0
         while True:
             if stop_event and stop_event.is_set():
                 break
 
+            # Get current config (allows live parameter updates)
+            current_config = config() if callable(config) else config
+
+            bpm = current_config.get("targetBpm", 145)
+            # 60.0 / (bpm * self.ticks_per_beat)
+            tick_duration = 60.0 / (bpm * self.ticks_per_beat)
+
             # Regenerate messages for every bar to allow live parameter updates
-            # (Note: we pull config from the generator's state or closure in real use)
-            messages = self.generate_bar_messages(bar_idx, config, dna)
+            messages = self.generate_bar_messages(bar_idx, current_config, dna)
 
             start_time = time.time()
             for tick, msg in messages:
@@ -181,7 +196,7 @@ class PsyGenerator:
                 port.send(msg)
 
             bar_idx += 1
-            if config.get("mode") == "loop" and bar_idx >= 8:
+            if current_config.get("mode") == "loop" and bar_idx >= 8:
                 bar_idx = 0
 
     def _get_root_for_bar(self, root_notes, bar_idx):

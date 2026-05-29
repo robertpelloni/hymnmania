@@ -218,7 +218,7 @@ with tab3:
     st.header("🌀 Live Psy-Mono Studio V5: Live Jam Edition")
     from streamlit_mic_recorder import mic_recorder
     from hymn_remaker.src.audio_to_midi import transcribe_audio_to_midi
-    from hymn_remaker.src.psy_sequencer import PsyGenerator
+    from hymn_remaker.src.psy_sequencer import PsyGenerator, InternalMidiPort
     import mido
     import threading
 
@@ -226,6 +226,7 @@ with tab3:
         import hymn_player_ext
         st.session_state.psy_player = hymn_player_ext.HymnPlayer(settings.DEFAULT_SOUNDFONT_PATHS[0])
         st.session_state.psy_gen = PsyGenerator()
+        st.session_state.internal_midi_port = InternalMidiPort(st.session_state.psy_player)
 
     if "event_log" not in st.session_state:
         st.session_state.event_log = []
@@ -371,33 +372,58 @@ with tab3:
             if input_midi_path:
                 temp_output = os.path.join(output_dir, "studio_output.mid")
                 mode_str = "arrangement" if gen_mode == "Arrangement (56 bars)" else "loop"
-                gen_config = {
-                    "targetBpm": bpm, "euclideanDensity": density, "gallopVariant": gallop,
-                    "mode": mode_str, "kickVelocity": vol_k, "bassVelocity": vol_b, "leadVelocity": vol_l
-                }
-                if algo_style != "None":
-                    gen_config["style_preset"] = algo_style
 
-                st.session_state.psy_gen.generate(input_midi_path, temp_output, gen_config)
+                # Define a live config getter
+                def get_live_config():
+                    c = {
+                        "targetBpm": st.session_state.get("psy_bpm", 145),
+                        "euclideanDensity": st.session_state.get("psy_density", 5),
+                        "gallopVariant": st.session_state.get("psy_gallop", "classic"),
+                        "mode": "arrangement" if st.session_state.get("psy_mode") == "Arrangement (56 bars)" else "loop",
+                        "kickVelocity": st.session_state.get("psy_vol_k", 0.9),
+                        "bassVelocity": st.session_state.get("psy_vol_b", 0.7),
+                        "leadVelocity": st.session_state.get("psy_vol_l", 0.8)
+                    }
+                    astyle = st.session_state.get("psy_algo_style", "None")
+                    if astyle != "None":
+                        c["style_preset"] = astyle
+                    return c
+
+                # Clear previous threads
+                if "midi_stop_event" in st.session_state:
+                    st.session_state.midi_stop_event.set()
+                if "midi_out_thread" in st.session_state and st.session_state.midi_out_thread.is_alive():
+                    st.session_state.midi_out_thread.join()
+                if "internal_midi_thread" in st.session_state and st.session_state.internal_midi_thread.is_alive():
+                    st.session_state.internal_midi_thread.join()
+
+                st.session_state.midi_stop_event = threading.Event()
+
+                # Start Internal Streaming
+                st.session_state.psy_player.start_realtime()
+                st.session_state.internal_midi_thread = threading.Thread(
+                    target=st.session_state.psy_gen.stream_to_port,
+                    args=(st.session_state.internal_midi_port, input_midi_path, get_live_config, st.session_state.midi_stop_event)
+                )
+                st.session_state.internal_midi_thread.start()
 
                 # Optional: Stream to external MIDI port
                 if midi_out_sel != "None":
                     try:
-                        if "midi_out_thread" in st.session_state and st.session_state.midi_out_thread.is_alive():
-                             st.session_state.midi_stop_event.set()
-                             st.session_state.midi_out_thread.join()
-
-                        st.session_state.midi_stop_event = threading.Event()
                         out_port = mido.open_output(midi_out_sel)
                         st.session_state.midi_out_thread = threading.Thread(
                             target=st.session_state.psy_gen.stream_to_port,
-                            args=(out_port, input_midi_path, gen_config, st.session_state.midi_stop_event)
+                            args=(out_port, input_midi_path, get_live_config, st.session_state.midi_stop_event)
                         )
                         st.session_state.midi_out_thread.start()
                         st.info(f"Streaming to external MIDI port: {midi_out_sel}")
                     except Exception as e:
                         st.error(f"External MIDI Out Error: {e}")
 
+                st.success(f"Live performance started in {mode_str} mode!")
+
+                # Still generate the MIDI file for visual preview / download
+                st.session_state.psy_gen.generate(input_midi_path, temp_output, get_live_config())
                 mid = mido.MidiFile(temp_output)
                 notes = []
                 for track in mid.tracks:
@@ -444,6 +470,13 @@ with tab3:
                 time.sleep(0.05)
                 st.session_state.psy_player.send_note_off(2, 60 + i*2)
             st.toast("Acid Fill triggered!")
+
+        if st.button("🚨 PANIC (Stop All)", type="secondary"):
+            if "midi_stop_event" in st.session_state:
+                st.session_state.midi_stop_event.set()
+            for ch in range(16):
+                st.session_state.psy_player.send_cc(ch, 123, 0) # All Notes Off
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Panic triggered.")
 
         st.subheader("5. Export & Render")
         er1, er2 = st.columns(2)
