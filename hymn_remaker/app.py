@@ -219,6 +219,7 @@ with tab3:
     from streamlit_mic_recorder import mic_recorder
     from hymn_remaker.src.audio_to_midi import transcribe_audio_to_midi
     from hymn_remaker.src.psy_sequencer import PsyGenerator, InternalMidiPort
+    from hymn_remaker.src.audio_streamer import AudioStreamer
     import mido
     import threading
 
@@ -227,6 +228,7 @@ with tab3:
         st.session_state.psy_player = hymn_player_ext.HymnPlayer(settings.DEFAULT_SOUNDFONT_PATHS[0])
         st.session_state.psy_gen = PsyGenerator()
         st.session_state.internal_midi_port = InternalMidiPort(st.session_state.psy_player)
+        st.session_state.audio_streamer = AudioStreamer(st.session_state.psy_player)
 
     if "event_log" not in st.session_state:
         st.session_state.event_log = []
@@ -328,6 +330,15 @@ with tab3:
             st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 71 (Resonance): {res}")
             st.session_state.prev_res = res
 
+        st.subheader("Live Audio Stream")
+        use_web_stream = st.toggle("🌐 Enable Web Stream (Browser Audio)", value=False)
+        if use_web_stream:
+            st.session_state.audio_streamer.start()
+            st.markdown('<audio src="http://localhost:8000/stream.mp3" controls autoplay style="width: 100%;"></audio>', unsafe_allow_html=True)
+            st.info("Streaming live MP3 to browser. Use System Audio if running locally.")
+        else:
+            st.session_state.audio_streamer.stop()
+
         st.subheader("Psy-Energy Macro")
         psy_energy = st.slider("Global Energy", 0.0, 1.0, 0.5, help="Macro: Affects filter, resonance, and playback intensity.")
         # Map macro to actual params
@@ -349,10 +360,19 @@ with tab3:
         preview_placeholder = st.empty()
 
         st.subheader("Live Waveform Visualizer")
-        viz_data = np.random.randn(100) * (0.1 + master_gain * 0.2)
-        if st.session_state.psy_player.is_playing():
-             # Add some "beat" pulses
-             viz_data[::10] *= 2
+
+        # Pull real peaks from streamer or player
+        peaks = st.session_state.audio_streamer.get_peaks()
+        # Create a simple dynamic buffer for visualization
+        if "viz_buffer" not in st.session_state:
+            st.session_state.viz_buffer = np.zeros(100)
+
+        new_val = (peaks[0] + peaks[1]) / 2.0
+        st.session_state.viz_buffer = np.roll(st.session_state.viz_buffer, -1)
+        st.session_state.viz_buffer[-1] = new_val
+
+        viz_data = st.session_state.viz_buffer
+
         fig_viz = go.Figure(go.Scatter(y=viz_data, mode='lines', line=dict(color='cyan')))
         fig_viz.update_layout(height=150, margin=dict(l=0,r=0,t=0,b=0), xaxis_visible=False, yaxis_visible=False, template="plotly_dark")
         st.plotly_chart(fig_viz, use_container_width=True)
