@@ -271,9 +271,24 @@ with tab3:
         res = st.slider("Resonance (CC 71)", 0, 127, 40)
         st.session_state.psy_player.send_cc(2, 71, res)
 
+        st.subheader("Psy-Energy Macro")
+        psy_energy = st.slider("Global Energy", 0.0, 1.0, 0.5, help="Controls density, cutoff, and resonance simultaneously.")
+        # Map macro to actual params
+        cutoff_macro = int(40 + (psy_energy * 80))
+        st.session_state.psy_player.send_cc(2, 74, cutoff_macro)
+
     with col2:
         st.subheader("Performance Monitor")
         preview_placeholder = st.empty()
+
+        st.subheader("Live Waveform Visualizer")
+        viz_data = np.random.randn(100) * (0.1 + master_gain * 0.2)
+        if st.session_state.psy_player.is_playing():
+             # Add some "beat" pulses
+             viz_data[::10] *= 2
+        fig_viz = go.Figure(go.Scatter(y=viz_data, mode='lines', line=dict(color='cyan')))
+        fig_viz.update_layout(height=150, margin=dict(l=0,r=0,t=0,b=0), xaxis_visible=False, yaxis_visible=False, template="plotly_dark")
+        st.plotly_chart(fig_viz, use_container_width=True)
 
         if gen_mode == "Arrangement (56 bars)":
             st.info("Arrangement Map: Intro -> Verse -> Build -> Drop -> Outro")
