@@ -19,17 +19,12 @@ if os.path.exists(_env_path):
 from hymn_remaker import settings
 
 # Load global version
-VERSION = "Unknown"
+VERSION = "1.36.0"
 try:
-    version_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "VERSION")
-    if os.path.exists(version_path):
-        with open(version_path, "r") as vf:
+    v_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "VERSION")
+    if os.path.exists(v_root):
+        with open(v_root, "r") as vf:
             VERSION = vf.read().strip()
-    else:
-        version_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "VERSION.md")
-        if os.path.exists(version_path):
-            with open(version_path, "r") as vf:
-                VERSION = vf.read().strip()
 except Exception:
     pass
 
@@ -330,15 +325,6 @@ with tab3:
             st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 71 (Resonance): {res}")
             st.session_state.prev_res = res
 
-        st.subheader("Live Audio Stream")
-        use_web_stream = st.toggle("🌐 Enable Web Stream (Browser Audio)", value=False)
-        if use_web_stream:
-            st.session_state.audio_streamer.start()
-            st.markdown('<audio src="http://localhost:8000/stream.mp3" controls autoplay style="width: 100%;"></audio>', unsafe_allow_html=True)
-            st.info("Streaming live MP3 to browser. Use System Audio if running locally.")
-        else:
-            st.session_state.audio_streamer.stop()
-
         st.subheader("Psy-Energy Macro")
         psy_energy = st.slider("Global Energy", 0.0, 1.0, 0.5, help="Macro: Affects filter, resonance, and playback intensity.")
         # Map macro to actual params
@@ -348,6 +334,15 @@ with tab3:
         st.session_state.psy_player.send_cc(2, 71, res_macro)
         # Dynamically adjust gain based on energy
         st.session_state.psy_player.set_gain(master_gain * (0.8 + psy_energy * 0.4))
+
+        st.subheader("Live Audio Stream")
+        use_web_stream = st.toggle("🌐 Enable Web Stream (Browser Audio)", value=False)
+        if use_web_stream:
+            st.session_state.audio_streamer.start()
+            st.markdown('<audio src="http://localhost:8000/stream.mp3" controls autoplay style="width: 100%;"></audio>', unsafe_allow_html=True)
+            st.info("Streaming live MP3 to browser. Use System Audio if running locally.")
+        else:
+            st.session_state.audio_streamer.stop()
 
     with col2:
         st.subheader("Performance Monitor & Event Log")
@@ -360,20 +355,17 @@ with tab3:
         preview_placeholder = st.empty()
 
         st.subheader("Live Waveform Visualizer")
-
-        # Pull real peaks from streamer or player
+        # Pull real peaks from streamer
         peaks = st.session_state.audio_streamer.get_peaks()
-        # Create a simple dynamic buffer for visualization
         if "viz_buffer" not in st.session_state:
-            st.session_state.viz_buffer = np.zeros(100)
+            st.session_state.viz_buffer = np.zeros(200)
 
         new_val = (peaks[0] + peaks[1]) / 2.0
         st.session_state.viz_buffer = np.roll(st.session_state.viz_buffer, -1)
         st.session_state.viz_buffer[-1] = new_val
-
         viz_data = st.session_state.viz_buffer
 
-        fig_viz = go.Figure(go.Scatter(y=viz_data, mode='lines', line=dict(color='cyan')))
+        fig_viz = go.Figure(go.Scattergl(y=viz_data, mode='lines', line=dict(color='cyan', width=2), fill='tozeroy', fillcolor='rgba(0, 255, 255, 0.2)'))
         fig_viz.update_layout(height=150, margin=dict(l=0,r=0,t=0,b=0), xaxis_visible=False, yaxis_visible=False, template="plotly_dark")
         st.plotly_chart(fig_viz, use_container_width=True)
 
@@ -457,7 +449,7 @@ with tab3:
                     for t_name in ['Kick', 'Bass', 'Lead']:
                         # Show first 4 bars in preview
                         t_notes = [n for n in notes if n['track'] == t_name and n['t'] < 1920 * 4]
-                        fig.add_trace(go.Scatter(x=[n['t'] for n in t_notes], y=[n['n'] for n in t_notes], mode='markers', name=t_name))
+                        fig.add_trace(go.Scattergl(x=[n['t'] for n in t_notes], y=[n['n'] for n in t_notes], mode='markers', name=t_name))
                     fig.update_layout(height=350, margin=dict(l=0,r=0,t=0,b=0), title="Preview (First 4 Bars)")
                     preview_placeholder.plotly_chart(fig, use_container_width=True)
 
@@ -672,7 +664,7 @@ with tab5:
             df = pd.concat([df.drop('config', axis=1), df_config], axis=1)
 
             st.write("### Rating vs. Euclidean Density")
-            fig = go.Figure(data=go.Scatter(
+            fig = go.Figure(data=go.Scattergl(
                 x=df['density'],
                 y=df['rating'],
                 mode='markers',

@@ -166,7 +166,7 @@ void HymnPlayer::send_note_off(int channel, int key) {
 }
 
 void HymnPlayer::renderAudio(float* buffer, int numFrames) {
-    if (synth) {
+    if (isPlaying() && synth) {
         // Ensure buffer is cleared before writing
         for (int i = 0; i < numFrames * 2; ++i) {
             buffer[i] = 0.0f;
@@ -175,7 +175,6 @@ void HymnPlayer::renderAudio(float* buffer, int numFrames) {
         // Render audio - interleaved stereo
         // fluid_synth_write_float parameters: synth, len, lout, loff, rout, roff
         // For interleaved stereo: lout = buffer, rout = buffer + 1, stride = 2
-        // We render even if isPlaying() is false to support real-time MIDI event streaming
         fluid_synth_write_float(synth, numFrames, buffer, 0, 2, buffer + 1, 0, 2);
     } else {
         // Output silence

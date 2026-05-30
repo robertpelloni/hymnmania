@@ -2,15 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.36.0] - 2026-05-29
-### Added
-- **Psy-Mono Real-time Engine**: Integrated Python-native psy_sequencer.py and low-latency C++ HymnPlayer for algorithmic music generation with zero-stop parameter reactivity.
-- **Live Audio Streaming**: Implemented Flask + FFmpeg AudioStreamer for real-time MP3 streaming to browser UI (port 8000).
-- **Live Waveform Visualizer**: Integrated Plotly-based dynamic waveform monitor for real-time peak analysis during algorithmic performance.
-- **Vocal Remix Pipeline**: Added automated hip-hop vocal isolation (Demucs/LALAL.AI) and phase-locked time-stretching for psytrance integration.
-- **Studio V7 UI**: Comprehensive upgrade with Performance Mode, MIDI hardware mapping (CC 1/74), and A/B testing analytics dashboard.
-- **Kaleidoscope Video**: New audio-reactive kaleidoscope filter mode for FFmpeg video generation.
-
 ## [1.6.0] - 2024-05-22
 ### Added
 - **Granular TTS Progress Logging Implementation**: Fully implemented the `status_callback` deep into the ElevenLabs iterative loop inside `tts_generator.py`. The pipeline now accurately updates the UI progress text per lyric line during generation (e.g., "Synthesizing Vocal Line 3/10").
