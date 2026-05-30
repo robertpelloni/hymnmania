@@ -27,6 +27,9 @@ from hymn_remaker.src.stem_separator import StemSeparator
 from hymn_remaker.src.radio_streamer import RadioStreamer
 from hymn_remaker.src.utils import process_audio
 from hymn_remaker.src.midi_analyzer import MidiAnalyzer
+from hymn_remaker.src.psy_sequencer import PsyGenerator
+from hymn_remaker.src.vocal_remix import VocalRemixer
+from hymn_remaker.src.local_remaker import LocalMusicRemaker
 
 # Load environment variables
 load_dotenv()
@@ -112,11 +115,14 @@ def main():
     parser.add_argument("--upload", action="store_true", help="Upload to YouTube after generation")
     parser.add_argument("--skip-render", action="store_true", help="Skip MIDI rendering if WAV exists")
     parser.add_argument("--skip-remake", action="store_true", help="Skip music generation if output audio exists")
-    parser.add_argument("--remake-priority", default=settings.REMAKE_PRIORITY, choices=["suno", "udio", "udio-oauth", "replicate"], help="AI service priority for Step 2 remake (default: suno)")
+    parser.add_argument("--remake-priority", default=settings.REMAKE_PRIORITY, choices=["suno", "udio", "udio-oauth", "replicate", "local"], help="AI service priority for Step 2 remake (default: suno)")
+    parser.add_argument("--local-guidance", type=float, default=3.0, help="Local MusicGen guidance scale")
+    parser.add_argument("--local-temperature", type=float, default=1.0, help="Local MusicGen temperature")
     parser.add_argument("--suno-session", default=None, help="Suno AI session token (overrides SUNO_SESSION_TOKEN env var)")
     parser.add_argument("--udio-token", default=None, help="Udio AI auth token (overrides UDIO_AUTH_TOKEN env var)")
     parser.add_argument("--udio-cookie", default=None, help="Udio AI full cookie string (most reliable)")
     parser.add_argument("--udio-variance", type=float, default=0.25, help="Udio remix variance (0.1 to 1.0). Lower is stricter.")
+    parser.add_argument("--udio-neg-prompt", default="organ, classical, baroque, church organ, cathedral", help="Styles to avoid in Udio remix")
     parser.add_argument("--sonic-vacuum", action="store_true", help="Use Sonic Vacuum preprocessor (dry render)")
     parser.add_argument("--symbolic-norm", action="store_true", help="Use Symbolic Normalizer (velocity flattening)")
     parser.add_argument("--house-quantizer", action="store_true", help="Use House Structural Quantizer (snap to 124 BPM grid)")
@@ -140,28 +146,50 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
 
-    try:
-        renderer = MidiRenderer(soundfont_path=args.soundfont)
-        remaker = MusicRemaker()
-        suno_remaker = SunoRemaker(session_token=args.suno_session)
-        udio_remaker = UdioRemaker(auth_token=args.udio_token, cookie_string=args.udio_cookie)
-        udio_oauth_remaker = UdioOAuthRemaker() # Uses env vars if available
-        content_gen = GeminiContentGenerator()
-        ai_video_gen = AIVideoGenerator()
-        video_producer = VideoProducer()
-        mxl_parser = MusicXMLParser()
-        omr_processor = OMRProcessor()
-        stem_separator = StemSeparator()
-    except Exception as e:
-        logger.error(f"Failed to initialize pipeline: {e}")
-        sys.exit(1)
+    # Lazy-loaded component holders
+    components = {
+        'renderer': None,
+        'remaker': None,
+        'suno_remaker': None,
+        'udio_remaker': None,
+        'udio_oauth_remaker': None,
+        'local_remaker': None,
+        'content_gen': None,
+        'ai_video_gen': None,
+        'video_producer': None,
+        'mxl_parser': None,
+        'omr_processor': None,
+        'stem_separator': None,
+        'radio_streamer': None
+    }
+
+    def get_comp(name):
+        if components[name]: return components[name]
+        logger.info(f"Initializing {name}...")
+        if name == 'renderer': components[name] = MidiRenderer(soundfont_path=args.soundfont)
+        elif name == 'remaker': components[name] = MusicRemaker()
+        elif name == 'suno_remaker': components[name] = SunoRemaker(session_token=args.suno_session)
+        elif name == 'udio_remaker': components[name] = UdioRemaker(auth_token=args.udio_token, cookie_string=args.udio_cookie)
+        elif name == 'udio_oauth_remaker': components[name] = UdioOAuthRemaker()
+        elif name == 'local_remaker': components[name] = LocalMusicRemaker()
+        elif name == 'content_gen': components[name] = GeminiContentGenerator()
+        elif name == 'ai_video_gen': components[name] = AIVideoGenerator()
+        elif name == 'video_producer': components[name] = VideoProducer()
+        elif name == 'mxl_parser': components[name] = MusicXMLParser()
+        elif name == 'omr_processor': components[name] = OMRProcessor()
+        elif name == 'stem_separator': components[name] = StemSeparator()
+        elif name == 'radio_streamer': components[name] = RadioStreamer()
+        return components[name]
 
     import concurrent.futures
 
     def run_pipeline(midi_file_list):
         if not midi_file_list:
             return
-        worker_count = min(4, len(midi_file_list))
+        # Force single worker if using browser automation
+        use_browser_automation = args.remake_priority in ["suno", "udio", "udio-oauth"]
+        worker_count = 1 if use_browser_automation else min(4, len(midi_file_list))
+        
         with concurrent.futures.ThreadPoolExecutor(max_workers=worker_count) as executor:
             futures = {
                 executor.submit(
@@ -172,30 +200,34 @@ def main():
                     args.skip_render,
                     args.skip_remake,
                     args.upload,
-                    renderer,
-                    remaker,
-                    suno_remaker=suno_remaker,
-                    udio_remaker=udio_remaker,
-                    udio_oauth_remaker=udio_oauth_remaker,
+                    get_comp('renderer'),
+                    get_comp('remaker'),
+                    suno_remaker=get_comp('suno_remaker'),
+                    udio_remaker=get_comp('udio_remaker'),
+                    udio_oauth_remaker=get_comp('udio_oauth_remaker'),
+                    local_remaker=get_comp('local_remaker'),
                     remake_priority=args.remake_priority,
-                    content_gen=content_gen,
-                    video_producer=video_producer,
-                    mxl_parser=mxl_parser,
-                    omr_processor=omr_processor,
+                    content_gen=get_comp('content_gen'),
+                    video_producer=get_comp('video_producer'),
+                    mxl_parser=get_comp('mxl_parser'),
+                    omr_processor=get_comp('omr_processor'),
                     tts_generator=None,
-                    stem_separator=stem_separator,
+                    stem_separator=get_comp('stem_separator'),
                     voice_id=args.voice_id,
                     model=args.model,
                     video_format=args.video_format,
                     create_shorts=args.create_shorts,
                     enable_visualizer=args.visualizer,
                     visualizer_mode=args.visualizer_mode,
-                    ai_video_gen=ai_video_gen if args.ai_video else None,
+                    ai_video_gen=get_comp('ai_video_gen') if args.ai_video else None,
                     use_quotes=args.use_quotes,
                     local_video=args.local_video,
                     video_model=args.video_model,
                     video_model_size=args.video_model_size,
                     udio_variance=args.udio_variance,
+                    udio_neg_prompt=args.udio_neg_prompt,
+                    local_guidance=args.local_guidance,
+                    local_temperature=args.local_temperature,
                     transient=args.transient,
                     sonic_vacuum=args.sonic_vacuum,
                     symbolic_norm=args.symbolic_norm,
@@ -214,7 +246,7 @@ def main():
     # Batch MP3 conversion mode
     if args.convert_mp3:
         logger.info("Batch converting base WAV files to MP3...")
-        converted, failed = suno_remaker.batch_wav_to_mp3(args.output_dir, bitrate=settings.DEFAULT_MP3_BITRATE)
+        converted, failed = get_comp('suno_remaker').batch_wav_to_mp3(args.output_dir, bitrate=settings.DEFAULT_MP3_BITRATE)
         logger.info(f"MP3 conversion complete: {converted} converted, {failed} failed")
         sys.exit(0 if failed == 0 else 1)
 
@@ -228,8 +260,11 @@ def main():
     streamer = None
     if args.stream_rtmp:
         logger.info(f"Initializing Live DJ Radio Stream to {args.stream_rtmp}...")
-        streamer = RadioStreamer(args.stream_rtmp, input_dir=args.output_dir)
-        streamer.start()
+        streamer = get_comp('radio_streamer')
+        if streamer:
+            streamer.rtmp_url = args.stream_rtmp
+            streamer.input_dir = args.output_dir
+            streamer.start()
 
     if args.daemon:
         logger.info(f"Starting Daemon Mode. Monitoring {args.input_dir} for new files...")
@@ -339,6 +374,7 @@ def process_single_midi(
     suno_remaker=None,
     udio_remaker=None,
     udio_oauth_remaker=None,
+    local_remaker=None,
     remake_priority="suno",
     content_gen=None,
     video_producer=None,
@@ -369,6 +405,9 @@ def process_single_midi(
     video_model="ltx-video",
     video_model_size="1.3b",
     udio_variance=0.25,
+    udio_neg_prompt="organ, classical, baroque, church organ, cathedral",
+    local_guidance=3.0,
+    local_temperature=1.0,
     transient=False,
     sonic_vacuum=False,
     symbolic_norm=False,
@@ -443,7 +482,6 @@ def process_single_midi(
         if is_sonic_vacuum or is_symbolic_norm or is_house_quantizer:
             update_status(f"Running Experimental Pipeline for {style}...", 21)
             try:
-                import subprocess
                 # Ensure output directories exist for the manual script run
                 os.makedirs(os.path.join(output_dir, "dry_render"), exist_ok=True)
                 os.makedirs(os.path.join(output_dir, "symbolic_midi"), exist_ok=True)
@@ -470,12 +508,11 @@ def process_single_midi(
                 logger.error(f"Experimental pipeline failed: {e}")
 
         if is_psytrance:
-            update_status("Psy-Mono: Invoking Algorithmic Psytrance Sequencer...", 22)
+            update_status("Psy-Mono: Invoking Python Algorithmic Psytrance Sequencer...", 22)
             psy_midi_path = os.path.join(output_dir, f"{name_no_ext}_psy.mid")
             try:
-                import subprocess
-                cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", target_midi_path, psy_midi_path]
-                subprocess.run(cmd, check=True, capture_output=True)
+                psy_gen = PsyGenerator()
+                psy_gen.generate(target_midi_path, psy_midi_path, config={"targetBpm": 145})
                 target_midi_path = psy_midi_path
                 transient_only = True
             except Exception as e:
@@ -484,6 +521,13 @@ def process_single_midi(
         # Extract precise BPM to prevent AI tempo drift
         target_bpm = 120.0
         if os.path.exists(target_midi_path):
+            if remake_priority in ["udio", "udio-oauth"]:
+                stretched_midi_path = os.path.join(output_dir, f"{name_no_ext}_stretched.mid")
+                update_status("Stretching MIDI to fit 28.0 seconds for Udio reference...", 24)
+                stretch_success = renderer.stretch_midi(target_midi_path, stretched_midi_path, target_duration=28.0)
+                if stretch_success and os.path.exists(stretched_midi_path):
+                    target_midi_path = stretched_midi_path
+
             target_bpm = renderer.get_midi_bpm(target_midi_path)
             update_status(f"Extracted dynamic tempo: {target_bpm:.1f} BPM", 25)
 
@@ -497,8 +541,21 @@ def process_single_midi(
         if not skip_remake or not os.path.exists(remake_audio_path):
             remake_success = False
 
+            # --- Priority 0: Local MusicGen ---
+            if remake_priority == "local" and local_remaker:
+                update_status(f"Step 2/4: Remaking Audio via Local MusicGen ({filename})...", 40)
+                try:
+                    local_remaker.generate(style, melody_path=base_audio_path, duration=30, output_path=remake_audio_path, guidance_scale=local_guidance, temperature=local_temperature)
+                    update_status(f"Local MusicGen remake complete for {filename}", 55)
+                    process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms)
+                    remake_success = True
+                    logger.info(f"Local MusicGen remake succeeded for {filename}")
+                except Exception as local_err:
+                    logger.warning(f"Local MusicGen failed for {filename}: {local_err}")
+                    update_status(f"Local MusicGen error, trying fallbacks...", 42)
+
             # --- Priority 1: Udio AI (Official OAuth API) ---
-            if remake_priority == "udio-oauth" and udio_oauth_remaker and udio_oauth_remaker.is_available():
+            if not remake_success and remake_priority == "udio-oauth" and udio_oauth_remaker and udio_oauth_remaker.is_available():
                 update_status(f"Step 2/4: Remaking Audio via Udio OAuth API ({filename})...", 40)
                 try:
                     udio_result = udio_oauth_remaker.remake(base_audio_path, style, variance=udio_variance)
@@ -522,7 +579,7 @@ def process_single_midi(
                     composer = pre_extracted_metadata.get("composer") or "Traditional"
                     rich_prompt = f"A modern {style} remix of '{clean_title}' by {composer}. Inspired by the original MIDI melody as reference media. {target_bpm:.1f} BPM."
                     
-                    udio_result = udio_remaker.remake(base_audio_path, rich_prompt, variance=udio_variance)
+                    udio_result = udio_remaker.remake(base_audio_path, rich_prompt, variance=udio_variance, negative_prompt=udio_neg_prompt)
                     if udio_result and os.path.exists(udio_result):
                         if udio_result != remake_audio_path:
                             import shutil
@@ -589,6 +646,10 @@ def process_single_midi(
             art_prompt = metadata.get("art_prompt", f"Abstract album art for {metadata.get('title', name_no_ext)}, {style} style, high quality, 4k")
         else:
             analysis_data = content_gen.analyze_audio_for_content(base_audio_path, name_no_ext, style=style)
+            if not analysis_data:
+                logger.warning(f"Audio analysis failed for {name_no_ext}. Using fallbacks.")
+                analysis_data = {"metadata": {}, "lyrics": [], "theme": "Peaceful reflection", "visual_prompt": f"Peaceful landscape, {style}"}
+                
             metadata = analysis_data.get("metadata", {})
             lyrics = analysis_data.get("lyrics", [])
             extracted_lyrics = pre_extracted_metadata.get("lyrics")
@@ -617,7 +678,8 @@ def process_single_midi(
 
         # Generate Art
         update_status(f"Generating Album Art via Gemini Imagen 3 ({filename})...", 79)
-        art_url = content_gen.generate_image(art_prompt)
+        art_path = os.path.join(output_dir, f"{name_no_ext}_art.png")
+        art_url = content_gen.generate_image(art_prompt, art_path)
         if not art_url:
             fallback_art_path = os.path.join(output_dir, f"{name_no_ext}_fallback_art.png")
             art_url = generate_fallback_gradient(fallback_art_path)
@@ -633,36 +695,21 @@ def process_single_midi(
 
         # Hip-Hop Vocal Remix Integration
         if hiphop_vocal_path:
-            update_status(f"Step 3.5/4: Isolating and Grid-locking Hip-Hop Vocals...", 82)
+            update_status(f"Step 3.5/4: Isolating and Grid-locking Hip-Hop Vocals (Python)...", 82)
             try:
-                # Resolve local path if URL
-                input_vocal = hiphop_vocal_path
-                if hiphop_vocal_path.startswith("http"):
-                    # Use yt-dlp to download audio (stubbed logic for now)
-                    pass
+                vocal_remixer = VocalRemixer()
+                vocal_track_path = os.path.join(output_dir, f"{name_no_ext}_hiphop_vocal.wav")
+                # Attempt to determine key from hymn DNA if possible
+                root_key = 0 # Default C
+                if pre_extracted_metadata and 'root_key' in pre_extracted_metadata:
+                    root_key = pre_extracted_metadata['root_key']
 
-                # Call TypeScript VocalProcessor
-                vocal_out_dir = os.path.join(output_dir, f"{name_no_ext}_hiphop")
-                os.makedirs(vocal_out_dir, exist_ok=True)
+                vocal_remixer.process_remix(hiphop_vocal_path, vocal_track_path, target_bpm=target_bpm, target_key_root=root_key)
 
-                # Setup TS call for vocal isolation and stretching
-                ts_vocal_script = f"""
-import {{ VocalProcessor }} from './src/integrators/vocal_processor.ts';
-async function run() {{
-    const vp = new VocalProcessor({{ mode: 'local', targetBpm: {target_bpm} }});
-    const result = await vp.process("{input_vocal}", "{vocal_out_dir}");
-    console.log(result);
-}}
-run().catch(console.error);
-"""
-                with open("temp_vocal_task.ts", "w") as f:
-                    f.write(ts_vocal_script)
-
-                cmd = ["npx", "ts-node", "--transpile-only", "temp_vocal_task.ts"]
-                proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                vocal_track_path = proc.stdout.strip().split('\n')[-1]
-                logger.info(f"Isolated hip-hop vocals ready at: {vocal_track_path}")
-                os.remove("temp_vocal_task.ts")
+                if os.path.exists(vocal_track_path):
+                    logger.info(f"Isolated hip-hop vocals ready at: {vocal_track_path}")
+                else:
+                    logger.error("Vocal processing failed.")
             except Exception as e:
                 logger.error(f"Hip-hop vocal integration failed: {e}")
 

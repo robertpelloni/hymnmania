@@ -263,13 +263,26 @@ class VideoProducer:
                     w_viz, h_viz = (1080, 150) if video_format == "Vertical 9:16 (TikTok/Reels)" else (1920, 200)
                     y_pos = "(H-h)/2" # Center vertically
 
-                    if visualizer_mode == "avectorscope":
-                        vis_filter = f"[1:a]avectorscope=s={h_viz}x{h_viz}:draw=line[wave];[v_base][wave]overlay=x=(W-w)/2:y={y_pos}:format=yuv420[v_pre]"
+                    if visualizer_mode == "kaleidoscope":
+                        # Kaleidoscope: Split video into quadrants, flip and tile
+                        # 1. Take top-left corner (960x540)
+                        # 2. Duplicate and flip for symmetry
+                        kaleido = (
+                            f"[v_base]crop=iw/2:ih/2:0:0,split=4[q1][q2][q3][q4];"
+                            f"[q2]hflip[q2h];[q3]vflip[q3v];[q4]hflip,vflip[q4hv];"
+                            f"[q1][q2h]hstack[top];[q3v][q4hv]hstack[bottom];[top][bottom]vstack[v_kaleido];"
+                            f"[1:a]showwaves=s={target_w}x{h_viz}:mode=cline:colors=white@0.4[wave];"
+                            f"[v_kaleido][wave]overlay=x=0:y={y_pos}:format=yuv420[v_pre]"
+                        )
+                        filters.append(kaleido)
+                    elif visualizer_mode == "avectorscope":
+                        vis_filter = f"[1:a]avectorscope=s={h_viz}x{h_viz}:draw=line:color=white[wave];[v_base][wave]overlay=x=(W-w)/2:y={y_pos}:format=yuv420[v_pre]"
+                        filters.append(vis_filter)
                     else:
                         vis_filter = f"[1:a]showwaves=s={w_viz}x{h_viz}:mode={visualizer_mode}:colors=white@0.5[wave];[v_base][wave]overlay=x=0:y={y_pos}:format=yuv420[v_pre]"
+                        filters.append(vis_filter)
                     
                     # Ensure the overlay result is exactly the target size
-                    filters.append(vis_filter)
                     filters.append(f"[v_pre]scale={target_w}:{target_h}[v]")
                 else:
                     # Just pass the base video through

@@ -71,3 +71,6 @@ __hssrc.bin
 decrypt_files.py
 sb-ssr-production-auth-token.*
 ssr_bucket.*
+hymn_remaker/bin/ffmpeg.exe
+hymn_remaker/bin/ffprobe.exe
+token_gemini.json

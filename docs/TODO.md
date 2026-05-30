@@ -1,9 +1,10 @@
 # TODO
 
 ### Immediate Fixes
-- [ ] Implement LALAL.AI REST API integration as a fall-back for local Demucs.
-- [ ] Optimize Local MusicGen latency by implementing a quantized model (INT8/FP16).
-- [ ] Add more complex Markov-chain transition rules to the arpeggiator for "peak climax" variations.
+- [x] Implement LALAL.AI REST API integration as a fall-back for local Demucs.
+- [x] Optimize Local MusicGen latency by implementing a quantized model (INT8/FP16).
+- [x] Add more complex Markov-chain transition rules to the arpeggiator for "peak climax" variations.
+- [ ] Implement VST3 hosting within the C++ engine to support Serum/Vital presets.
 
 ### Enhancements
 - [ ] Multi-voice vocal harmonization for hip-hop acapellas using ElevenLabs.

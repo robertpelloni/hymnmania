@@ -12,3 +12,4 @@ To build the "holy grail" of electronic music automation: an expert system that 
 3. **Neural Texture Mapping:** Using AI models (Suno, Udio, MusicGen) not as creators of notes, but as "neural synthesizers" that apply high-end sound design to procedurally generated stems.
 4. **Vocal Integration:** Programmatic isolation and grid-locking of hip-hop acapellas into the psytrance framework.
 5. **Real-time Interaction:** A live "Psy-Mono Studio" for parameter tweaking and instant algorithmic feedback via a native C++ audio engine.
+6. **Live Generative Performance:** Moving beyond static remakes into live "Jam" environments where AI acts as a multi-instrumentalist collaborator responding to manual FX triggers and real-time automation.

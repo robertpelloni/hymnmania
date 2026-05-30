@@ -19,6 +19,7 @@ from pathlib import Path
 from hymn_remaker import settings
 from hymn_remaker.src.suno_api import SunoAPIClient
 from hymn_remaker.src import suno_browser
+from hymn_remaker.src.suno_browser_automation import SunoBrowserAutomation
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class SunoRemaker:
 
     Supports two modes:
         - API mode:   Direct HTTP requests with Turnstile token
-        - Browser mode: Playwright automation of the Suno web UI
+        - Browser mode: CDP automation of the Suno web UI in Edge
     """
 
     def __init__(self, session_token=None, client_token=None, model_version=None):
@@ -41,10 +42,28 @@ class SunoRemaker:
         self.session_token = self.api.session_token
         self.client_token = self.api.client_token
         self.model_version = self.api.model_version
+        self.browser_automation = SunoBrowserAutomation()
 
     def is_available(self):
-        """Check if Suno API is configured and session is valid."""
-        return self.api.is_available()
+        """Check if Suno API or Browser Automation is configured."""
+        # Try API check first
+        if self.api.is_available():
+            return True
+        
+        # Fallback: check if Edge is listening on 9222 for browser automation
+        try:
+            import socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            result = sock.connect_ex(('127.0.0.1', 9222))
+            sock.close()
+            if result == 0:
+                logger.info("SunoRemaker: API not available, but Edge debugging port 9222 is open. Enabling browser mode.")
+                return True
+        except Exception:
+            pass
+            
+        return False
 
     def check_captcha(self):
         """Check if CAPTCHA is required for generation."""
@@ -70,8 +89,6 @@ class SunoRemaker:
                tags="deep house, electronic, club", keep_mp3=False,
                mode="auto", turnstile_token=None):
         """Generate a Deep House remake of a hymn using Suno AI."""
-        if not self.session_token:
-            raise RuntimeError("SunoRemaker not configured. Set SUNO_SESSION_TOKEN.")
         if not os.path.exists(wav_path):
             raise FileNotFoundError(f"Input WAV not found: {wav_path}")
 
@@ -87,8 +104,8 @@ class SunoRemaker:
 
         clips = None
 
-        # Try API mode first
-        if mode in ("auto", "api"):
+        # Try API mode first if session token is available
+        if mode in ("auto", "api") and self.session_token:
             try:
                 # 1. Upload audio influence first in API mode
                 audio_influence_id = None
@@ -128,26 +145,40 @@ class SunoRemaker:
                 else:
                     raise
 
-        # Prepare audio influence path (prefer MP3, fall back to WAV) for Browser Mode
-        audio_influence = None
-        mp3_path = wav_path.rsplit('_base.wav', 1)[0] + '_base.mp3'
-        if os.path.exists(mp3_path):
-            audio_influence = mp3_path
-        elif os.path.exists(wav_path):
-            audio_influence = wav_path
-
-        # Fall back to browser mode
+        # Fall back to browser mode (CDP)
         if clips is None and mode in ("auto", "browser"):
-            clips = suno_browser.generate_songs_browser(
-                prompt=full_prompt,
-                session_token=self.session_token,
-                client_token=self.client_token,
-                make_instrumental=make_instrumental,
-                audio_influence_path=audio_influence,
-            )
+            logger.info("Triggering Suno Browser Automation (CDP)...")
+            # Prepare audio influence path (prefer MP3, fall back to WAV)
+            audio_influence = None
+            mp3_path = wav_path.rsplit('_base.wav', 1)[0] + '_base.mp3'
+            if os.path.exists(mp3_path):
+                audio_influence = mp3_path
+            elif os.path.exists(wav_path):
+                audio_influence = wav_path
+
+            try:
+                success = self.browser_automation.trigger_generation(
+                    prompt=full_prompt,
+                    audio_path=audio_influence,
+                    make_instrumental=make_instrumental
+                )
+                if success:
+                    logger.info("Suno: Browser automation triggered generation. Waiting for completion...")
+                    if self.browser_automation.wait_for_completion_and_download():
+                        # We don't have clip IDs from browser mode easily, but we can poll the feed via API
+                        # to find the latest completed clips for this user.
+                        time.sleep(10)
+                        logger.info("Suno: Polling user feed for the new clips...")
+                        feed = self.api.get_feed()
+                        # Take the top 2 clips (Suno generates in pairs)
+                        if feed:
+                            clips = feed[:2]
+                            logger.info(f"Suno: Found {len(clips)} new clips in feed.")
+            except Exception as be:
+                logger.error(f"Suno Browser Automation failed: {be}")
 
         if not clips:
-            raise RuntimeError("No clips generated")
+            raise RuntimeError("No clips generated (Suno)")
 
         # Poll for completion
         clip_ids = [clip.get("id") for clip in clips if clip.get("id")]

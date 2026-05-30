@@ -1,11 +1,14 @@
 import time
 import json
 import uuid
+import random
 import streamlit as st
 import os
 import sys
 import subprocess
 import concurrent.futures
+import plotly.graph_objects as go
+import numpy as np
 from dotenv import load_dotenv
 
 # Load .env file from project root
@@ -16,20 +19,16 @@ if os.path.exists(_env_path):
 from hymn_remaker import settings
 
 # Load global version
-VERSION = "Unknown"
+VERSION = "1.36.0"
 try:
-    version_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "VERSION")
-    if os.path.exists(version_path):
-        with open(version_path, "r") as vf:
+    v_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "VERSION")
+    if os.path.exists(v_root):
+        with open(v_root, "r") as vf:
             VERSION = vf.read().strip()
-    else:
-        version_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "VERSION.md")
-        if os.path.exists(version_path):
-            with open(version_path, "r") as vf:
-                VERSION = vf.read().strip()
 except Exception:
     pass
 
+st.set_page_config(page_title="Hymn Remaker UI", page_icon="🎵", layout="wide")
 st.sidebar.markdown(f"**Version: {VERSION}**")
 st.sidebar.markdown("---")
 
@@ -44,12 +43,12 @@ from hymn_remaker.src.tts_generator import TTSGenerator
 from hymn_remaker.src.musicxml_parser import MusicXMLParser
 from hymn_remaker.src.omr_processor import OMRProcessor
 from hymn_remaker.src.stem_separator import StemSeparator
+from hymn_remaker.src.local_remaker import LocalMusicRemaker
+from hymn_remaker.src.quality_evaluator import QualityEvaluator
 from hymn_remaker.main import process_single_midi
 
-st.set_page_config(page_title="Hymn Remaker UI", page_icon="🎵", layout="wide")
 st.title("🎵 Hymn Remaker Pipeline")
 st.write("Convert MIDI files into modern music videos with AI!")
-
 
 # Initialize objects
 @st.cache_resource
@@ -65,15 +64,18 @@ def load_modules():
         mxl_parser = MusicXMLParser()
         omr_processor = OMRProcessor()
         stem_separator = StemSeparator()
-        return renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator
+        udio_oauth_remaker = UdioOAuthRemaker()
+        local_remaker = LocalMusicRemaker()
+        quality_eval = QualityEvaluator()
+        return renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval
     except Exception as e:
         import traceback
         st.error(f"Failed to initialize modules: {e}")
         st.code(traceback.format_exc())
-        return None, None, None, None, None, None, None, None, None, None
+        return [None] * 13
 
-
-renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator = load_modules()
+modules = load_modules()
+renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval = modules
 
 st.sidebar.header("Environment & API")
 missing_keys = []
@@ -82,16 +84,11 @@ if not os.environ.get("GEMINI_API_KEY") and not os.path.exists("client_secrets.j
 if not os.environ.get("REPLICATE_API_TOKEN"):
     missing_keys.append("REPLICATE_API_TOKEN")
 if missing_keys:
-    st.sidebar.error(f"Missing Essential API Keys: {', '.join(missing_keys)}. The pipeline may fail. Please set them in your `.env` file or provide credentials.")
+    st.sidebar.error(f"Missing Essential API Keys: {', '.join(missing_keys)}")
 else:
     st.sidebar.success("Essential API Keys configured! ✅")
 
-if not os.environ.get("ELEVENLABS_API_KEY"):
-    st.sidebar.warning("Missing ELEVENLABS_API_KEY. Vocal generation will be disabled.")
-
 st.sidebar.header("Settings")
-
-# Style Preset Selection
 preset_styles = [
     settings.DEFAULT_STYLE,
     "Full-On Psytrance, 145 BPM, driving, psychedelic",
@@ -99,19 +96,15 @@ preset_styles = [
     "Symbolic Norm: Velocity-flattened grid",
     "House Quantizer: 124 BPM 4/4 structural snap",
     "Lofi hip hop, chill, relaxing",
-    "Synthwave, retro 80s, neon",
-    "Epic Orchestral, cinematic, Hans Zimmer",
-    "Acoustic Folk, warm, intimate",
+    "Synthwave, retro 80s",
+    "Epic Orchestral",
     "Custom..."
 ]
-selected_style = st.sidebar.selectbox("Musical Style Preset", preset_styles, help="Select a predefined style or choose 'Custom...' to write your own.")
-if selected_style == "Custom...":
-    style = st.sidebar.text_input("Custom Style", value="Your custom prompt here", help="Describe the exact musical style, instruments, and mood you want.")
-else:
-    style = selected_style
+selected_style = st.sidebar.selectbox("Musical Style Preset", preset_styles)
+style = selected_style if selected_style != "Custom..." else st.sidebar.text_input("Custom Style", value="Your custom prompt here")
 
-output_dir = st.sidebar.text_input("Output Directory", value=settings.OUTPUT_DIR, help="Where the final audio, video, and metadata files will be saved.")
-max_workers = st.sidebar.slider("Concurrent Tasks", min_value=1, max_value=4, value=1, help="Process multiple MIDI files at the same time.")
+output_dir = st.sidebar.text_input("Output Directory", value=settings.OUTPUT_DIR)
+max_workers = st.sidebar.slider("Concurrent Tasks", min_value=1, max_value=4, value=1)
 
 st.sidebar.markdown("### Experimental Preprocessors")
 with st.sidebar.expander("Udio/Suno Optimizers", expanded=False):
@@ -161,38 +154,21 @@ if st.session_state.radio_streamer and st.session_state.radio_streamer.is_stream
         st.session_state.radio_streamer.skip_track()
 
 st.sidebar.markdown("### Pipeline Options")
-video_format = st.sidebar.selectbox("Video Format", ["Standard 16:9", "Vertical 9:16 (TikTok/Reels)"], index=0, help="Output video aspect ratio.")
-enable_visualizer = st.sidebar.checkbox("Audio-Reactive Visualizer", value=False, help="Overlay a dynamic audio waveform on the generated video.")
+video_format = st.sidebar.selectbox("Video Format", ["Standard 16:9", "Vertical 9:16"])
+enable_visualizer = st.sidebar.checkbox("Audio-Reactive Visualizer", value=False)
 visualizer_mode = "cline"
 if enable_visualizer:
-    visualizer_mode = st.sidebar.selectbox("Visualizer Mode", ["cline", "line", "p2p", "avectorscope"], index=0, help="Select the type of audio-reactive visualizer.")
-generate_vocals = st.sidebar.checkbox("Generate Vocals (ElevenLabs)", value=False, help="Automatically generate singing/spoken word vocals for the lyrics and mix them into the final track.")
-create_shorts = st.sidebar.checkbox("Create 15s Shorts", value=False, help="Extract 15-second clips from the final video into the output/shorts directory.")
-elevenlabs_voice_id = settings.DEFAULT_ELEVENLABS_VOICE_ID
-elevenlabs_model = settings.DEFAULT_ELEVENLABS_MODEL
+    visualizer_mode = st.sidebar.selectbox("Visualizer Mode", ["kaleidoscope", "cline", "line", "p2p", "avectorscope"], index=0)
+generate_vocals = st.sidebar.checkbox("Generate Vocals (ElevenLabs)", value=False)
+remake_priority = st.sidebar.selectbox("AI Remake Service", ["udio-oauth", "udio", "suno", "replicate", "local"], index=0)
+udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.25)
+local_guidance = st.slider("Local Guidance Scale", 1.0, 10.0, 3.0)
+local_temperature = st.slider("Local Temperature", 0.1, 2.0, 1.0)
 
-if generate_vocals:
-    if not os.environ.get("ELEVENLABS_API_KEY"):
-        st.sidebar.error("Cannot generate vocals without an ELEVENLABS_API_KEY.")
-    else:
-        with st.sidebar.expander("ElevenLabs Settings", expanded=True):
-            elevenlabs_voice_id = st.text_input("Voice IDs (Comma-separated for Harmony)", value=settings.DEFAULT_ELEVENLABS_VOICE_ID, help="Enter a single ElevenLabs Voice ID for solo, or multiple comma-separated IDs to generate a multi-voice harmonized choir.")
-            elevenlabs_model = st.selectbox("Model", ["eleven_multilingual_v2", "eleven_monolingual_v1", "eleven_turbo_v2"], index=0, help="The ElevenLabs model to use.")
+upload = st.sidebar.checkbox("Upload to YouTube", value=False)
 
 skip_render = st.sidebar.checkbox("Skip Render if exists", value=False, help="If the intermediate base WAV file already exists, don't re-render it from MIDI.")
 skip_remake = st.sidebar.checkbox("Skip Remake if exists", value=False, help="If the remade audio already exists, don't call the MusicGen API again.")
-remake_priority = st.sidebar.selectbox("AI Remake Service", ["udio-oauth", "udio", "suno", "replicate"], index=0, help="Udio OAuth is the official API. Udio AI uses session cookies. Suno AI uses audio influence.")
-udio_client_id = st.sidebar.text_input("Udio Client ID", value=os.environ.get("UDIO_CLIENT_ID", ""), help="Your official Udio Developer Portal Client ID.")
-udio_client_secret = st.sidebar.text_input("Udio Client Secret", value=os.environ.get("UDIO_CLIENT_SECRET", ""), type="password", help="Your official Udio Developer Portal Client Secret.")
-udio_token = st.sidebar.text_input("Udio Auth Token", value=os.environ.get("UDIO_AUTH_TOKEN", ""), type="password", help="Paste your Udio sb-api-auth-token (if using session-based Udio).")
-udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.35, 0.05, help="Lower variance follows the original melody more strictly.")
-transient = st.sidebar.checkbox("Pure Transient Rendering", value=True, help="Render MIDI as Woodblock pulses to strip stylistic flavor and force AI instruments.")
-
-# Initialize remakers with UI overrides
-suno_remaker = SunoRemaker(session_token=settings.SUNO_SESSION_TOKEN) if settings.SUNO_SESSION_TOKEN else suno_remaker
-udio_remaker = UdioRemaker(auth_token=udio_token) if udio_token else udio_remaker
-udio_oauth_remaker = UdioOAuthRemaker(client_id=udio_client_id, client_secret=udio_client_secret) if udio_client_id and udio_client_secret else None
-upload = st.sidebar.checkbox("Upload to YouTube", value=False, help="Automatically upload the finished video to YouTube (requires OAuth credentials setup).")
 
 interactive_mode = st.sidebar.checkbox("Interactive Review Mode", value=False, help="Pause the pipeline after metadata/lyrics generation to manually edit the lyrics, title, and art prompt before rendering the final audio and video.")
 
@@ -210,27 +186,23 @@ if st.sidebar.button("🗑️ Clear Workspace", help="Delete all files in the in
     except Exception as e:
         st.sidebar.error(f"Failed to clear workspace: {e}")
 
-tab1, tab2, tab3 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)", "🌀 Live Psy-Mono Studio"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Editor (Beta)", "🌀 Live Psy-Mono Studio", "📚 Library", "🔬 Optimization & Analytics"])
 
 with tab1:
-    uploaded_files = st.file_uploader("Upload MIDI, MusicXML, or Sheet Music images (OMR)", type=["mid", "midi", "mxl", "xml", "png", "jpg", "pdf"], accept_multiple_files=True, help="Select one or more public domain hymn MIDI, MusicXML, or Sheet Music image files to process.")
+    uploaded_files = st.file_uploader("Upload MIDI/MusicXML", type=["mid", "midi", "mxl", "xml"], accept_multiple_files=True)
     if st.button("Start Processing", type="primary"):
         st.session_state["is_processing"] = True
-        st.session_state["completed_files"] = []
         st.session_state["uploaded_files_data"] = []
         if uploaded_files:
             for uf in uploaded_files:
                 st.session_state["uploaded_files_data"].append({
-                    "name": uf.name,
-                    "data": uf.getbuffer().tobytes()
+                    "name": uf.name, "data": uf.getbuffer().tobytes()
                 })
 
     if st.session_state.get("is_processing", False):
         if not st.session_state.get("uploaded_files_data"):
-            st.warning("Please upload at least one MIDI file.")
+            st.warning("Please upload files.")
             st.session_state["is_processing"] = False
-        elif renderer is None:
-            st.error("Pipeline modules failed to load.")
         else:
             os.makedirs(settings.INPUT_DIR, exist_ok=True)
             os.makedirs(output_dir, exist_ok=True)
@@ -242,494 +214,529 @@ with tab1:
                     f.write(uf_data["data"])
                 saved_files.append(file_path)
 
-            st.success(f"Saved {len(saved_files)} files to input directory.")
-
-            progress_bars = {}
-            status_texts = {}
             for file_path in saved_files:
                 filename = os.path.basename(file_path)
-                st.write(f"### {filename}")
-                progress_bars[file_path] = st.progress(0)
-                status_texts[file_path] = st.empty()
-                status_texts[file_path].text("Queued...")
-
-            def ui_process_wrapper(file_path):
-                filename = os.path.basename(file_path)
-                try:
-                    status_texts[file_path].info(f"Step 1/4: Rendering MIDI ({filename})...")
-                    progress_bars[file_path].progress(15)
-
-                    callback = None
-                    if interactive_mode:
-                        def interactive_callback_sync(data):
-                            st.info("Pipeline Paused: Review generated content before final rendering.")
-                            state_key = f"interactive_{filename}"
-                            if state_key not in st.session_state:
-                                st.session_state[state_key] = data
-                            curr_data = st.session_state[state_key]
-                            if st.session_state.get(f"interactive_done_{filename}"):
-                                return st.session_state[state_key]
-                            with st.form(key=f"form_{filename}"):
-                                st.subheader(f"Edit Metadata & Art Prompt: {filename}")
-                                new_title = st.text_input("Title", value=curr_data['metadata'].get('title', ''))
-                                new_desc = st.text_area("Description", value=curr_data['metadata'].get('description', ''))
-                                new_art = st.text_area("Art Prompt (Imagen 3)", value=curr_data['art_prompt'])
-                                st.subheader("Edit Lyrics")
-                                raw_text = "\n".join([l['text'] for l in curr_data['lyrics']])
-                                new_lyrics_text = st.text_area("Lyrics (One line per subtitle block)", value=raw_text, height=300)
-                                submit = st.form_submit_button("Approve & Continue Rendering")
-                                if submit:
-                                    new_lyrics = []
-                                    for idx, line in enumerate(new_lyrics_text.strip().split('\n')):
-                                        if line.strip():
-                                            if idx < len(curr_data['lyrics']):
-                                                new_line = curr_data['lyrics'][idx].copy()
-                                                new_line['text'] = line.strip()
-                                                new_lyrics.append(new_line)
-                                            else:
-                                                new_lyrics.append({'start': 0, 'end': 5, 'text': line.strip()})
-                                    curr_data['metadata']['title'] = new_title
-                                    curr_data['metadata']['description'] = new_desc
-                                    curr_data['art_prompt'] = new_art
-                                    curr_data['lyrics'] = new_lyrics
-                                    st.session_state[f"interactive_done_{filename}"] = True
-                                    st.session_state[state_key] = curr_data
-                                    st.rerun()
-                            st.stop()
-                        callback = interactive_callback_sync
-
-                    force_skip_render = skip_render
-                    force_skip_remake = skip_remake
-                    if interactive_mode and st.session_state.get(f"interactive_done_{filename}"):
-                        force_skip_render = True
-                        force_skip_remake = True
-
-                    process_single_midi(
-                        file_path,
-                        output_dir,
-                        style,
-                        force_skip_render,
-                        force_skip_remake,
-                        upload,
-                        renderer,
-                        remaker,
-                        suno_remaker,
-                        udio_remaker,
-                        remake_priority,
-                        content_gen,
-                        video_producer,
-                        mxl_parser=mxl_parser,
-                        omr_processor=omr_processor,
-                        tts_generator=tts_generator,
-                        stem_separator=stem_separator,
-                        normalize_audio=normalize_audio,
-                        fade_in_ms=fade_in_ms,
-                        fade_out_ms=fade_out_ms,
-                        generate_vocals=generate_vocals,
-                        voice_id=elevenlabs_voice_id,
-                        model=elevenlabs_model,
-                        video_format=video_format,
-                        create_shorts=create_shorts,
-                        sub_font_size=sub_font_size,
-                        sub_primary_color=sub_primary_color,
-                        sub_outline_color=sub_outline_color,
-                        sub_back_color=sub_back_color,
-                        sub_box=sub_box,
-                        enable_visualizer=enable_visualizer,
-                        visualizer_mode=visualizer_mode,
-                        status_callback=lambda msg, prog: (status_texts[file_path].info(msg), progress_bars[file_path].progress(prog)),
-                        interactive_callback=callback,
-                        udio_variance=udio_variance,
-                        transient=transient,
-                        sonic_vacuum=sonic_vacuum,
-                        symbolic_norm=symbolic_norm,
-                        house_quantizer=house_quantizer,
-                        hiphop_vocal_path=mix_hiphop_vocals if mix_hiphop_vocals else None
-                    )
-
-                    status_texts[file_path].success(f"Completed! ✅ ({filename})")
-                    progress_bars[file_path].progress(100)
-                    name_no_ext = os.path.splitext(filename)[0]
-                    video_path = os.path.join(output_dir, f"{name_no_ext}.mp4")
-                    audio_path = os.path.join(output_dir, f"{name_no_ext}_remake.wav")
-                    metadata_path = os.path.join(output_dir, f"{name_no_ext}_metadata.json")
-
-                    if os.path.exists(video_path):
-                        st.video(video_path)
-
-                    col1, col2, col3 = st.columns(3)
-                    if os.path.exists(video_path):
-                        with open(video_path, "rb") as f:
-                            col1.download_button("Download Video 🎥", f, file_name=f"{name_no_ext}.mp4", mime="video/mp4")
-                    if os.path.exists(audio_path):
-                        with open(audio_path, "rb") as f:
-                            col2.download_button("Download Audio 🎵", f, file_name=f"{name_no_ext}_remake.wav", mime="audio/wav")
-                    if os.path.exists(metadata_path):
-                        with open(metadata_path, "r") as f:
-                            metadata = json.load(f)
-                        col3.download_button("Download Metadata 📄", json.dumps(metadata, indent=4), file_name=f"{name_no_ext}_metadata.json", mime="application/json")
-                        with st.expander(f"Metadata & Lyrics for {name_no_ext}"):
-                            st.write(f"**Title:** {metadata.get('title', 'N/A')}")
-                            st.write(f"**Description:** {metadata.get('description', 'N/A')}")
-                            st.write(f"**Tags:** {', '.join(metadata.get('tags', []))}")
-                            if metadata.get("lyrics"):
-                                st.write("**Lyrics:**")
-                                for line in metadata["lyrics"]:
-                                    st.write(f"[{line.get('start')}s -> {line.get('end')}s] {line.get('text')}")
-                except Exception as e:
-                    status_texts[file_path].text(f"Error: {e} ❌")
-                    st.error(f"Error processing {filename}: {e}")
-
-            st.write("---")
-            st.write("Processing log:")
-
-            if interactive_mode:
-                st.warning("Interactive mode enabled: processing files sequentially.")
-                for fp in saved_files:
-                    filename = os.path.basename(fp)
-                    if filename in st.session_state.get("completed_files", []):
-                        continue
-                    ui_process_wrapper(fp)
-                    if "completed_files" not in st.session_state:
-                        st.session_state["completed_files"] = []
-                    st.session_state["completed_files"].append(filename)
-            else:
-                from streamlit.runtime.scriptrunner import get_script_run_ctx, add_script_run_ctx
-                ctx = get_script_run_ctx()
-
-                def thread_func(fp, context):
-                    add_script_run_ctx(ctx=context)
-                    ui_process_wrapper(fp)
-
-                with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    futures = []
-                    for fp in saved_files:
-                        future = executor.submit(thread_func, fp, ctx)
-                        futures.append(future)
-                    for future in concurrent.futures.as_completed(futures):
-                        pass
-
+                with st.status(f"Processing {filename}...") as status:
+                    try:
+                        process_single_midi(
+                            midi_path=file_path,
+                            output_dir=output_dir,
+                            style=style,
+                            skip_render=skip_render,
+                            skip_remake=skip_remake,
+                            upload=upload,
+                            renderer=renderer,
+                            remaker=remaker,
+                            suno_remaker=suno_remaker,
+                            udio_remaker=udio_remaker,
+                            remake_priority=remake_priority,
+                            udio_oauth_remaker=udio_oauth_remaker,
+                            local_remaker=local_remaker,
+                            content_gen=content_gen,
+                            video_producer=video_producer,
+                            mxl_parser=mxl_parser,
+                            omr_processor=omr_processor,
+                            tts_generator=tts_generator,
+                            stem_separator=stem_separator,
+                            generate_vocals=generate_vocals,
+                            video_format=video_format,
+                            enable_visualizer=enable_visualizer,
+                            udio_variance=udio_variance,
+                            local_guidance=local_guidance,
+                            local_temperature=local_temperature,
+                            sonic_vacuum=sonic_vacuum,
+                            symbolic_norm=symbolic_norm,
+                            house_quantizer=house_quantizer,
+                            hiphop_vocal_path=mix_hiphop_vocals if mix_hiphop_vocals else None
+                        )
+                        status.update(label=f"Finished {filename}!", state="complete")
+                    except Exception as e:
+                        st.error(f"Error processing {filename}: {e}")
             st.balloons()
-            st.success("All processing complete!")
             st.session_state["is_processing"] = False
-            st.session_state.pop("uploaded_files_data", None)
 
 with tab2:
     st.header("Hymn Editor Toolbar")
-    st.info("This section exposes raw backend rendering tools for manual experimentation without running the full generative pipeline.")
-
-    st.subheader("1. File Operations")
-    editor_file = st.file_uploader("Load MIDI or MusicXML file for editing", type=["mid", "midi", "mxl", "xml"], key="editor_uploader")
+    editor_file = st.file_uploader("Load MIDI/MusicXML", type=["mid", "midi", "mxl", "xml"], key="editor_up")
     if editor_file:
         file_path = os.path.join(settings.INPUT_DIR, f"edit_{editor_file.name}")
         with open(file_path, "wb") as f:
             f.write(editor_file.getbuffer())
-        st.success(f"Loaded: {editor_file.name}")
 
-    st.subheader("2. Native Audio Preview")
-    st.write("Use the native C++ engine to render a fast audio preview of the raw file.")
-    col1, col2 = st.columns(2)
-    with col1:
-        preview_soundfont = st.selectbox("Select SoundFont", settings.DEFAULT_SOUNDFONT_PATHS)
-    with col2:
-        st.write(" ")
-        st.write(" ")
-
-    if st.button("Render Preview 🔊"):
-        with st.spinner("Rendering audio via C++ engine..."):
-            try:
-                temp_renderer = MidiRenderer(soundfont_path=preview_soundfont)
-                target_path = file_path
-                if file_path.lower().endswith('.mxl') or file_path.lower().endswith('.xml'):
-                    target_path = os.path.join(settings.OUTPUT_DIR, f"edit_preview.mid")
-                    mxl_parser.process(file_path, target_path)
-                out_audio = os.path.join(settings.OUTPUT_DIR, "edit_preview.wav")
-                temp_renderer.render(target_path, out_audio)
-                st.audio(out_audio)
-                st.success("Render complete.")
-            except Exception as e:
-                st.error(f"Failed to render preview: {e}")
-
-    st.subheader("3. Metadata Extraction")
-    if st.button("Extract Sheet Metadata 📄"):
-        if file_path.lower().endswith('.mxl') or file_path.lower().endswith('.xml'):
-            with st.spinner("Parsing MusicXML..."):
-                try:
-                    dummy_mid = os.path.join(settings.OUTPUT_DIR, "dummy_extract.mid")
-                    metadata = mxl_parser.process(file_path, dummy_mid)
-                    st.text_input("Extracted Title", value=metadata.get("title", "Unknown"))
-                    st.text_input("Extracted Composer", value=metadata.get("composer", "Unknown"))
-                    if metadata.get("lyrics"):
-                        st.success("✅ Precise note-by-note synchronization extracted!")
-                        raw_text = metadata.get("raw_lyrics_text", "")
-                        edited_lyrics = st.text_area("Extracted Lyrics (Raw Text)", value=raw_text, height=200)
-                        with st.expander("View Internal Subtitle Timings (JSON)"):
-                            st.json(metadata.get("lyrics"))
-                        if st.button("Save Edited Lyrics to .txt 💾"):
-                            out_txt_path = os.path.join(settings.OUTPUT_DIR, f"{editor_file.name}_lyrics.txt")
-                            with open(out_txt_path, "w") as lf:
-                                lf.write(edited_lyrics)
-                            st.success(f"Lyrics saved to {out_txt_path}")
-                            with open(out_txt_path, "rb") as lf:
-                                st.download_button("Download .txt", lf, file_name=f"{editor_file.name}_lyrics.txt", mime="text/plain")
-                    else:
-                        st.warning("No lyrics found in this file.")
-                except Exception as e:
-                    st.error(f"Failed to parse MusicXML: {e}")
-        else:
-            st.warning("Metadata extraction is currently only supported for MusicXML (.mxl, .xml) files, not standard MIDI.")
-
-    st.subheader("4. Cluster Rendering")
-    if "job_id" not in st.session_state:
-        st.session_state.job_id = None
-    if st.button("Submit to Render Cluster (RabbitMQ) 🐇"):
-        try:
-            import redis as redis_lib
-            import pika
-            r = redis_lib.Redis(host='localhost', port=6379, db=0)
-            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-            channel = connection.channel()
-            channel.queue_declare(queue='render_jobs', durable=True)
-            job_id = str(uuid.uuid4())
-            r.set(f"job:{job_id}:status", "queued")
-            st.session_state.job_id = job_id
-            job_data = {
-                "job_id": job_id,
-                "prompt": "stub prompt",
-                "target_bpm": 120,
-                "model_id": "stub_model"
-            }
-            channel.basic_publish(
-                exchange='',
-                routing_key='render_jobs',
-                body=json.dumps(job_data),
-                properties=pika.BasicProperties(
-                    delivery_mode=2,
-                )
-            )
-            connection.close()
-            st.success(f"Job {job_id} successfully queued to the render cluster!")
-        except Exception as e:
-            st.error(f"Failed to submit job: {e}")
-
-    if st.session_state.job_id:
-        try:
-            import redis as redis_lib
-            from streamlit_autorefresh import st_autorefresh
-            r = redis_lib.Redis(host='localhost', port=6379, db=0)
-            status = r.get(f"job:{st.session_state.job_id}:status")
-            if status:
-                status = status.decode("utf-8")
-                st.info(f"Current Job Status: {status}")
-                if status not in ["completed", "failed"]:
-                    st_autorefresh(interval=2000, key="job_poll")
-                elif status == "completed":
-                    st.success("Video Render Complete!")
-                    st.balloons()
-        except Exception as e:
-            st.warning("Could not connect to Redis to check job status.")
+        if st.button("Render Preview 🔊"):
+            out_audio = os.path.join(settings.OUTPUT_DIR, "edit_preview.wav")
+            renderer.render(file_path, out_audio)
+            st.audio(out_audio)
 
 with tab3:
-    st.header("🌀 Live Psy-Mono Studio")
-    st.write("Tweak algorithmic psytrance parameters in real-time.")
-
+    st.header("🌀 Live Psy-Mono Studio V5: Live Jam Edition")
     from streamlit_mic_recorder import mic_recorder
     from hymn_remaker.src.audio_to_midi import transcribe_audio_to_midi
+    from hymn_remaker.src.psy_sequencer import PsyGenerator, InternalMidiPort
+    from hymn_remaker.src.audio_streamer import AudioStreamer
+    import mido
+    import threading
 
     if "psy_player" not in st.session_state:
         import hymn_player_ext
-        sf_path = settings.DEFAULT_SOUNDFONT_PATHS[0]
-        st.session_state.psy_player = hymn_player_ext.HymnPlayer(sf_path)
+        st.session_state.psy_player = hymn_player_ext.HymnPlayer(settings.DEFAULT_SOUNDFONT_PATHS[0])
+        st.session_state.psy_gen = PsyGenerator()
+        st.session_state.internal_midi_port = InternalMidiPort(st.session_state.psy_player)
+        st.session_state.audio_streamer = AudioStreamer(st.session_state.psy_player)
 
-    if "local_remaker" not in st.session_state:
-        st.session_state.local_remaker = None
+    if "event_log" not in st.session_state:
+        st.session_state.event_log = []
+
+    perf_mode = st.toggle("🚀 PERFORMANCE MODE", value=False, help="Hides non-essential sliders for a cleaner live jamming interface.")
 
     col1, col2 = st.columns([1, 2])
-
     with col1:
-        selected_sf = st.selectbox("Studio SoundFont", settings.DEFAULT_SOUNDFONT_PATHS, help="Select the soundfont for real-time preview and export.")
-        if "current_sf" not in st.session_state or st.session_state.current_sf != selected_sf:
-            import hymn_player_ext
-            st.session_state.psy_player = hymn_player_ext.HymnPlayer(selected_sf)
-            st.session_state.current_sf = selected_sf
+        if not perf_mode:
+            st.subheader("1. Input & Mode")
+        source_mode = st.radio("Input Source", ["Hymn MIDI", "Mic Input"], key="psy_source")
+        gen_mode = st.radio("Generation Mode", ["Loop (8 bars)", "Arrangement (56 bars)"], key="psy_mode")
 
-        source_mode = st.radio("Input Source", ["Hymn MIDI", "Mic Input"])
+        if perf_mode:
+             st.info(f"Mode: {gen_mode} | Gain: {st.session_state.get('psy_gain', 1.0)}")
 
         input_midi_path = None
-
         if source_mode == "Hymn MIDI":
-            live_midi = st.file_uploader("Upload Hymn MIDI", type=["mid", "midi"], key="live_psy_uploader")
+            live_midi = st.file_uploader("Upload MIDI", type=["mid", "midi"], key="live_up")
             if live_midi:
-                temp_input = os.path.join(settings.INPUT_DIR, "live_input.mid")
-                with open(temp_input, "wb") as f:
+                input_midi_path = os.path.join(settings.INPUT_DIR, "live_input.mid")
+                with open(input_midi_path, "wb") as f:
                     f.write(live_midi.getbuffer())
-                input_midi_path = temp_input
         else:
-            st.write("Record your melody (monophonic):")
-            audio_rec = mic_recorder(start_prompt="⏺️ Record", stop_prompt="⏹️ Stop", key="mic")
+            audio_rec = mic_recorder(start_prompt="⏺️ Record", stop_prompt="⏹️ Stop", key="mic_psy")
             if audio_rec:
                 temp_audio = os.path.join(settings.INPUT_DIR, "live_mic.wav")
+                input_midi_path = os.path.join(settings.INPUT_DIR, "live_mic.mid")
                 with open(temp_audio, "wb") as f:
                     f.write(audio_rec['bytes'])
+                transcribe_audio_to_midi(temp_audio, input_midi_path)
 
-                temp_input = os.path.join(settings.INPUT_DIR, "live_input_from_mic.mid")
-                with st.spinner("Transcribing audio..."):
-                    try:
-                        transcribe_audio_to_midi(temp_audio, temp_input)
-                        st.success("Transcription complete!")
-                        input_midi_path = temp_input
-                    except Exception as e:
-                        st.error(f"Transcription failed: {e}")
+        if not perf_mode:
+            st.subheader("2. Sequencer Config")
+            bpm = st.slider("Target BPM", 120, 160, 145, key="psy_bpm")
+            algo_style = st.selectbox("Algorithmic Style", ["None", "Full-On", "DarkPsy", "Progressive", "Morning"], key="psy_algo_style")
+            density = st.slider("Euclidean Density", 1, 16, 5, key="psy_density")
+            gallop = st.selectbox("Gallop Variant", ["classic", "triplet", "rolling"], key="psy_gallop")
+        else:
+            bpm = st.session_state.get("psy_bpm", 145)
+            algo_style = st.session_state.get("psy_algo_style", "None")
+            density = st.session_state.get("psy_density", 5)
+            gallop = st.session_state.get("psy_gallop", "classic")
 
-        st.subheader("Sequencer Config")
-        bpm = st.slider("Target BPM", 120, 160, 145)
-        density = st.slider("Euclidean Density", 1, 16, 5)
-        gallop = st.selectbox("Gallop Variant", ["classic", "triplet", "rolling"])
-        octave_freq = st.slider("Octave Jump Freq", 0, 4, 2)
+        st.subheader("3. Live Performance Mixer")
+        master_gain = st.slider("Global Gain", 0.0, 5.0, 1.0, key="psy_gain")
+        st.session_state.psy_player.set_gain(master_gain)
 
-        st.subheader("Mixer")
-        k_vel = st.slider("Kick Volume", 0.0, 1.0, 0.9)
-        b_vel = st.slider("Bass Volume", 0.0, 1.0, 0.7)
-        l_vel = st.slider("Lead Volume", 0.0, 1.0, 0.8)
+        vol_k = st.slider("Kick (Ch 0)", 0.0, 1.0, 0.9, key="psy_vol_k")
+        vol_b = st.slider("Bass (Ch 1)", 0.0, 1.0, 0.7, key="psy_vol_b")
+        vol_l = st.slider("Lead (Ch 2)", 0.0, 1.0, 0.8, key="psy_vol_l")
 
-        psy_config = {
-            "targetBpm": bpm,
-            "euclideanDensity": density,
-            "gallopVariant": gallop,
-            "octaveJumpBarFrequency": octave_freq,
-            "kickVelocity": k_vel,
-            "bassVelocity": b_vel,
-            "leadVelocity": l_vel
-        }
+        st.session_state.psy_player.set_channel_volume(0, vol_k)
+        st.session_state.psy_player.set_channel_volume(1, vol_b)
+        st.session_state.psy_player.set_channel_volume(2, vol_l)
+
+        st.subheader("External MIDI Control")
+        try:
+            in_ports = mido.get_input_names()
+            out_ports = mido.get_output_names()
+        except Exception:
+            in_ports = []
+            out_ports = []
+
+        midi_in_sel = st.selectbox("MIDI Input (Hardware/Controller)", ["None"] + in_ports)
+        midi_out_sel = st.selectbox("MIDI Output (External VST/Synth)", ["None"] + out_ports)
+
+        if midi_in_sel != "None" and st.session_state.get("last_midi_in") != midi_in_sel:
+            # Setup input callback
+            def midi_callback(message):
+                if message.type == 'control_change':
+                    # Map CC 1 (Mod wheel) to Energy
+                    if message.control == 1:
+                         # This won't update UI directly but can affect engine state
+                         st.session_state.psy_energy_val = message.value / 127.0
+                    # Map CC 74 (Brightness) to Cutoff
+                    elif message.control == 74:
+                         st.session_state.psy_player.send_cc(2, 74, message.value)
+
+            try:
+                if "midi_in_port" in st.session_state:
+                    st.session_state.midi_in_port.close()
+                st.session_state.midi_in_port = mido.open_input(midi_in_sel, callback=midi_callback)
+                st.session_state.last_midi_in = midi_in_sel
+                st.success(f"Connected to {midi_in_sel}")
+            except Exception as e:
+                st.error(f"MIDI In Error: {e}")
+
+        st.subheader("4. Real-time Automation")
+        cutoff = st.slider("Filter Cutoff (CC 74)", 0, 127, 100)
+        st.session_state.psy_player.send_cc(2, 74, cutoff) # Lead channel filter
+        if cutoff != st.session_state.get('prev_cutoff'):
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 74 (Cutoff): {cutoff}")
+            st.session_state.prev_cutoff = cutoff
+
+        res = st.slider("Resonance (CC 71)", 0, 127, 40)
+        st.session_state.psy_player.send_cc(2, 71, res)
+        if res != st.session_state.get('prev_res'):
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 71 (Resonance): {res}")
+            st.session_state.prev_res = res
+
+        st.subheader("Psy-Energy Macro")
+        psy_energy = st.slider("Global Energy", 0.0, 1.0, 0.5, help="Macro: Affects filter, resonance, and playback intensity.")
+        # Map macro to actual params
+        cutoff_macro = int(20 + (psy_energy * 100))
+        res_macro = int(10 + (psy_energy * 90))
+        st.session_state.psy_player.send_cc(2, 74, cutoff_macro)
+        st.session_state.psy_player.send_cc(2, 71, res_macro)
+        # Dynamically adjust gain based on energy
+        st.session_state.psy_player.set_gain(master_gain * (0.8 + psy_energy * 0.4))
+
+        st.subheader("Live Audio Stream")
+        use_web_stream = st.toggle("🌐 Enable Web Stream (Browser Audio)", value=False)
+        if use_web_stream:
+            st.session_state.audio_streamer.start()
+            st.markdown('<audio src="http://localhost:8000/stream.mp3" controls autoplay style="width: 100%;"></audio>', unsafe_allow_html=True)
+            st.info("Streaming live MP3 to browser. Use System Audio if running locally.")
+        else:
+            st.session_state.audio_streamer.stop()
 
     with col2:
-        st.subheader("Live Controls")
-        c1, c2, c3, c4 = st.columns(4)
+        st.subheader("Performance Monitor & Event Log")
 
-        play_btn = c1.button("▶️ Play / Refresh")
-        stop_btn = c2.button("⏹️ Stop")
-        export_btn = c3.button("💾 Export WAV")
+        log_container = st.container(height=150)
+        with log_container:
+            for event in reversed(st.session_state.event_log[-20:]):
+                st.write(f"`{event}`")
 
-        if st.session_state.get("studio_is_playing"):
-            st.info("🔊 Real-time audio output is active.")
-        else:
-            st.warning("🔇 Audio output is idle.")
+        preview_placeholder = st.empty()
 
-        st.markdown("---")
-        st.subheader("Full AI Render")
-        gen_mode = st.selectbox("AI Model", ["Replicate (Cloud)", "Transformers (Local)"])
-        use_ts_pipeline = st.checkbox("Use Psy-Mono TS Pipeline", value=True, help="Enable the full TypeScript-led orchestration (includes stem rendering).")
-        render_btn = st.button("🚀 Render with Generative AI")
+        st.subheader("Live Waveform Visualizer")
+        # Pull real peaks from streamer
+        peaks = st.session_state.audio_streamer.get_peaks()
+        if "viz_buffer" not in st.session_state:
+            st.session_state.viz_buffer = np.zeros(200)
 
-        if input_midi_path:
-            if play_btn:
-                # 1. Run TS Sequencer
-                temp_output = os.path.join(output_dir, "live_psy_output.mid")
-                config_json = json.dumps(psy_config)
+        new_val = (peaks[0] + peaks[1]) / 2.0
+        st.session_state.viz_buffer = np.roll(st.session_state.viz_buffer, -1)
+        st.session_state.viz_buffer[-1] = new_val
+        viz_data = st.session_state.viz_buffer
 
-                with st.spinner("Generating Psytrance..."):
-                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", input_midi_path, temp_output, config_json]
-                    subprocess.run(cmd, check=True, capture_output=True)
+        fig_viz = go.Figure(go.Scattergl(y=viz_data, mode='lines', line=dict(color='cyan', width=2), fill='tozeroy', fillcolor='rgba(0, 255, 255, 0.2)'))
+        fig_viz.update_layout(height=150, margin=dict(l=0,r=0,t=0,b=0), xaxis_visible=False, yaxis_visible=False, template="plotly_dark")
+        st.plotly_chart(fig_viz, use_container_width=True)
 
-                # 2. Load and Play
+        if gen_mode == "Arrangement (56 bars)":
+            st.info("Arrangement Map: Intro -> Verse -> Build -> Drop -> Outro")
+            # Draw a simple progress bar based on hypothetical playback (Streamlit doesn't track C++ playback time easily)
+            # but we can show the static arrangement visual.
+            fig_arr = go.Figure()
+            fig_arr.add_trace(go.Bar(x=["Intro", "Verse", "Build", "Drop", "Outro"], y=[8, 16, 8, 16, 8], marker_color='indigo'))
+            fig_arr.update_layout(title="Arrangement Timeline (Bars)", height=250)
+            st.plotly_chart(fig_arr, use_container_width=True)
+
+        c1, c2, c3 = st.columns(3)
+        if c1.button("▶️ GENERATE & PLAY"):
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Trigger: Generate & Play ({algo_style})")
+            if input_midi_path:
+                temp_output = os.path.join(output_dir, "studio_output.mid")
+                mode_str = "arrangement" if gen_mode == "Arrangement (56 bars)" else "loop"
+
+                # Define a live config getter
+                def get_live_config():
+                    c = {
+                        "targetBpm": st.session_state.get("psy_bpm", 145),
+                        "euclideanDensity": st.session_state.get("psy_density", 5),
+                        "gallopVariant": st.session_state.get("psy_gallop", "classic"),
+                        "mode": "arrangement" if st.session_state.get("psy_mode") == "Arrangement (56 bars)" else "loop",
+                        "kickVelocity": st.session_state.get("psy_vol_k", 0.9),
+                        "bassVelocity": st.session_state.get("psy_vol_b", 0.7),
+                        "leadVelocity": st.session_state.get("psy_vol_l", 0.8)
+                    }
+                    astyle = st.session_state.get("psy_algo_style", "None")
+                    if astyle != "None":
+                        c["style_preset"] = astyle
+                    return c
+
+                # Clear previous threads
+                if "midi_stop_event" in st.session_state:
+                    st.session_state.midi_stop_event.set()
+                if "midi_out_thread" in st.session_state and st.session_state.midi_out_thread.is_alive():
+                    st.session_state.midi_out_thread.join()
+                if "internal_midi_thread" in st.session_state and st.session_state.internal_midi_thread.is_alive():
+                    st.session_state.internal_midi_thread.join()
+
+                st.session_state.midi_stop_event = threading.Event()
+
+                # Start Internal Streaming
+                st.session_state.psy_player.start_realtime()
+                st.session_state.internal_midi_thread = threading.Thread(
+                    target=st.session_state.psy_gen.stream_to_port,
+                    args=(st.session_state.internal_midi_port, input_midi_path, get_live_config, st.session_state.midi_stop_event)
+                )
+                st.session_state.internal_midi_thread.start()
+
+                # Optional: Stream to external MIDI port
+                if midi_out_sel != "None":
+                    try:
+                        out_port = mido.open_output(midi_out_sel)
+                        st.session_state.midi_out_thread = threading.Thread(
+                            target=st.session_state.psy_gen.stream_to_port,
+                            args=(out_port, input_midi_path, get_live_config, st.session_state.midi_stop_event)
+                        )
+                        st.session_state.midi_out_thread.start()
+                        st.info(f"Streaming to external MIDI port: {midi_out_sel}")
+                    except Exception as e:
+                        st.error(f"External MIDI Out Error: {e}")
+
+                st.success(f"Live performance started in {mode_str} mode!")
+
+                # Still generate the MIDI file for visual preview / download
+                st.session_state.psy_gen.generate(input_midi_path, temp_output, get_live_config())
+                mid = mido.MidiFile(temp_output)
+                notes = []
+                for track in mid.tracks:
+                    time = 0
+                    for msg in track:
+                        time += msg.time
+                        if msg.type == 'note_on' and msg.velocity > 0:
+                            notes.append({'t': time, 'n': msg.note, 'track': track.name})
+                if notes:
+                    fig = go.Figure()
+                    for t_name in ['Kick', 'Bass', 'Lead']:
+                        # Show first 4 bars in preview
+                        t_notes = [n for n in notes if n['track'] == t_name and n['t'] < 1920 * 4]
+                        fig.add_trace(go.Scattergl(x=[n['t'] for n in t_notes], y=[n['n'] for n in t_notes], mode='markers', name=t_name))
+                    fig.update_layout(height=350, margin=dict(l=0,r=0,t=0,b=0), title="Preview (First 4 Bars)")
+                    preview_placeholder.plotly_chart(fig, use_container_width=True)
+
                 st.session_state.psy_player.stop_realtime()
                 st.session_state.psy_player.load(temp_output)
                 st.session_state.psy_player.start_realtime()
                 st.session_state.psy_player.play()
-                st.session_state["studio_is_playing"] = True
-                st.success("Playing live!")
+                st.success(f"Playing {mode_str} live!")
 
-            if render_btn:
-                if use_ts_pipeline:
-                    with st.spinner("Executing Psy-Mono TS Pipeline..."):
-                        from pipeline.psy_mono_bridge import generate_psytrance_pipeline
-                        success = generate_psytrance_pipeline(input_midi_path, os.path.join(output_dir, "psy_mono"), psy_config=psy_config)
-                        if success:
-                            st.success("Pipeline execution complete! Check output directory for stems.")
-                            # For the UI preview, we'll still show a local AI result if possible
-                            st.info("TS Pipeline finished. Individual stems available in output/psy_mono/stems.")
-                        else:
-                            st.error("TS Pipeline failed.")
+        if c2.button("⏹️ STOP"):
+            st.session_state.psy_player.stop()
+            st.session_state.psy_player.stop_realtime()
+            if "midi_stop_event" in st.session_state:
+                st.session_state.midi_stop_event.set()
+            st.info("Performance stopped.")
 
-                # 1. Generate local conditioning WAV (legacy flow for UI preview)
-                temp_output = os.path.join(output_dir, "live_psy_output.mid")
-                config_json = json.dumps(psy_config)
-                with st.spinner("Generating algorithmic MIDI..."):
-                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", input_midi_path, temp_output, config_json]
-                    subprocess.run(cmd, check=True, capture_output=True)
+        st.subheader("Manual FX & Jam Trigger")
+        fc1, fc2, fc3 = st.columns(3)
+        if fc1.button("💥 Crash Cymbal"):
+             st.session_state.psy_player.send_note_on(9, 49, 120) # MIDI Ch 10 is usually percussion
+             st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Manual FX: Crash Cymbal")
+        if fc2.button("🚀 Rising Sweep"):
+            st.session_state.psy_player.send_note_on(3, 72, 100)
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Manual FX: Rising Sweep")
+        if fc3.button("🥁 Acid Fill"):
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Manual FX: Acid Fill")
+            # Trigger a rapid acid lead sequence on channel 2
+            for i in range(4):
+                st.session_state.psy_player.send_note_on(2, 60 + i*2, 110)
+                time.sleep(0.05)
+                st.session_state.psy_player.send_note_off(2, 60 + i*2)
+            st.toast("Acid Fill triggered!")
 
-                # 2. Render MIDI to dry audio
-                cond_audio = os.path.join(output_dir, "live_psy_cond.wav")
-                with st.spinner("Rendering dry conditioning audio..."):
-                    renderer.render(temp_output, cond_audio, transient_only=True)
+        if st.button("🚨 PANIC (Stop All)", type="secondary"):
+            if "midi_stop_event" in st.session_state:
+                st.session_state.midi_stop_event.set()
+            for ch in range(16):
+                st.session_state.psy_player.send_cc(ch, 123, 0) # All Notes Off
+            st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Panic triggered.")
 
-                # 3. AI Generation
-                final_audio = os.path.join(output_dir, "live_psy_final.wav")
-                prompt = f"Modern Full-On Psytrance, {bpm} BPM, driving, psychedelic sound design, festival grade master"
+        st.subheader("5. Export & Render")
+        er1, er2 = st.columns(2)
+        if er1.button("🎬 Render Studio Jam to Video", help="Renders the current generated MIDI with audio-reactive visuals."):
+            temp_mid = os.path.join(output_dir, "studio_output.mid")
+            if os.path.exists(temp_mid):
+                with st.spinner("Rendering audio and video..."):
+                    out_audio = os.path.join(output_dir, f"studio_render_{uuid.uuid4().hex[:4]}.wav")
+                    out_video = out_audio.replace(".wav", ".mp4")
 
-                if gen_mode == "Replicate (Cloud)":
-                    with st.spinner("Remaking via Replicate (MusicGen)..."):
-                        try:
-                            remake_url = remaker.remake(cond_audio, prompt)
-                            import requests
-                            resp = requests.get(remake_url)
-                            with open(final_audio, "wb") as f:
-                                f.write(resp.content)
-                            st.success("AI Generation Complete!")
-                            st.audio(final_audio)
-                        except Exception as e:
-                            st.error(f"Cloud remake failed: {e}")
-                else:
-                    if st.session_state.local_remaker is None:
-                        from hymn_remaker.src.local_remaker import LocalMusicRemaker
-                        with st.spinner("Loading local model (first time)..."):
-                            st.session_state.local_remaker = LocalMusicRemaker()
+                    # Render Audio
+                    renderer.render(temp_mid, out_audio)
 
-                    with st.spinner("Remaking via Local Transformers..."):
-                        st.session_state.local_remaker.generate(cond_audio, prompt, duration=30, output_path=final_audio)
+                    # Render Video with Visualizer
+                    # Use a placeholder image or a solid color
+                    video_producer.create_video(
+                        out_audio, "black", out_video,
+                        enable_visualizer=True,
+                        visualizer_mode=visualizer_mode,
+                        tempo_bpm=bpm
+                    )
+                    st.video(out_video)
+                    st.success(f"Render complete: {out_video}")
+                    st.balloons()
+            else:
+                st.error("No generated MIDI found. Press 'GENERATE & PLAY' first.")
 
-                st.success("AI Generation Complete!")
-                st.audio(final_audio)
-                with open(final_audio, "rb") as f:
-                    st.download_button("Download Final Track 🎵", f, file_name="psy_hymn_remix.wav", mime="audio/wav")
+        if er2.button("💾 Download Generated MIDI"):
+            temp_mid = os.path.join(output_dir, "studio_output.mid")
+            if os.path.exists(temp_mid):
+                with open(temp_mid, "rb") as f:
+                    st.download_button("Click to Download MIDI", f, file_name="psy_jam.mid")
+            else:
+                st.error("No generated MIDI found.")
 
-            if export_btn:
-                # 1. Generate algorithmic MIDI (same logic as Play)
-                temp_output = os.path.join(output_dir, "live_psy_output.mid")
-                config_json = json.dumps(psy_config)
-                with st.spinner("Generating MIDI for export..."):
-                    cmd = ["npx", "ts-node", "--transpile-only", "src/main.ts", input_midi_path, temp_output, config_json]
-                    subprocess.run(cmd, check=True, capture_output=True)
+    with st.expander("Model Refinement & Feedback"):
+        feedback_rating = st.slider("Rate this Track (Stars)", 1, 5, 5, key="studio_stars")
+        feedback_text = st.text_area("What could be improved?", key="studio_feedback_text")
+        if st.button("Submit Feedback"):
+            st.success("Thank you for your feedback! It will be used to refine our algorithmic rules.")
+            # In a real app, we would write this to a DB
+            with open("output/feedback_log.jsonl", "a") as f:
+                f.write(json.dumps({
+                    "timestamp": time.time(),
+                    "rating": feedback_rating,
+                    "text": feedback_text,
+                    "config": {
+                        "bpm": bpm, "density": density, "gallop": gallop, "algo_style": algo_style
+                    }
+                }) + "\n")
 
-                # 2. Render to full quality WAV via offline engine
-                export_wav = os.path.join(output_dir, "live_psy_export.wav")
-                with st.spinner("Exporting high-fidelity WAV..."):
-                    try:
-                        import soundfile as sf
-                        import numpy as np
-                        # Use a local temporary player to not disrupt real-time session
-                        import hymn_player_ext
-                        exporter = hymn_player_ext.HymnPlayer(selected_sf)
-                        exporter.load(temp_output)
+    with st.expander("Novel AI Generation (Local MusicGen)"):
+        novel_prompt = st.text_input("Novel Prompt", value="Fast melodic psytrance, 145 BPM, psychedelic leads, high energy")
+        novel_duration = st.slider("Duration (sec)", 5, 30, 10)
+        if st.button("✨ Generate Novel Track"):
+            with st.spinner("Generating novel track..."):
+                out_path = os.path.join(output_dir, f"novel_{uuid.uuid4().hex[:8]}.wav")
+                local_remaker.generate(novel_prompt, duration=novel_duration, output_path=out_path)
+                st.audio(out_path)
+                st.success(f"Novel track generated: {out_path}")
 
-                        # Get duration
-                        import mido
-                        mid = mido.MidiFile(temp_output)
-                        duration_frames = int((mid.length + 2) * settings.SAMPLE_RATE)
-
-                        audio = exporter.render_audio(duration_frames)
-                        audio = audio.reshape(-1, 2)
-                        sf.write(export_wav, audio, settings.SAMPLE_RATE)
-                        st.success("Export complete!")
-                        with open(export_wav, "rb") as f:
-                            st.download_button("Download Exported WAV 🎵", f, file_name="psy_studio_export.wav", mime="audio/wav")
-                    except Exception as e:
-                        st.error(f"Export failed: {e}")
-
-            if stop_btn:
-                st.session_state.psy_player.stop()
-                st.session_state.psy_player.stop_realtime()
-                st.session_state["studio_is_playing"] = False
-                st.info("Playback stopped.")
+with tab4:
+    st.header("📚 Output Library")
+    if os.path.exists(output_dir):
+        files = [f for f in os.listdir(output_dir) if f.endswith(('.wav', '.mp3', '.mp4'))]
+        if not files:
+            st.info("No files found in output directory.")
         else:
-            st.info("Upload a MIDI file to start the live studio.")
+            # Sort by modification time (newest first)
+            files.sort(key=lambda x: os.path.getmtime(os.path.join(output_dir, x)), reverse=True)
+
+            for f in files:
+                f_path = os.path.join(output_dir, f)
+                c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
+                c1.write(f"**{f}**")
+
+                # Show score if audio
+                if f.endswith(('.wav', '.mp3')):
+                    score = quality_eval.evaluate(f_path)
+                    c2.metric("Quality Score", f"{score}")
+                    with c1:
+                        st.audio(f_path)
+
+                    if c3.button("🎹 Load Studio", key=f"load_{f}"):
+                        if f.endswith('.wav'):
+                            # Check if there is a matching MIDI for playback or just load the WAV
+                            # For simplicity we just stop existing and load
+                            st.session_state.psy_player.stop_realtime()
+                            # We need a MIDI for the player load, if we only have WAV we can't play via FluidSynth
+                            # but we can at least show it was clicked.
+                            st.info(f"Loading {f} to studio player...")
+                            # If it's studio_output.mid's render, we can load the mid
+                            name_base = f.replace(".wav", "")
+                            possible_mid = os.path.join(output_dir, f"{name_base}.mid")
+                            if os.path.exists(possible_mid):
+                                st.session_state.psy_player.load(possible_mid)
+                                st.session_state.psy_player.start_realtime()
+                                st.session_state.psy_player.play()
+                                st.success(f"Playing {name_base}.mid")
+                else:
+                    with c1:
+                        st.video(f_path)
+
+                if c4.button("🗑️ Delete", key=f"del_{f}"):
+                    os.remove(f_path)
+                    st.rerun()
+                st.divider()
+    else:
+        st.error(f"Output directory not found: {output_dir}")
+
+with tab5:
+    st.header("🔬 Optimization & Analytics Dashboard")
+    st.write("Conduct A/B/C/D testing to validate generation quality and adjust parameters.")
+
+    import pandas as pd
+
+    # Section 1: A/B/C/D Testing
+    st.subheader("1. A/B/C/D Variant Testing")
+    test_midi = st.file_uploader("Upload MIDI for A/B Test", type=["mid", "midi"], key="ab_midi")
+
+    if test_midi:
+        if st.button("🚀 Generate 4 Variants"):
+            test_path = os.path.join(settings.INPUT_DIR, "ab_test_input.mid")
+            with open(test_path, "wb") as f:
+                f.write(test_midi.getbuffer())
+
+            variants = []
+            for i, label in enumerate(['A', 'B', 'C', 'D']):
+                out_v = os.path.join(output_dir, f"test_variant_{label}.mid")
+                out_audio = out_v.replace(".mid", ".wav")
+
+                # Randomize params for test
+                v_config = {
+                    "targetBpm": 145,
+                    "euclideanDensity": random.randint(3, 13),
+                    "gallopVariant": random.choice(["classic", "triplet", "rolling"]),
+                    "mode": "loop"
+                }
+                st.session_state.psy_gen.generate(test_path, out_v, v_config)
+                renderer.render(out_v, out_audio)
+                variants.append({"label": label, "audio": out_audio, "config": v_config})
+            st.session_state["ab_variants"] = variants
+
+    if "ab_variants" in st.session_state:
+        cols = st.columns(4)
+        for i, v in enumerate(st.session_state["ab_variants"]):
+            with cols[i]:
+                st.write(f"**Variant {v['label']}**")
+                st.audio(v['audio'])
+                if st.button(f"Vote {v['label']}", key=f"vote_{v['label']}"):
+                    st.success(f"Voted for {v['label']}!")
+                    # Log winning params
+                    with open("output/parameter_optimization.jsonl", "a") as f:
+                        f.write(json.dumps({
+                            "timestamp": time.time(),
+                            "winner": v['label'],
+                            "config": v['config']
+                        }) + "\n")
+
+    # Section 2: Analytics
+    st.subheader("2. Feedback Analytics")
+    feedback_file = "output/feedback_log.jsonl"
+    if os.path.exists(feedback_file):
+        data = []
+        with open(feedback_file, "r") as f:
+            for line in f:
+                data.append(json.loads(line))
+
+        if data:
+            df = pd.DataFrame(data)
+            # Flatten config
+            df_config = pd.json_normalize(df['config'])
+            df = pd.concat([df.drop('config', axis=1), df_config], axis=1)
+
+            st.write("### Rating vs. Euclidean Density")
+            fig = go.Figure(data=go.Scattergl(
+                x=df['density'],
+                y=df['rating'],
+                mode='markers',
+                marker=dict(size=12, color=df['rating'], colorscale='Viridis', showscale=True)
+            ))
+            fig.update_layout(xaxis_title="Euclidean Density", yaxis_title="User Rating")
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.write("### Style Preference Distribution")
+            style_counts = df['algo_style'].value_counts()
+            fig_pie = go.Figure(data=[go.Pie(labels=style_counts.index, values=style_counts.values)])
+            st.plotly_chart(fig_pie, use_container_width=True)
+        else:
+            st.info("No feedback data yet.")
+    else:
+        st.info("Log file not found. Submit feedback in the Studio tab first.")

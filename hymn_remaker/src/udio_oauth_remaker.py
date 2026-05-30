@@ -126,13 +126,10 @@ class UdioOAuthRemaker:
             # 3. Trigger Remix
             logger.info(f"Triggering remix generation (Influence: 0.35, Prompt Strength: 0.65, Manual: True)...")
             
-            # Rewrite prompt to use authoritative production tags instead of conversational text
-            tag_prompt = f"Deep house, 122 bpm, soulful melodic house, driving 4x4 club beat, crisp analog synthesizer chords, modern polished club mix, slap bassline, pristine electronic sound design"
-
             gen_res = self.session.post(
                 f"{UDIO_API_BASE}generate",
                 json={
-                    "prompt": tag_prompt,
+                    "prompt": prompt,
                     "model": "udio-v4-remix",
                     "conditioning_id": upload_id,
                     "variance": variance if variance != 0.25 else 0.35, # Use 0.35 as default sweet spot

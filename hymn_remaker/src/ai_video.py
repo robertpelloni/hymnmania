@@ -1,7 +1,6 @@
 import os
 import time
 import logging
-import requests
 
 from hymn_remaker import settings
 from hymn_remaker.src.local_video_generator import LocalVideoGenerator
@@ -20,12 +19,7 @@ class AIVideoGenerator:
         self.local_gen = None
         
         if self.api_token:
-            try:
-                import replicate
-                replicate.Client(api_token=self.api_token)
-                logger.info("AIVideoGenerator initialized via Replicate.")
-            except ImportError:
-                logger.warning("Replicate library not found.")
+            logger.info("AIVideoGenerator initialized (lazy client).")
         else:
             logger.warning("REPLICATE_API_TOKEN not set.")
 
@@ -36,6 +30,13 @@ class AIVideoGenerator:
         return self.local_gen
 
     def generate_video(self, audio_path, image_url, output_path, prompt=None, tempo=120.0, force_local=False, model_type="ltx-video", model_size="1.3b", quotes=None):
+        """High level dispatch for video generation."""
+        if force_local:
+            return self._get_local_gen().generate_video(audio_path, image_url, output_path, prompt=prompt, tempo=tempo, model_type=model_type, model_size=model_size, quotes=quotes)
+        
+        import requests
+        import replicate
+        # ... rest of method
         """
         Generate an audio-reactive AI video.
         Supports cloud models via Replicate or local GPU generation.

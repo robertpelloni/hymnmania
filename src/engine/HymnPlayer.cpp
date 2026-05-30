@@ -13,6 +13,10 @@ HymnPlayer::HymnPlayer(const std::string& soundfontPath) : playing(false), sound
     fluid_settings_setstr(settings, "player.timing-source", "sample");
     fluid_settings_setnum(settings, "synth.sample-rate", 44100.0);
 
+    // Optimize for low-latency: reduce internal buffer sizes
+    fluid_settings_setint(settings, "synth.polyphony", 128);
+    fluid_settings_setint(settings, "synth.cpu-cores", 2);
+
     // Initialize synthesizer
     synth = new_fluid_synth(settings);
     if (!synth) {
@@ -127,6 +131,37 @@ void HymnPlayer::stop_realtime() {
         // Switch back to sample timing for offline rendering
         fluid_settings_setstr(settings, "player.timing-source", "sample");
         std::cout << "Real-time audio driver stopped." << std::endl;
+    }
+}
+
+void HymnPlayer::set_gain(float gain) {
+    if (synth) {
+        fluid_synth_set_gain(synth, gain);
+    }
+}
+
+void HymnPlayer::set_channel_volume(int channel, float volume) {
+    if (synth) {
+        // volume is 0.0 to 1.0, MIDI CC 7 is 0 to 127
+        fluid_synth_cc(synth, channel, 7, (int)(volume * 127));
+    }
+}
+
+void HymnPlayer::send_cc(int channel, int control, int value) {
+    if (synth) {
+        fluid_synth_cc(synth, channel, control, value);
+    }
+}
+
+void HymnPlayer::send_note_on(int channel, int key, int velocity) {
+    if (synth) {
+        fluid_synth_noteon(synth, channel, key, velocity);
+    }
+}
+
+void HymnPlayer::send_note_off(int channel, int key) {
+    if (synth) {
+        fluid_synth_noteoff(synth, channel, key);
     }
 }
 

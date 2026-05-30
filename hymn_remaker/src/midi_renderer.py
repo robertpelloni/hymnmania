@@ -86,6 +86,30 @@ class MidiRenderer:
         except Exception:
             return 120.0
 
+    def stretch_midi(self, input_path, output_path, target_duration=28.0):
+        """Scale the tempo/ticks of a MIDI file so that it plays within target_duration."""
+        try:
+            import mido
+            mid = mido.MidiFile(input_path)
+            original_duration = mid.length
+            if original_duration <= 0:
+                logger.warning("MIDI duration is 0 or negative. Cannot stretch.")
+                return False
+                
+            scale_factor = target_duration / original_duration
+            logger.info(f"Stretching MIDI {input_path} from {original_duration:.2f}s to {target_duration:.2f}s (factor: {scale_factor:.4f})")
+            
+            for track in mid.tracks:
+                for msg in track:
+                    if not msg.is_meta or msg.type != 'set_tempo':
+                        msg.time = int(round(msg.time * scale_factor))
+                        
+            mid.save(output_path)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to stretch MIDI: {e}")
+            return False
+
     def _render_fluidsynth_cli(self, midi_path, output_path, transient_mode=False):
         """Render MIDI to audio using the FluidSynth CLI directly."""
         if not self.fluidsynth_bin:
@@ -140,17 +164,26 @@ class MidiRenderer:
             logger.error(f"FluidSynth stderr: {result.stderr}")
             raise RuntimeError(f"FluidSynth CLI failed: {result.stderr[:500]}")
 
+        if not os.path.exists(output_path):
+            raise RuntimeError(f"FluidSynth completed but output file not found: {output_path}")
+
+        logger.info(f"FluidSynth CLI rendering complete: {output_path}")
+
     def render(self, midi_path, output_path, transient=False, transient_only=False):
         """
-        Render a MIDI file to audio.
-        transient: Use Woodblock pulses for AI conditioning.
-        transient_only: Route to SonicVacuum for dry piano.
+        Render a MIDI file to audio (WAV/MP3/FLAC depending on extension).
+
+        Args:
+            midi_path (str): Path to the input MIDI file.
+            output_path (str): Path to the output audio file.
+            transient (bool): Use Woodblock pulses for AI conditioning.
+            transient_only (bool): If True, route to SonicVacuum for dry piano (staccato sines).
         """
         if not os.path.exists(midi_path):
             raise FileNotFoundError(f"MIDI file not found: {midi_path}")
 
         if transient_only:
-            logger.info("Transient-only rendering requested (SonicVacuum).")
+            logger.info("Transient-only rendering requested. Routing to SonicVacuum (Staccato Sines).")
             try:
                 from pipeline.processing.sonic_vacuum import SonicVacuumProcessor
                 vacuum = SonicVacuumProcessor(midi_path)

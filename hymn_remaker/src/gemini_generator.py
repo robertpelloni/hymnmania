@@ -22,11 +22,11 @@ GEMINI_SCOPES = ["https://www.googleapis.com/auth/generative-language"]
 class GeminiContentGenerator:
     def __init__(self, api_key=None, client_secrets_file="client_secrets.json"):
         """Initialize the GeminiContentGenerator using the new google-genai SDK."""
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or os.environ.get("MCP_LLM_GOOGLE_API_KEY")
         self.client_secrets_file = client_secrets_file
-        self.model_name = "gemini-2.0-flash"
-        self.image_model_name = "imagen-3.0-generate-001"
-        self.video_model_name = "veo-2.0-generate-preview" 
+        self.model_name = "gemini-2.5-flash"
+        self.image_model_name = "imagen-4.0-fast-generate-001"
+        self.video_model_name = "veo-3.0-generate-001" 
         self.client = None
         
     def _get_client(self):
