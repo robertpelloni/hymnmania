@@ -113,46 +113,6 @@ with st.sidebar.expander("Udio/Suno Optimizers", expanded=False):
     house_quantizer = st.checkbox("House Structural Quantizer", value=False, help="Force snap to 124 BPM electronic grid.")
     mix_hiphop_vocals = st.text_input("Hip-Hop Vocal Remix (Path/URL)", help="Provide a local path or YouTube URL to an acapella or hip-hop track to remix into the psytrance track.")
 
-st.sidebar.markdown("### Advanced Audio Processing")
-with st.sidebar.expander("Audio Settings", expanded=False):
-    normalize_audio = st.checkbox("Normalize Volume", value=True, help="Automatically adjust the volume of the generated audio to a standard level.")
-    fade_in_ms = st.number_input("Fade-In (ms)", min_value=0, max_value=10000, value=0, step=500, help="Apply a gradual volume increase at the start of the audio.")
-    fade_out_ms = st.number_input("Fade-Out (ms)", min_value=0, max_value=10000, value=0, step=500, help="Apply a gradual volume decrease at the end of the audio.")
-
-st.sidebar.markdown("### Subtitle Styling")
-with st.sidebar.expander("Subtitle Style Settings", expanded=False):
-    sub_font_size = st.number_input("Font Size", min_value=12, max_value=72, value=24, step=2, help="Font size for burned-in subtitles.")
-    sub_primary_color = st.color_picker("Primary Color", value="#FFFFFF", help="Main text color for subtitles.")
-    sub_outline_color = st.color_picker("Outline Color", value="#000000", help="Outline color for subtitles.")
-    sub_back_color = st.color_picker("Background Box Color", value="#000000", help="Background box color (if enabled).")
-    sub_box = st.checkbox("Show Background Box", value=True, help="Draw a semi-transparent box behind subtitle text for readability.")
-
-st.sidebar.markdown("### Live DJ Radio Stream")
-stream_url = st.sidebar.text_input("RTMP URL (e.g., YouTube Live)", help="Enter your RTMP endpoint to broadcast 24/7 internet radio.")
-col_str1, col_str2 = st.sidebar.columns(2)
-if "radio_streamer" not in st.session_state:
-    st.session_state.radio_streamer = None
-if col_str1.button("Start Radio 📻"):
-    if not stream_url:
-        st.sidebar.error("RTMP URL required.")
-    elif st.session_state.radio_streamer and st.session_state.radio_streamer.is_streaming:
-        st.sidebar.warning("Radio is already streaming!")
-    else:
-        from hymn_remaker.src.radio_streamer import RadioStreamer
-        st.session_state.radio_streamer = RadioStreamer(stream_url, input_dir=output_dir)
-        st.session_state.radio_streamer.start()
-        st.sidebar.success("Radio broadcast started.")
-if col_str2.button("Stop Radio ⏹️"):
-    if st.session_state.radio_streamer:
-        st.session_state.radio_streamer.stop()
-        st.session_state.radio_streamer = None
-        st.sidebar.info("Radio broadcast stopped.")
-if st.session_state.radio_streamer and st.session_state.radio_streamer.is_streaming:
-    curr_track = st.session_state.radio_streamer.current_track
-    st.sidebar.info(f"**Now Playing:** {curr_track if curr_track else 'Waiting for tracks...'}")
-    if st.sidebar.button("Skip Track ⏭️"):
-        st.session_state.radio_streamer.skip_track()
-
 st.sidebar.markdown("### Pipeline Options")
 video_format = st.sidebar.selectbox("Video Format", ["Standard 16:9", "Vertical 9:16"])
 enable_visualizer = st.sidebar.checkbox("Audio-Reactive Visualizer", value=False)
@@ -162,8 +122,8 @@ if enable_visualizer:
 generate_vocals = st.sidebar.checkbox("Generate Vocals (ElevenLabs)", value=False)
 remake_priority = st.sidebar.selectbox("AI Remake Service", ["suno", "udio-oauth", "udio", "replicate", "local"], index=0)
 udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.25)
-local_guidance = st.slider("Local Guidance Scale", 1.0, 10.0, 3.0)
-local_temperature = st.slider("Local Temperature", 0.1, 2.0, 1.0)
+local_guidance = st.sidebar.slider("Local Guidance Scale", 1.0, 10.0, 3.0)
+local_temperature = st.sidebar.slider("Local Temperature", 0.1, 2.0, 1.0)
 
 upload = st.sidebar.checkbox("Upload to YouTube", value=False)
 

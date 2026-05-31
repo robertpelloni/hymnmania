@@ -1,3 +1,25 @@
+# Handoff - Version 1.36.0 (Suno Transition & Psy-Mono Finalization)
+
+## Session Summary
+Completed the strategic transition of the primary AI music generation service from Udio to **Suno**, while simultaneously finalizing the Psy-Mono production pipeline. The system now prioritizes Suno for its superior melody retention and high-fidelity electronic output, while maintaining Udio and Local MusicGen as robust fallbacks. This release marks the completion of the v1.36.0 milestone.
+
+## Major Changes
+- **Suno Integration:**
+    - `main.py`: Reordered remake priority to place Suno first.
+    - `api.py` / `app.py`: Set Suno as the default AI remake service.
+    - `suno_remaker.py`: Fixed critical method call bug (`upload_audio`).
+- **Psy-Mono Studio V5 Finalization:**
+    - Integrated algorithmic psytrance sequencing (v1.36.0) with real-time parameter tweaking.
+    - Added "Performance Mode" to Streamlit UI for cleaner live jamming.
+- **Workflow & Sync:**
+    - Performed a comprehensive sync-merge with all active GitHub branches (`master` and `psy-mono-pipeline-1.27.0-9908176330949525010`).
+    - Resolved complex conflicts in core modules (`main.py`, `app.py`, `midi_renderer.py`) while preserving Suno-first orchestration.
+
+## Verification Status
+- Verified Suno priority logic via mock unit tests (`tests/test_suno_priority.py`).
+- Verified Udio fallback mechanism via simulated API failures (`tests/test_suno_fallback.py`).
+- Full end-to-end pipeline run successful for both Suno and Local MusicGen modes.
+
 # Handoff - Version 1.35.0 (Interactive Live Parameters & Internal Streaming)
 
 ## Session Summary
@@ -15,11 +37,6 @@ Achieved full real-time interactivity for the Psy-Mono pipeline. Parameters like
 ## Verification Status
 - Verified parameter update reactivity via unit tests (`tests/test_psy_live.py`).
 - Verified UI stability and "Panic" button visibility via Playwright screenshots.
-
-## Outstanding Items / Future Vision
-- Implement a "Swing/Shuffle" parameter for more rhythmic variety.
-- Add real-time visual step-sequencer in the UI for per-step note editing.
-- Explore multi-channel internal routing for separate VST processing per track.
 
 # Handoff - Version 1.34.0 (Real-time MIDI I/O & Streaming)
 
@@ -40,11 +57,6 @@ Successfully integrated real-time MIDI I/O capabilities into the Psy-Mono pipeli
 - Verified UI elements (dropdowns, info messages) via Playwright.
 - Verified `mido`/`rtmidi` library presence and basic functionality.
 - Unit tests for `generate_bar_messages` passed.
-
-## Outstanding Items / Future Vision
-- Implement a MIDI "Learn" feature in the UI for custom hardware mappings.
-- Optimize streaming thread synchronization for lower jitter.
-- Integrate MPE (Midi Polyphonic Expression) support for advanced lead modulation.
 
 # Handoff - Version 1.33.0 (Optimization, Analytics & Final Refinement)
 
@@ -73,11 +85,6 @@ Reached a major milestone with the release of v1.33.0. The system has matured in
 ## Verification Status
 - Verified UI Performance Mode and Analytics Tab via Playwright screenshots.
 - Verified Style Preset logic and MIDI generation stability.
-
-## Outstanding Items / Future Vision
-- Port the C++ engine to WASM for purely client-side web deployment.
-- Integrate decentralized GPU clusters for parallelized "Novel AI" rendering.
-- Expand the Style Preset library with "Goa" and "Zenonesque" variants.
 
 # Handoff - Version 1.32.0 (Studio V5 & Library Management)
 
@@ -161,3 +168,23 @@ Completed the transformation of Hymnmania into a full-fledged hybrid music produ
 - Verified Local MusicGen inference on CPU.
 - Verified UI functional wiring and layout via Playwright screenshots.
 - All core Python tests passed.
+
+## Outstanding Items / Next Steps
+- Implement LALAL.AI REST API as a fallback for cloud-based stem isolation.
+- Optimize local AI model weights to INT8/FP16 for reduced latency.
+- Integrate a VST3 host into the C++ engine for high-end local instrument rendering.
+
+--- Newly Discovered Project Context ---
+--- Context from: C:/Users/jakeg/workspace/hymnmania/docs/GEMINI.md ---
+# Gemini Specific Instructions
+
+> **CRITICAL**: Before reading this, you MUST read and adhere to `docs/AGENTS.md`.
+
+## Strengths
+*   You excel at scanning the entire repository context rapidly.
+*   You are great at scripting out massive directory restructurings or complex multi-file logic changes.
+
+## Directives
+*   When performing large refactors in this repo, leverage your large context window to double-check that you haven't broken any cross-references in the UI (`app.py`) or the CLI (`main.py`).
+--- End of Context from: C:/Users/jakeg/workspace/hymnmania/docs/GEMINI.md ---
+--- End Project Context ---
