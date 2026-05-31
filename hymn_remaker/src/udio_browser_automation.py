@@ -339,6 +339,26 @@ class UdioBrowserAutomation:
         # Focus prompt area first
         focus_js = """
         (function() {
+            // Set Variance slider if present
+            let varianceSlider = document.querySelector('input[type="range"][min="0.1"][max="1"]');
+            if (varianceSlider) {
+                const proto = window.HTMLInputElement.prototype;
+                const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+                setter.call(varianceSlider, "%VARIANCE%");
+                varianceSlider.dispatchEvent(new Event('input', { bubbles: true }));
+                varianceSlider.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            // Set Style Reduction (negative prompt) if present
+            let negInput = document.querySelector('input[placeholder*="avoid"]') || document.querySelector('input[cmdk-input=""]');
+            if (negInput) {
+                const proto = window.HTMLInputElement.prototype;
+                const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+                setter.call(negInput, "%NEG_PROMPT%");
+                negInput.dispatchEvent(new Event('input', { bubbles: true }));
+                negInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
             let textareas = Array.from(document.querySelectorAll('textarea'));
             let inputs = Array.from(document.querySelectorAll('input[type="text"]'));
             let els = textareas.concat(inputs);
@@ -354,7 +374,8 @@ class UdioBrowserAutomation:
             }
             return null;
         })()
-        """
+        """.replace("%VARIANCE%", str(variance)).replace("%NEG_PROMPT%", negative_prompt.replace('"', '\\"').replace('\n', ' '))
+        
         coords = self.execute_js(ws_url, focus_js)
         if coords:
             self._cdp_click_coords(ws_url, coords[0], coords[1])
@@ -475,8 +496,8 @@ class UdioBrowserAutomation:
                     return "clicked_download_init";
                 }
                 
-                const allMenu = Array.from(document.querySelectorAll('[role=\"menu\"] *, .menu *, [class*=\"menu\"] *')).map(el => el.textContent.trim()).filter(t => t.length > 1 && t.length < 30);
-                return \"ready_no_btn_menu:\" + allMenu.join('|').substring(0, 100);
+                const allMenu = Array.from(document.querySelectorAll('[role="menu"] *, .menu *, [class*="menu"] *')).map(el => el.textContent.trim()).filter(t => t.length > 1 && t.length < 30);
+                return "ready_no_btn_menu:" + allMenu.join('|').substring(0, 100);
             })()
             """
             try:
