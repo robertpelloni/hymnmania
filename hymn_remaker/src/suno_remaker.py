@@ -116,7 +116,7 @@ class SunoRemaker:
                     
                     logger.info(f"Uploading audio influence for API mode: {os.path.basename(upload_path)}")
                     # Use the api client's upload method
-                    upload_result = self.api._upload_audio(upload_path)
+                    upload_result = self.api.upload_audio(upload_path)
                     if upload_result:
                         audio_influence_id = upload_result.get("id")
                         logger.info(f"Audio influence ID: {audio_influence_id}")

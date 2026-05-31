@@ -554,9 +554,27 @@ def process_single_midi(
                     logger.warning(f"Local MusicGen failed for {filename}: {local_err}")
                     update_status(f"Local MusicGen error, trying fallbacks...", 42)
 
-            # --- Priority 1: Udio AI (Official OAuth API) ---
-            if not remake_success and remake_priority == "udio-oauth" and udio_oauth_remaker and udio_oauth_remaker.is_available():
-                update_status(f"Step 2/4: Remaking Audio via Udio OAuth API ({filename})...", 40)
+            # --- Priority 1: Suno AI (audio influence -> Deep House) ---
+            if not remake_success and (remake_priority == "suno" or remake_priority == "udio" or remake_priority == "udio-oauth") and suno_remaker and suno_remaker.is_available():
+                update_status(f"Step 2/4: Remaking Audio via Suno AI ({filename})...", 40)
+                try:
+                    tempo_enforced_style = f"{style}, {target_bpm:.1f} BPM"
+                    suno_result = suno_remaker.remake(base_audio_path, tempo_enforced_style)
+                    if suno_result and os.path.exists(suno_result):
+                        if suno_result != remake_audio_path:
+                            import shutil
+                            shutil.move(suno_result, remake_audio_path)
+                        update_status(f"Suno AI remake complete for {filename}", 55)
+                        process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms)
+                        remake_success = True
+                        logger.info(f"Suno AI remake succeeded for {filename}")
+                except Exception as suno_err:
+                    logger.warning(f"Suno AI failed for {filename}: {suno_err}")
+                    update_status(f"Suno AI error for {filename}, trying Udio fallback...", 42)
+
+            # --- Priority 2: Udio AI (Official OAuth API) ---
+            if not remake_success and (remake_priority == "suno" or remake_priority == "udio-oauth") and udio_oauth_remaker and udio_oauth_remaker.is_available():
+                update_status(f"Step 2/4: Remaking Audio via Udio OAuth API ({filename})...", 43)
                 try:
                     udio_result = udio_oauth_remaker.remake(base_audio_path, style, variance=udio_variance)
                     if udio_result and os.path.exists(udio_result):
@@ -569,10 +587,10 @@ def process_single_midi(
                         logger.info(f"Udio OAuth remake succeeded for {filename}")
                 except Exception as udio_err:
                     logger.warning(f"Udio OAuth failed for {filename}: {udio_err}")
-                    update_status(f"Udio OAuth error, trying session-based Udio...", 42)
+                    update_status(f"Udio OAuth error, trying session-based Udio...", 44)
 
-            # --- Priority 2: Udio AI (Session-based) ---
-            if not remake_success and (remake_priority == "udio" or (remake_priority == "udio-oauth" and udio_remaker and udio_remaker.is_available())):
+            # --- Priority 3: Udio AI (Session-based) ---
+            if not remake_success and (remake_priority == "suno" or remake_priority == "udio" or (remake_priority == "udio-oauth" and udio_remaker and udio_remaker.is_available())):
                 update_status(f"Step 2/4: Remaking Audio via Udio AI ({filename})...", 45)
                 try:
                     clean_title = (pre_extracted_metadata.get("title") or name_no_ext.replace('_', ' ').replace('-', ' ')).title()
@@ -590,25 +608,7 @@ def process_single_midi(
                         logger.info(f"Udio AI remake succeeded for {filename}")
                 except Exception as udio_err:
                     logger.warning(f"Udio AI failed for {filename}: {udio_err}")
-                    update_status(f"Udio AI error for {filename}, trying Suno fallback...", 47)
-
-            # --- Priority 3: Suno AI (audio influence -> Deep House) ---
-            if not remake_success and (remake_priority == "suno" or remake_priority == "udio" or remake_priority == "udio-oauth") and suno_remaker and suno_remaker.is_available():
-                update_status(f"Step 2/4: Remaking Audio via Suno AI ({filename})...", 40)
-                try:
-                    tempo_enforced_style = f"{style}, {target_bpm:.1f} BPM"
-                    suno_result = suno_remaker.remake(base_audio_path, tempo_enforced_style)
-                    if suno_result and os.path.exists(suno_result):
-                        if suno_result != remake_audio_path:
-                            import shutil
-                            shutil.move(suno_result, remake_audio_path)
-                        update_status(f"Suno AI remake complete for {filename}", 55)
-                        process_audio(remake_audio_path, remake_audio_path, normalize=normalize_audio, fade_in_ms=fade_in_ms, fade_out_ms=fade_out_ms)
-                        remake_success = True
-                        logger.info(f"Suno AI remake succeeded for {filename}")
-                except Exception as suno_err:
-                    logger.warning(f"Suno AI failed for {filename}: {suno_err}")
-                    update_status(f"Suno AI error for {filename}, trying Replicate fallback...", 42)
+                    update_status(f"Udio AI error for {filename}, trying Replicate fallback...", 47)
 
             # --- Priority 4: Replicate MusicGen ---
             if not remake_success:

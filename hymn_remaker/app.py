@@ -160,7 +160,7 @@ visualizer_mode = "cline"
 if enable_visualizer:
     visualizer_mode = st.sidebar.selectbox("Visualizer Mode", ["kaleidoscope", "cline", "line", "p2p", "avectorscope"], index=0)
 generate_vocals = st.sidebar.checkbox("Generate Vocals (ElevenLabs)", value=False)
-remake_priority = st.sidebar.selectbox("AI Remake Service", ["udio-oauth", "udio", "suno", "replicate", "local"], index=0)
+remake_priority = st.sidebar.selectbox("AI Remake Service", ["suno", "udio-oauth", "udio", "replicate", "local"], index=0)
 udio_variance = st.sidebar.slider("Udio Remix Variance", 0.1, 1.0, 0.25)
 local_guidance = st.slider("Local Guidance Scale", 1.0, 10.0, 3.0)
 local_temperature = st.slider("Local Temperature", 0.1, 2.0, 1.0)

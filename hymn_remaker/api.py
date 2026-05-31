@@ -59,7 +59,7 @@ async def generate_hymn(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     style: str = Form("Deep House, high quality, electronic"),
-    remake_priority: str = Form("udio"),
+    remake_priority: str = Form(settings.REMAKE_PRIORITY),
     generate_vocals: bool = Form(False),
     normalize_audio: bool = Form(True),
     fade_in_ms: int = Form(0),
