@@ -194,19 +194,14 @@ class SunoBrowserAutomation:
         custom_mode_js = """
         (function() {
             const allBtns = Array.from(document.querySelectorAll('button'));
-            const b = allBtns.find(el => el.innerText.includes('Custom') && el.offsetParent !== null);
+            const b = allBtns.find(el => {
+                const txt = (el.innerText || '').toLowerCase();
+                return txt.includes('custom') && el.offsetParent !== null;
+            });
             if (b) {
                 const isChecked = b.className.includes('checked') || b.getAttribute('aria-checked') === 'true';
                 if (!isChecked) {
-                    b.click();
-                    return "clicked_custom_mode";
-                }
-                return "custom_mode_already_on";
-            }
-            return "custom_mode_btn_not_found";
-        })()
-        """
-        logger.info(f"Suno: Checking Custom Mode... {self.execute_js(ws_url, custom_mode_js)}")
+                    b.click();        logger.info(f"Suno: Checking Custom Mode... {self.execute_js(ws_url, custom_mode_js)}")
         time.sleep(3)
 
         # 1. Handle Audio Upload (if provided)
