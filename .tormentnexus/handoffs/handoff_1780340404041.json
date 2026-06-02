@@ -1,10 +1,6 @@
 {
   "version": "0.99.1",
-<<<<<<<< HEAD:.tormentnexus/handoffs/handoff_1780419019038.json
-  "timestamp": 1780419019037,
-========
-  "timestamp": 1780339504038,
->>>>>>>> 7cb41e5f7978c1c2d6c24668f93f24207604f3c8:.tormentnexus/handoffs/handoff_1780339504039.json
+  "timestamp": 1780340404040,
   "sessionId": "current",
   "stats": {
     "totalCount": 36,
