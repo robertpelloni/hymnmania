@@ -336,7 +336,16 @@ class SunoBrowserAutomation:
         (function() {{
             const textareas = Array.from(document.querySelectorAll('textarea'));
             // Use the first textarea on the page, which is the description field
-            const ta = textareas[0];
+            let ta = textareas.find(el => {
+                const ph = (el.placeholder || '').toLowerCase();
+                return ph.includes('describe') && !ph.includes('lyrics');
+            });
+            if (!ta) {
+                ta = textareas.find(el => !((el.placeholder || '').toLowerCase().includes('lyrics')));
+            }
+            if (!ta && textareas.length > 0) {
+                ta = textareas[0];
+            }
             if (!ta) return "no_prompt_textarea";
              
             // Try React Props first
