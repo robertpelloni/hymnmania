@@ -245,6 +245,8 @@ class SunoBrowserAutomation:
 
     def trigger_generation(self, prompt, audio_path=None, make_instrumental=True):
         tab = self._get_active_tab(require_suno=True)
+        if not tab:
+            raise RuntimeError("No Suno tab found for trigger_generation")
         ws_url = tab.get("webSocketDebuggerUrl")
 
         # Navigate to create if needed
@@ -330,23 +332,63 @@ class SunoBrowserAutomation:
 
             self._clear_suno_popups(ws_url)
 
-        # 2. Set Prompt (Style)
+        # 1.5 Click "Prompt" button to ensure prompt mode (not lyrics/write mode)
+        logger.info("Suno: Ensuring Prompt mode is active...")
+        mode_js = """
+        (function() {
+            const btns = Array.from(document.querySelectorAll('button'));
+            const promptBtn = btns.find(el => 
+                el.innerText.trim() === 'Prompt' && el.offsetParent !== null
+            );
+            if (promptBtn) {
+                const isActive = promptBtn.className.includes('bg-background') || 
+                    promptBtn.getAttribute('aria-pressed') === 'true' || 
+                    promptBtn.className.includes('active');
+                if (!isActive) {
+                    promptBtn.click();
+                    return "clicked_prompt";
+                }
+                return "prompt_already_active";
+            }
+            const promptByLabel = btns.find(el => 
+                (el.getAttribute('aria-label') || '').includes('Prompt') && el.offsetParent !== null
+            );
+            if (promptByLabel) {
+                promptByLabel.click();
+                return "clicked_prompt_by_label";
+            }
+            return "prompt_btn_not_found";
+        })()
+        """
+        logger.info(
+            f"Suno: Mode selection result: {self.execute_js(ws_url, mode_js)}"
+        )
+        time.sleep(1)
+
+        # 2. Set Prompt (Style) on the description textarea
         logger.info(f"Suno: Setting style/prompt: {prompt[:50]}...")
         prompt_js = f"""
         (function() {{
             const textareas = Array.from(document.querySelectorAll('textarea'));
-            // Use the first textarea on the page, which is the description field
-            let ta = textareas.find(el => {
+            // Select the description textarea (Suno: "Describe the sound you want")
+            let ta = textareas.find(el => {{
                 const ph = (el.placeholder || '').toLowerCase();
-                return ph.includes('describe') && !ph.includes('lyrics');
-            });
-            if (!ta) {
-                ta = textareas.find(el => !((el.placeholder || '').toLowerCase().includes('lyrics')));
-            }
-            if (!ta && textareas.length > 0) {
-                ta = textareas[0];
-            }
+                return ph.includes('describe');
+            }});
+            if (!ta && textareas.length > 0) {{
+                ta = textareas[textareas.length - 1];
+            }}
             if (!ta) return "no_prompt_textarea";
+
+            // Also set song title
+            const titleInputs = Array.from(document.querySelectorAll('input[placeholder*="Song Title"]'));
+            if (titleInputs.length > 0) {{
+                const ti = titleInputs[0];
+                const propsKey2 = Object.keys(ti).find(k => k.startsWith('__reactProps$'));
+                if (propsKey2 && ti[propsKey2] && ti[propsKey2].onChange) {{
+                    ti[propsKey2].onChange({{ target: {{ value: "Deep House Remix" }}, persist: () => {{}} }});
+                }}
+            }}
              
             // Try React Props first
             const propsKey = Object.keys(ta).find(k => k.startsWith('__reactProps$'));
@@ -359,7 +401,7 @@ class SunoBrowserAutomation:
             ta.dispatchEvent(new Event('input', {{ bubbles: true }}));
             ta.dispatchEvent(new Event('change', {{ bubbles: true }}));
             return "set_on_" + ta.placeholder;
-        }})()
+        }}())
         """
         logger.info(
             f"Suno: Prompt injection result: {self.execute_js(ws_url, prompt_js)}"
@@ -422,6 +464,8 @@ class SunoBrowserAutomation:
         logger.info("Suno: Polling for track completion...")
         while time.time() - start < timeout:
             tab = self._get_active_tab(require_suno=True)
+            if not tab:
+                raise RuntimeError("No Suno tab found for wait_for_completion_and_download")
             ws_url = tab.get("webSocketDebuggerUrl")
 
             poll_js = """
@@ -429,15 +473,15 @@ class SunoBrowserAutomation:
                 // Find latest track row
                 const rows = Array.from(document.querySelectorAll('[data-testid="song-row"], [class*="SongRow"]'));
                 if (rows.length === 0) return "no_tracks";
-                
+
                 const latest = rows[0];
                 const text = (latest.innerText || '').toLowerCase();
-                
+
                 if (text.includes('error') || text.includes('failed')) return "error";
                 if (text.includes('creating') || text.includes('queue') || text.includes('generating')) return "generating";
-                
+
                 // Track is ready if it has a duration and no "creating" text
-                const hasDuration = /\\d+:\\d+/.test(text);
+                const hasDuration = /\d+:\d+/.test(text);
                 if (hasDuration) {
                     // Try to find download button
                     // Suno often hides it in a "..." menu
