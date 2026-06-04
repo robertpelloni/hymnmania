@@ -49,20 +49,23 @@ class SunoRemaker:
         # Try API check first
         if self.api.is_available():
             return True
-        
+
         # Fallback: check if Edge is listening on 9222 for browser automation
         try:
             import socket
+
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
-            result = sock.connect_ex(('127.0.0.1', 9222))
+            result = sock.connect_ex(("127.0.0.1", 9222))
             sock.close()
             if result == 0:
-                logger.info("SunoRemaker: API not available, but Edge debugging port 9222 is open. Enabling browser mode.")
+                logger.info(
+                    "SunoRemaker: API not available, but Edge debugging port 9222 is open. Enabling browser mode."
+                )
                 return True
         except Exception:
             pass
-            
+
         return False
 
     def check_captcha(self):
@@ -85,9 +88,18 @@ class SunoRemaker:
             timeout=timeout,
         )
 
-    def remake(self, wav_path, prompt, duration=30, make_instrumental=True,
-               tags="deep house, electronic, club", keep_mp3=False,
-               mode="auto", turnstile_token=None):
+    def remake(
+        self,
+        wav_path,
+        prompt,
+        duration=30,
+        make_instrumental=True,
+        tags="deep house, electronic, club",
+        keep_mp3=False,
+        mode="auto",
+        turnstile_token=None,
+        lyrics=None,
+    ):
         """Generate a Deep House remake of a hymn using Suno AI."""
         if not os.path.exists(wav_path):
             raise FileNotFoundError(f"Input WAV not found: {wav_path}")
@@ -111,10 +123,12 @@ class SunoRemaker:
                 audio_influence_id = None
                 if os.path.exists(wav_path):
                     # Prefer MP3 for upload efficiency if it exists
-                    mp3_path = wav_path.rsplit('_base.wav', 1)[0] + '_base.mp3'
+                    mp3_path = wav_path.rsplit("_base.wav", 1)[0] + "_base.mp3"
                     upload_path = mp3_path if os.path.exists(mp3_path) else wav_path
-                    
-                    logger.info(f"Uploading audio influence for API mode: {os.path.basename(upload_path)}")
+
+                    logger.info(
+                        f"Uploading audio influence for API mode: {os.path.basename(upload_path)}"
+                    )
                     # Use the api client's upload method
                     upload_result = self.api.upload_audio(upload_path)
                     if upload_result:
@@ -136,7 +150,7 @@ class SunoRemaker:
                     tags=tags,
                     title=f"{hymn_name} (Deep House Remix)",
                     audio_influence_id=audio_influence_id,
-                    audio_influence_weight=0.8 # Force strict melody retention
+                    audio_influence_weight=0.8,  # Force strict melody retention
                 )
             except Exception as e:
                 logger.warning(f"API mode failed: {e}")
@@ -150,7 +164,7 @@ class SunoRemaker:
             logger.info("Triggering Suno Browser Automation (CDP)...")
             # Prepare audio influence path (prefer MP3, fall back to WAV)
             audio_influence = None
-            mp3_path = wav_path.rsplit('_base.wav', 1)[0] + '_base.mp3'
+            mp3_path = wav_path.rsplit("_base.wav", 1)[0] + "_base.mp3"
             if os.path.exists(mp3_path):
                 audio_influence = mp3_path
             elif os.path.exists(wav_path):
@@ -160,10 +174,13 @@ class SunoRemaker:
                 success = self.browser_automation.trigger_generation(
                     prompt=full_prompt,
                     audio_path=audio_influence,
-                    make_instrumental=make_instrumental
+                    make_instrumental=make_instrumental,
+                    lyrics=lyrics,
                 )
                 if success:
-                    logger.info("Suno: Browser automation triggered generation. Waiting for completion...")
+                    logger.info(
+                        "Suno: Browser automation triggered generation. Waiting for completion..."
+                    )
                     if self.browser_automation.wait_for_completion_and_download():
                         # We don't have clip IDs from browser mode easily, but we can poll the feed via API
                         # to find the latest completed clips for this user.
@@ -189,7 +206,8 @@ class SunoRemaker:
 
         # Filter out errored clips
         valid_clips = [
-            c for c in completed_clips
+            c
+            for c in completed_clips
             if c.get("status") not in ("error", "failed") and c.get("audio_url")
         ]
         if not valid_clips:
@@ -234,9 +252,13 @@ class SunoRemaker:
 
         cmd = [
             settings.FFMPEG_BIN,
-            "-y", "-i", wav_path,
-            "-codec:a", "libmp3lame",
-            "-b:a", bitrate,
+            "-y",
+            "-i",
+            wav_path,
+            "-codec:a",
+            "libmp3lame",
+            "-b:a",
+            bitrate,
             mp3_path,
         ]
         subprocess.run(cmd, capture_output=True, text=True, timeout=60)

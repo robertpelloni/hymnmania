@@ -243,7 +243,9 @@ class SunoBrowserAutomation:
         except Exception as e:
             logger.warning(f"Failed to save debug screenshot: {e}")
 
-    def trigger_generation(self, prompt, audio_path=None, make_instrumental=True):
+    def trigger_generation(
+        self, prompt, audio_path=None, make_instrumental=True, lyrics=None
+    ):
         tab = self._get_active_tab(require_suno=True)
         if not tab:
             raise RuntimeError("No Suno tab found for trigger_generation")
@@ -352,7 +354,7 @@ class SunoBrowserAutomation:
                     influence = self.execute_js(ws_url, influence_js)
                     logger.info(f"Suno: Influence panel options: {influence}")
 
-                    # Click Melody and Percussion (skip Lyrics for now)
+                    # Click Melody and Percussion (optionally add Lyrics if provided)
                     select_influence_js = """
                     (function() {
                         const buttons = Array.from(document.querySelectorAll('button'));
@@ -368,7 +370,14 @@ class SunoBrowserAutomation:
                         );
                         if (percussionBtn) { percussionBtn.click(); clicked.push('percussion'); }
                         
-                        // Skip lyrics for now
+                        // Click Lyrics if provided and button exists
+                        const lyricsBtn = buttons.find(b => 
+                            (b.innerText || '').toLowerCase().includes('lyric') && b.offsetParent !== null
+                        );
+                        if (lyricsBtn && arguments[0]) {
+                            lyricsBtn.click();
+                            clicked.push('lyrics');
+                        }
                         
                         // Look for a Done/Confirm/Apply button
                         const doneBtn = buttons.find(b => 
@@ -381,11 +390,40 @@ class SunoBrowserAutomation:
                             clicked.push('done');
                         }
                         return clicked;
-                    })()
+                    })(!!arguments[0])
                     """
                     clicked = self.execute_js(ws_url, select_influence_js)
                     logger.info(f"Suno: Selected influence options: {clicked}")
                     time.sleep(2)
+
+                    # 2.x Fill lyrics if they were supplied
+                    if lyrics:
+                        logger.info(
+                            "Suno: Injecting lyrics into the lyrics textarea..."
+                        )
+                        lyrics_js = f"""
+                        (function() {{
+                            // After clicking the Lyrics button, a textarea usually appears.
+                            const textareas = Array.from(document.querySelectorAll('textarea')).filter(t => t.offsetParent !== null);
+                            const lyricTa = textareas.find(t => (t.placeholder || '').toLowerCase().includes('lyric'));
+                            if (!lyricTa) return "no_lyrics_textarea";
+
+                            // Set value via React props (if available) then native setter
+                            const propsKey = Object.keys(lyricTa).find(k => k.startsWith('__reactProps$'));
+                            if (propsKey && lyricTa[propsKey] && lyricTa[propsKey].onChange) {{
+                                lyricTa[propsKey].onChange({{ target: {{ value: {json.dumps(lyrics)} }}, persist: () => {{}} }});
+                            }}
+                            const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+                            setter.call(lyricTa, {json.dumps(lyrics)});
+                            lyricTa.dispatchEvent(new Event('input', {{bubbles:true}}));
+                            lyricTa.dispatchEvent(new Event('change', {{bubbles:true}}));
+                            return "lyrics_set";
+                        }})()
+                        """
+                        logger.info(
+                            f"Suno: Lyrics injection result: {self.execute_js(ws_url, lyrics_js)}"
+                        )
+                        time.sleep(1)
 
                     self._clear_suno_popups(ws_url)
             finally:
