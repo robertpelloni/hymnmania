@@ -326,11 +326,71 @@ class SunoBrowserAutomation:
                         "Suno: Audio file injected. Waiting for upload to complete (25s)..."
                     )
                     time.sleep(25)  # Longer wait for Suno upload processing
+
+                    # Handle influence panel after upload (Melody, Percussion, Lyrics)
+                    logger.info("Suno: Checking for influence panel...")
+                    influence_js = """
+                    (function() {
+                        // Wait a bit for panel to appear
+                        const checkPanel = () => {
+                            const buttons = Array.from(document.querySelectorAll('button'));
+                            // Find influence options
+                            const melody = buttons.find(b => 
+                                (b.innerText || '').toLowerCase().includes('melody') && b.offsetParent !== null
+                            );
+                            const percussion = buttons.find(b => 
+                                (b.innerText || '').toLowerCase().includes('percussion') && b.offsetParent !== null
+                            );
+                            const lyrics = buttons.find(b => 
+                                (b.innerText || '').toLowerCase().includes('lyric') && b.offsetParent !== null
+                            );
+                            return {melody: !!melody, percussion: !!percussion, lyrics: !!lyrics};
+                        };
+                        return checkPanel();
+                    })()
+                    """
+                    influence = self.execute_js(ws_url, influence_js)
+                    logger.info(f"Suno: Influence panel options: {influence}")
+
+                    # Click Melody and Percussion (skip Lyrics for now)
+                    select_influence_js = """
+                    (function() {
+                        const buttons = Array.from(document.querySelectorAll('button'));
+                        let clicked = [];
+                        
+                        const melodyBtn = buttons.find(b => 
+                            (b.innerText || '').toLowerCase().includes('melody') && b.offsetParent !== null
+                        );
+                        if (melodyBtn) { melodyBtn.click(); clicked.push('melody'); }
+                        
+                        const percussionBtn = buttons.find(b => 
+                            (b.innerText || '').toLowerCase().includes('percussion') && b.offsetParent !== null
+                        );
+                        if (percussionBtn) { percussionBtn.click(); clicked.push('percussion'); }
+                        
+                        // Skip lyrics for now
+                        
+                        // Look for a Done/Confirm/Apply button
+                        const doneBtn = buttons.find(b => 
+                            (b.innerText || '').toLowerCase().includes('done') ||
+                            (b.innerText || '').toLowerCase().includes('apply') ||
+                            (b.innerText || '').toLowerCase().includes('confirm')
+                        );
+                        if (doneBtn && doneBtn.offsetParent !== null) {
+                            doneBtn.click();
+                            clicked.push('done');
+                        }
+                        return clicked;
+                    })()
+                    """
+                    clicked = self.execute_js(ws_url, select_influence_js)
+                    logger.info(f"Suno: Selected influence options: {clicked}")
+                    time.sleep(2)
+
+                    self._clear_suno_popups(ws_url)
             finally:
                 if ws:
                     ws.close()
-
-            self._clear_suno_popups(ws_url)
 
         # 1.5 Click "Simple" mode (Suno's new UI uses Simple/Advanced tabs)
         logger.info("Suno: Switching to Simple mode...")
@@ -455,7 +515,7 @@ class SunoBrowserAutomation:
                 if (text.includes('creating') || text.includes('queue') || text.includes('generating')) return "generating";
 
                 // Track is ready if it has a duration and no "creating" text
-                const hasDuration = /\d+:\d+/.test(text);
+                const hasDuration = /\\d+:\\d+/.test(text);
                 if (hasDuration) {
                     // Try to find download button
                     // Suno often hides it in a "..." menu
