@@ -1,38 +1,29 @@
-# Session Handoff - v1.37.0 "Studio Reversal"
+# Session Handoff - v1.37.0 "Studio Reversal" - User Testing Phase
 
 ## Summary of Changes
-Implemented the "Studio Reversal" update (v1.37.0), focusing on high-density experimentation and closing the loop between AI-generated audio and professional DAW production (Ableton Live).
+The "Studio Reversal" update (v1.37.0) is now ready for deployment and user testing. The project has transitioned from a linear generation pipeline to an experimental production ecosystem.
 
-### 1. Repository & Versioning
-- **Submodule:** Added `robertpelloni/ableton_psytrance_hymn_creator` to `submodules/`.
-- **Version Bump:** Project version incremented to **v1.37.0** across `VERSION`, `docs/VERSION.md`, and `docs/CHANGELOG.md`.
+### 1. New Features & Integration
+- **Suno Experiment Matrix:** Sidebar toggle triggers a 9-way generation grid (Speeds: 0.5x, 1x, 2x | Genres: Deep House, DnB, Psytrance).
+- **Reverse Engineering Bridge:** One-click reversal in the Library tab. AI tracks are split via Demucs, converted to MIDI via Basic-Pitch, and staged for Ableton Live assembly.
+- **Speed-Aware Preprocessing:** `SonicVacuumProcessor` now handles variable-speed dry renders, allowing AI models to interpret melodic seeds with different rhythmic densities.
 
-### 2. Suno Experiment Matrix (9-Way)
-- **Speed Variants:** Enhanced `SonicVacuumProcessor` (`pipeline/processing/sonic_vacuum.py`) to generate **0.5x, 1x, and 2x** speed variants of the dry staccato renders. This allows Suno to interpret the same melody as either a slow melodic pad seed or a high-speed arpeggio seed.
-- **Matrix Orchestrator:** Updated `SunoBrowserAutomation` to support a nested loop:
-    - **Speeds:** [0.5x, 1x, 2x]
-    - **Genres:** [Deep House, Drum & Bass, Psytrance]
-- **Pipeline Integration:** Added `--speed` and `--suno-matrix` flags to `hymn_remaker/main.py`.
+### 2. Deployment & Tools
+- **Packaging Utility:** `scripts/package_outputs.py` allows bundling all generated assets and experimental metadata into a structured ZIP for distribution.
+- **Updated DEPLOY.md:** Covers all new dependencies including `demucs`, `basic-pitch`, and `AbletonOSC` environment requirements.
+- **Version Governance:** Consistent versioning (v1.37.0) across all core files.
 
-### 3. Reverse Engineering Pipeline (Psy-Mono Bridge)
-- **New Module:** Created `hymn_remaker/src/psy_mono_bridge.py`.
-- **Workflow:**
-    1.  **Stem Separation:** Integrated `demucs` to isolate Vocals, Bass, Drums, and Other.
-    2.  **Audio-to-MIDI:** Integrated `basic-pitch` to convert the isolated Bass and Lead stems back into symbolic MIDI data.
-    3.  **DAW Assembly:** Implemented `pylive` (AbletonOSC) hooks to programmatically inject these extracted MIDIs and audio stems into a master Ableton Live template.
+### 3. User Testing UI
+- **Tester Guide:** A welcome expander on the home page highlights new features.
+- **Batch Demo Mode:** A button to simulate/populate the library with mock data, enabling testers to explore UI functionality without waiting for long AI generation cycles.
 
-### 4. UI Enhancements
-- **Automated Pipeline:** Added a "Sonic Vacuum Speed" selector and "Suno 9-Way Matrix" toggle to the sidebar.
-- **Output Library:** Added a "Reverse to Ableton" button for every generated audio track, enabling one-click reverse engineering of AI results back into the studio.
+## Verification Highlights
+- **Pre-commit Checks:** All unit and E2E tests for matrix logic and speed variants pass.
+- **UI Verification:** Playwright screenshots confirm correct rendering of the version string, tester guide, and experimental toggles.
+- **Safe Code Migration:** Restored legacy CLI parameters (`--soundfont`) and preserved multi-version history in `docs/CHANGELOG.md`.
 
-## Verification Results
-- **Unit Tests:** `tests/test_sonic_vacuum_variants.py` confirms correct speed variant rendering.
-- **E2E Tests:** `tests/test_matrix_preprocessing.py` verifies the 10-way generation trigger (9 matrix + 1 primary) and local file preparation.
-- **Frontend:** Streamlit UI components verified via Playwright.
+## Critical Path for v1.38.0
+- **AbletonOSC Deep Integration:** Map extracted MIDI directly into specific VST tracks (Serum/Vital) via predefined track-names in the template.
+- **High-Quality Resampling:** Integrate `librosa` into `SonicVacuumProcessor` to replace the current primitive sample-skipping speed logic with phase-locked time stretching.
 
-## Next Steps for v1.38.0
-- **VST3 Integration:** Finalize local Serum/Vital preset automation within the C++ engine.
-- **Refined Time-Stretching:** Replace simple sample skipping/duplication in `SonicVacuumProcessor` with `librosa.effects.time_stretch` for higher-quality seeds.
-- **Manual Mapping:** Enhance the Ableton bridge to support custom track mapping via JSON config.
-
-**Maintain total autonomy. The party never stops.**
+**Automated studio execution is active. The party continues.**

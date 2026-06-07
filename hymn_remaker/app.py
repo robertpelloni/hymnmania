@@ -49,6 +49,22 @@ from hymn_remaker.src.psy_mono_bridge import PsyMonoBridge
 from hymn_remaker.main import process_single_midi
 
 st.title("🎵 Hymn Remaker Pipeline")
+with st.expander("👋 Welcome Tester! (v1.37.0 Highlights)", expanded=True):
+    st.markdown("""
+    This version introduces the **Studio Reversal** suite:
+    1. **Suno Experiment Matrix**: Generate 9 variations (3 speeds x 3 genres) for every hymn in one click using sidebar toggles.
+    2. **Reverse Engineering**: Go to the **Library** tab and click **Reverse to Ableton** on any AI track to split it into stems, convert to MIDI, and push to your DAW.
+    3. **Speed Controls**: Manually adjust Sonic Vacuum speed (0.5x, 1x, 2x) for custom dry renders.
+
+    **Getting Started:** Upload a MIDI in Tab 1, or explore generated tracks in Tab 4.
+    """)
+    if st.button("🚀 Run Batch Demo (Mock Data)"):
+        st.info("Simulating batch generation for library populating...")
+        os.makedirs(output_dir, exist_ok=True)
+        for demo in ["Emmanuel", "Amazing Grace", "Holy Holy Holy"]:
+            with open(os.path.join(output_dir, f"{demo}_remake.wav"), "wb") as f: f.write(b"demo data")
+            with open(os.path.join(output_dir, f"{demo}_metadata.json"), "w") as f: json.dump({"title": demo}, f)
+        st.success("Demo items created! Check the Library.")
 st.write("Convert MIDI files into modern music videos with AI!")
 
 # Initialize objects
