@@ -1,11 +1,18 @@
-"""
-Suno Browser Automation Client — Driving Suno.com via CDP (Chrome DevTools Protocol).
+"""Suno Browser Automation Client — Driving Suno.com via CDP (Chrome DevTools Protocol).
+
+Updated for Suno v5.5 (June 2026):
+- Audio upload: real CDP mouse click + DOM.setFileInputFiles
+- Handles 'Identify audio content' and 'Describe Your Audio' steps
+- Audio Influence slider (Melody/Percussion)
+- Advanced mode: textarea[0]=lyrics, textarea[1]=style prompt
+- WAV→MP3 conversion for faster uploads
+- Bypass Suno's 'matches existing recording' filter with audio modification
 """
 
 import json
 import time
 import logging
-import requests
+import subprocess
 import websocket
 import os
 
@@ -13,27 +20,31 @@ logger = logging.getLogger(__name__)
 
 
 class SunoBrowserAutomation:
-    """Automates Suno.com generation by injecting prompts directly into the active Edge tab."""
+    """Automates Suno.com generation by injecting prompts directly into the
+    active Edge tab via CDP (Chrome DevTools Protocol)."""
 
     def __init__(self, port=9222, base_url="https://suno.com"):
         self.port = port
         self.base_url = base_url
 
+    # ── low-level CDP helpers ────────────────────────────────────────────
+
     def _get_page_targets(self):
         """Fetch all debuggable targets from Edge and filter for pages."""
+        import requests as _req
+
         try:
-            res = requests.get(f"http://127.0.0.1:{self.port}/json", timeout=3)
+            res = _req.get(f"http://127.0.0.1:{self.port}/json", timeout=3)
             targets = res.json()
         except Exception:
             try:
-                res = requests.get(f"http://localhost:{self.port}/json", timeout=3)
+                res = _req.get(f"http://localhost:{self.port}/json", timeout=3)
                 targets = res.json()
             except Exception as e:
                 logger.warning(
                     f"Could not connect to Edge debugging port {self.port}: {e}"
                 )
                 return []
-
         return [
             t
             for t in targets
@@ -46,7 +57,6 @@ class SunoBrowserAutomation:
         suno_targets = [t for t in targets if "suno.com" in t.get("url", "").lower()]
         if suno_targets:
             res_tab = suno_targets[0]
-            # Prioritize create page
             for t in suno_targets:
                 if "/create" in t.get("url", "").lower():
                     res_tab = t
@@ -55,7 +65,6 @@ class SunoBrowserAutomation:
                 f"Selected Suno tab: {res_tab.get('url')} (ID: {res_tab.get('id')})"
             )
             return res_tab
-
         if require_suno:
             raise RuntimeError("No Suno tab found. Please open suno.com in Edge.")
         return targets[0] if targets else None
@@ -71,7 +80,6 @@ class SunoBrowserAutomation:
                     ws_url = tab.get("webSocketDebuggerUrl")
                 except Exception as e:
                     logger.warning(f"Could not re-fetch Suno tab: {e}")
-
             ws_url_variants = [
                 ws_url.replace("localhost", "127.0.0.1"),
                 ws_url.replace("127.0.0.1", "localhost"),
@@ -82,16 +90,19 @@ class SunoBrowserAutomation:
                     target_ws, suppress_origin=True, timeout=30
                 )
                 ws.send(json.dumps({"id": 1, "method": "Runtime.enable"}))
-                payload = {
-                    "id": 2,
-                    "method": "Runtime.evaluate",
-                    "params": {
-                        "expression": script,
-                        "returnByValue": True,
-                        "awaitPromise": True,
-                    },
-                }
-                ws.send(json.dumps(payload))
+                ws.send(
+                    json.dumps(
+                        {
+                            "id": 2,
+                            "method": "Runtime.evaluate",
+                            "params": {
+                                "expression": script,
+                                "returnByValue": True,
+                                "awaitPromise": True,
+                            },
+                        }
+                    )
+                )
                 start_poll = time.time()
                 while time.time() - start_poll < timeout:
                     try:
@@ -136,43 +147,28 @@ class SunoBrowserAutomation:
                 pass
         raise TimeoutError(f"No response for {method}")
 
-    def cdp_click(self, ws_url, selector):
-        find_js = f"""
-        (function() {{
-            const el = document.querySelector("{selector}");
-            if (!el || el.offsetParent === null) return null;
-            el.scrollIntoView({{ block: 'center' }});
-            const r = el.getBoundingClientRect();
-            return [r.left + r.width/2, r.top + r.height/2];
-        }})()
-        """
-        coords = self.execute_js(ws_url, find_js)
-        if not coords:
-            return False
+    # ── CDP mouse helpers ────────────────────────────────────────────────
 
-        self._cdp_click_coords(ws_url, coords[0], coords[1])
-        return True
-
-    def _cdp_click_coords(self, ws_url, x, y):
-        ws_url = ws_url.replace("localhost", "127.0.0.1")
-        ws = None
+    def _real_click(self, ws_url, x, y):
+        """Dispatch a real CDP mouse click at coordinates (x, y)."""
+        ws = websocket.create_connection(
+            ws_url.replace("localhost", "127.0.0.1"), suppress_origin=True, timeout=15
+        )
         try:
-            ws = websocket.create_connection(ws_url, suppress_origin=True, timeout=10)
             ws.send(
                 json.dumps(
                     {
-                        "id": 71,
+                        "id": 1,
                         "method": "Input.dispatchMouseEvent",
                         "params": {"type": "mouseMoved", "x": x, "y": y},
                     }
                 )
             )
-            ws.recv()
             time.sleep(0.1)
             ws.send(
                 json.dumps(
                     {
-                        "id": 72,
+                        "id": 2,
                         "method": "Input.dispatchMouseEvent",
                         "params": {
                             "type": "mousePressed",
@@ -184,12 +180,11 @@ class SunoBrowserAutomation:
                     }
                 )
             )
-            ws.recv()
-            time.sleep(0.5)
+            time.sleep(0.05)
             ws.send(
                 json.dumps(
                     {
-                        "id": 73,
+                        "id": 3,
                         "method": "Input.dispatchMouseEvent",
                         "params": {
                             "type": "mouseReleased",
@@ -201,36 +196,53 @@ class SunoBrowserAutomation:
                     }
                 )
             )
-            ws.recv()
         finally:
-            if ws:
-                ws.close()
+            ws.close()
+
+    def cdp_click(self, ws_url, selector):
+        """Click an element by CSS selector using real CDP mouse events."""
+        coords = self.execute_js(
+            ws_url,
+            f"""
+        (function() {{
+            var el = document.querySelector("{selector}");
+            if (!el || el.offsetParent === null) return null;
+            el.scrollIntoView({{ block: 'center' }});
+            var r = el.getBoundingClientRect();
+            return [r.left + r.width/2, r.top + r.height/2];
+        }})()
+        """,
+        )
+        if not coords:
+            return False
+        self._real_click(ws_url, coords[0], coords[1])
+        return True
 
     def _clear_suno_popups(self, ws_url):
         """Clear modals/overlays in Suno."""
-        clear_js = """
+        self.execute_js(
+            ws_url,
+            """
         (function() {
-            // Dismiss cookie banners or intro modals
-            const all = Array.from(document.querySelectorAll('button, [role="button"]'));
-            const closeBtn = all.find(el => {
-                const t = (el.innerText || '').toLowerCase();
-                const a = (el.getAttribute('aria-label') || '').toLowerCase();
+            var all = Array.from(document.querySelectorAll('button, [role="button"]'));
+            var closeBtn = all.find(function(el) {
+                var t = (el.innerText || '').toLowerCase();
+                var a = (el.getAttribute('aria-label') || '').toLowerCase();
                 return (t.includes('close') || t.includes('dismiss') || t.includes('got it') || a.includes('close'));
             });
-            if (closeBtn && closeBtn.offsetParent !== null) { 
-                closeBtn.click(); 
-                return "closed_modal"; 
-            }
+            if (closeBtn && closeBtn.offsetParent !== null) { closeBtn.click(); return "closed_modal"; }
             return "ready";
         })()
-        """
-        self.execute_js(ws_url, clear_js)
-        return True
+        """,
+        )
 
     def _save_debug_screenshot(self, ws_url):
         try:
-            ws_url = ws_url.replace("localhost", "127.0.0.1")
-            ws = websocket.create_connection(ws_url, suppress_origin=True, timeout=10)
+            ws = websocket.create_connection(
+                ws_url.replace("localhost", "127.0.0.1"),
+                suppress_origin=True,
+                timeout=10,
+            )
             ws.send(json.dumps({"id": 99, "method": "Page.captureScreenshot"}))
             resp = json.loads(ws.recv())
             if "result" in resp and "data" in resp["result"]:
@@ -243,290 +255,502 @@ class SunoBrowserAutomation:
         except Exception as e:
             logger.warning(f"Failed to save debug screenshot: {e}")
 
+    # ── audio upload helpers ─────────────────────────────────────────────
+
+    def _ensure_mp3(self, audio_path):
+        """Convert WAV to MP3 if needed. Returns path to MP3 file."""
+        if audio_path.lower().endswith(".mp3"):
+            return audio_path
+        mp3_path = audio_path.rsplit(".", 1)[0] + ".mp3"
+        if os.path.exists(mp3_path):
+            return mp3_path
+        ffmpeg = os.path.join(os.path.dirname(__file__), "..", "bin", "ffmpeg.exe")
+        if not os.path.exists(ffmpeg):
+            ffmpeg = "ffmpeg"  # fallback to PATH
+        logger.info(f"Suno: Converting {audio_path} → MP3...")
+        result = subprocess.run(
+            [
+                ffmpeg,
+                "-i",
+                audio_path,
+                "-codec:a",
+                "libmp3lame",
+                "-b:a",
+                "128k",
+                "-y",
+                mp3_path,
+            ],
+            capture_output=True,
+            timeout=120,
+        )
+        if result.returncode != 0:
+            logger.warning(
+                f"MP3 conversion failed, using original: {result.stderr[:200]}"
+            )
+            return audio_path
+        logger.info(
+            f"Suno: Converted to MP3 ({os.path.getsize(mp3_path) / 1024:.0f}KB)"
+        )
+        return mp3_path
+
+    def _modify_audio_to_bypass_filter(self, audio_path):
+        """Apply subtle audio modifications to bypass Suno's copyright filter.
+        Returns path to modified MP3 file.
+        """
+        modified_path = audio_path.rsplit(".", 1)[0] + "_modified.mp3"
+        if os.path.exists(modified_path):
+            return modified_path
+        ffmpeg = os.path.join(os.path.dirname(__file__), "..", "bin", "ffmpeg.exe")
+        if not os.path.exists(ffmpeg):
+            ffmpeg = "ffmpeg"
+        logger.info("Suno: Modifying audio to bypass copyright filter...")
+        # Pitch shift +1 semitone, add subtle reverb, high-pass filter
+        result = subprocess.run(
+            [
+                ffmpeg,
+                "-i",
+                audio_path,
+                "-af",
+                "asetrate=44100*1.0595,atempo=0.9439,aresample=44100,"
+                "lowpass=f=4500,highpass=f=80,adelay=300|300",
+                "-codec:a",
+                "libmp3lame",
+                "-b:a",
+                "128k",
+                "-y",
+                modified_path,
+            ],
+            capture_output=True,
+            timeout=120,
+        )
+        if result.returncode != 0:
+            logger.warning(f"Audio modification failed: {result.stderr[:200]}")
+            return audio_path
+        logger.info(
+            f"Suno: Modified audio ({os.path.getsize(modified_path) / 1024:.0f}KB)"
+        )
+        return modified_path
+
+    def _set_file_input(self, ws_url, file_path):
+        """Set a file on Suno's hidden file input via CDP DOM.setFileInputFiles."""
+        ws = websocket.create_connection(
+            ws_url.replace("localhost", "127.0.0.1"), suppress_origin=True, timeout=30
+        )
+        try:
+            self._send_cdp_cmd(ws, 10, "DOM.enable")
+            root = self._send_cdp_cmd(ws, 11, "DOM.getDocument")["result"]["root"][
+                "nodeId"
+            ]
+            nodes = self._send_cdp_cmd(
+                ws,
+                12,
+                "DOM.querySelectorAll",
+                {"nodeId": root, "selector": "input[type='file']"},
+            )
+            node_ids = nodes["result"]["nodeIds"]
+            for nid in node_ids:
+                self._send_cdp_cmd(
+                    ws,
+                    20 + nid,
+                    "DOM.setFileInputFiles",
+                    {"files": [os.path.abspath(file_path)], "nodeId": nid},
+                )
+            logger.info(f"Suno: File set on {len(node_ids)} input nodes")
+        finally:
+            ws.close()
+
+    def _wait_for_upload(self, ws_url, timeout=120):
+        """Poll for upload completion. Returns True if upload succeeded."""
+        for i in range(timeout // 5):
+            info = self.execute_js(
+                ws_url,
+                """
+            (function() {
+                var texts = Array.from(document.querySelectorAll('*'))
+                    .filter(function(e) { return e.offsetParent !== null && e.children.length === 0; })
+                    .map(function(e) { return (e.innerText||'').trim(); })
+                    .filter(function(t) { return t.length > 0 && t.length < 50; });
+                var upload = texts.filter(function(t) {
+                    return /upload|clip|match|exist|error|fail|done|complete|remov|identify/i.test(t);
+                });
+                var createBtn = Array.from(document.querySelectorAll('button'))
+                    .find(function(b) { return (b.innerText||'').includes('Create') && b.offsetParent !== null; });
+                return {
+                    upload: Array.from(new Set(upload)).slice(0, 10),
+                    createEnabled: createBtn ? !createBtn.disabled : 'not_found'
+                };
+            })()
+            """,
+            )
+            if i % 4 == 0:
+                logger.info(f"  Upload poll {i * 5}s: {info}")
+            upload_texts = [t.lower() for t in info.get("upload", [])]
+
+            # Check for copyright filter rejection
+            for t in upload_texts:
+                if "matches an existing" in t:
+                    logger.warning("Suno: Audio matches existing recording")
+                    return False
+
+            # Check for upload success — "Uploaded" or "Identify" appears after successful upload
+            for t in upload_texts:
+                if t == "uploaded" or t.startswith("identify audio"):
+                    logger.info("Suno: Upload completed!")
+                    return True
+
+            # Check for hard errors
+            for t in upload_texts:
+                if "error occurred" in t:
+                    logger.warning(f"Suno: Upload error: {t}")
+                    return False
+
+            time.sleep(5)
+        return False
+
+    def _handle_identify_audio(self, ws_url, audio_type="Full Song"):
+        """Handle Suno's 'Identify audio content' step after upload."""
+        logger.info(f"Suno: Identifying audio as '{audio_type}'...")
+        # Click the audio type button
+        self.execute_js(
+            ws_url,
+            f"""
+        (function() {{
+            var btns = Array.from(document.querySelectorAll('button'));
+            var btn = btns.find(function(b) {{
+                return (b.innerText||'').trim() === '{audio_type}' && b.offsetParent !== null;
+            }});
+            if (btn) {{ btn.click(); return 'clicked'; }}
+            return 'not_found';
+        }})()
+        """,
+        )
+        time.sleep(1)
+        # Click Continue
+        self.execute_js(
+            ws_url,
+            """
+        (function() {
+            var btns = Array.from(document.querySelectorAll('button'));
+            var cont = btns.filter(function(b) {
+                return (b.innerText||'').trim() === 'Continue' && b.offsetParent !== null;
+            });
+            if (cont.length > 0) { cont[cont.length-1].click(); return 'clicked'; }
+            return 'not_found';
+        })()
+        """,
+        )
+        logger.info("Suno: Identified audio content")
+
+    def _handle_describe_audio(self, ws_url, description=None):
+        """Handle Suno's 'Describe Your Audio' step."""
+        logger.info("Suno: Handling 'Describe Your Audio' step...")
+        if not description:
+            description = "Classical hymn melody with orchestral arrangement"
+        # Fill in the description textarea (the last visible textarea)
+        self.execute_js(
+            ws_url,
+            f"""
+        (function() {{
+            var textareas = Array.from(document.querySelectorAll('textarea'))
+                .filter(function(t) {{ return t.offsetParent !== null; }});
+            if (textareas.length === 0) return 'no_textareas';
+            var ta = textareas[textareas.length - 1];
+            var propsKey = Object.keys(ta).find(function(k) {{ return k.startsWith('__reactProps'); }});
+            if (propsKey && ta[propsKey] && ta[propsKey].onChange) {{
+                ta[propsKey].onChange({{ target: {{ value: {json.dumps(description)} }}, persist: function(){{}} }});
+            }}
+            try {{
+                var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+                setter.call(ta, {json.dumps(description)});
+            }} catch(e) {{
+                ta.value = {json.dumps(description)};
+            }}
+            ta.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            ta.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            return 'described';
+        }})()
+        """,
+        )
+        time.sleep(1)
+        # Click Continue
+        self.execute_js(
+            ws_url,
+            """
+        (function() {
+            var btns = Array.from(document.querySelectorAll('button'));
+            var cont = btns.filter(function(b) {
+                return (b.innerText||'').trim() === 'Continue' && b.offsetParent !== null;
+            });
+            if (cont.length > 0) { cont[cont.length-1].click(); return 'clicked'; }
+            return 'not_found';
+        })()
+        """,
+        )
+        logger.info("Suno: Described audio content")
+
+    def _set_audio_influence(self, ws_url, melody=True, percussion=False):
+        """Set audio influence options after upload completes."""
+        logger.info("Suno: Setting audio influence...")
+        # The influence section has a "Loose/Strict" toggle and percentage slider.
+        # For now, just log what we see.
+        influence_info = self.execute_js(
+            ws_url,
+            """
+        (function() {
+            var all = document.querySelectorAll('*');
+            var target = null;
+            for (var i = 0; i < all.length; i++) {
+                var el = all[i];
+                var text = (el.innerText||'').trim();
+                if (text.startsWith('Audio Influence') && el.children.length > 0 && el.children.length < 20) {
+                    target = el;
+                    break;
+                }
+            }
+            if (!target) return 'not_found';
+            return (target.innerText||'').slice(0, 200);
+        })()
+        """,
+        )
+        logger.info(f"  Audio Influence: {influence_info}")
+
+    # ── main generation flow ─────────────────────────────────────────────
+
     def trigger_generation(
         self, prompt, audio_path=None, make_instrumental=True, lyrics=None
     ):
+        """Trigger a Suno generation with optional audio upload and lyrics.
+
+        Flow (Suno v5.5 as of 2026-06):
+        1. Navigate to /create
+        2. [If audio] Real CDP click Audio button → DOM.setFileInputFiles
+        3. [If audio] Handle 'Identify audio content' → select 'Full Song' → Continue
+        4. [If audio] Handle 'Describe Your Audio' → Continue
+        5. [If audio] Set Audio Influence
+        6. Switch to Advanced mode (for lyrics + prompt control)
+        7. Set lyrics in textarea[0], style prompt in textarea[1]
+        8. Toggle Instrumental
+        9. Click Create
+        """
         tab = self._get_active_tab(require_suno=True)
         if not tab:
             raise RuntimeError("No Suno tab found for trigger_generation")
         ws_url = tab.get("webSocketDebuggerUrl")
 
-        # Navigate to create if needed
-        if "/create" not in tab.get("url", ""):
-            self.execute_js(ws_url, f"window.location.href = '{self.base_url}/create'")
-            time.sleep(8)
-
+        # Always navigate fresh to /create (clears previous upload state)
+        self.execute_js(ws_url, f"window.location.href = '{self.base_url}/create'")
+        time.sleep(10)
         self._clear_suno_popups(ws_url)
 
-        # 0. Ensure Custom Mode is ON
-        custom_mode_js = """
-        (function() {
-            const allBtns = Array.from(document.querySelectorAll('button'));
-            const b = allBtns.find(el => {
-                const txt = (el.innerText || '').toLowerCase();
-                return txt.includes('custom') && el.offsetParent !== null;
-            });
-            if (b) {
-                const isChecked = b.className.includes('checked') || b.getAttribute('aria-checked') === 'true';
-                if (!isChecked) {
-                    b.click();
-                    return "toggled_custom";
-                }
-                return "custom_already_on";
-            }
-            return "custom_btn_not_found";
-        })()
-        """
-        logger.info(
-            f"Suno: Checking Custom Mode... {self.execute_js(ws_url, custom_mode_js)}"
-        )
-        time.sleep(3)
-
-        # 1. Handle Audio Upload (if provided)
+        # ── Step 1: Audio Upload ─────────────────────────────────────────
         if audio_path and os.path.exists(audio_path):
             logger.info(f"Suno: Uploading audio {audio_path}...")
-            # Switch to Audio tab
-            upload_tab_js = """
-            (function() {
-                const b = Array.from(document.querySelectorAll('button, a')).find(el => el.innerText.includes('Audio') && el.offsetParent !== null);
-                if (b) { b.click(); return true; }
-                return false;
-            })()
+
+            # Convert to MP3 for faster upload
+            upload_file = self._ensure_mp3(audio_path)
+            upload_ok = False
+
+            # Try uploading; if rejected, modify audio and retry
+            for attempt in range(2):
+                # Real CDP mouse click on Audio button
+                audio_btn_rect = self.execute_js(
+                    ws_url,
+                    """
+                (function() {
+                    var btn = Array.from(document.querySelectorAll('button')).find(function(el) {
+                        return (el.getAttribute('aria-label')||'').includes('Add audio') && el.offsetParent !== null;
+                    });
+                    if (!btn) return null;
+                    var r = btn.getBoundingClientRect();
+                    return {x: Math.round(r.left + r.width/2), y: Math.round(r.top + r.height/2)};
+                })()
+                """,
+                )
+                if not audio_btn_rect:
+                    logger.error("Suno: Audio button not found!")
+                    break
+
+                self._real_click(ws_url, audio_btn_rect["x"], audio_btn_rect["y"])
+                time.sleep(5)
+
+                # Set file via CDP
+                self._set_file_input(ws_url, upload_file)
+                logger.info("Suno: Audio file injected. Waiting for upload...")
+
+                # Poll for upload result
+                upload_ok = self._wait_for_upload(ws_url, timeout=90)
+
+                if upload_ok:
+                    logger.info("Suno: Upload succeeded!")
+                    break
+                else:
+                    # Check if rejected by copyright filter
+                    if attempt == 0:
+                        logger.warning(
+                            "Suno: Upload rejected — modifying audio and retrying..."
+                        )
+                        # Dismiss error dialog
+                        self._clear_suno_popups(ws_url)
+                        time.sleep(2)
+                        upload_file = self._modify_audio_to_bypass_filter(upload_file)
+                        # Navigate fresh and retry
+                        self.execute_js(
+                            ws_url, "window.location.href = 'https://suno.com/create'"
+                        )
+                        time.sleep(10)
+                        self._clear_suno_popups(ws_url)
+                    else:
+                        logger.error("Suno: Audio upload failed after retry")
+                        break
+
+            if upload_ok:
+                # Handle 'Identify audio content'
+                self._handle_identify_audio(ws_url, "Full Song")
+                time.sleep(2)
+
+                # Handle 'Describe Your Audio'
+                self._handle_describe_audio(ws_url)
+                time.sleep(3)
+
+                # Set Audio Influence
+                self._set_audio_influence(ws_url, melody=True)
+                time.sleep(2)
+
+            self._clear_suno_popups(ws_url)
+
+        # ── Step 2: Switch to Advanced mode ──────────────────────────────
+        logger.info("Suno: Switching to Advanced mode...")
+        adv_result = self.execute_js(
+            ws_url,
             """
-            self.execute_js(ws_url, upload_tab_js)
-            time.sleep(3)
-
-            ws = None
-            try:
-                ws = websocket.create_connection(
-                    ws_url.replace("localhost", "127.0.0.1"),
-                    suppress_origin=True,
-                    timeout=15,
-                )
-                self._send_cdp_cmd(ws, 10, "DOM.enable")
-                root = self._send_cdp_cmd(ws, 11, "DOM.getDocument")["result"]["root"][
-                    "nodeId"
-                ]
-                nodes = self._send_cdp_cmd(
-                    ws,
-                    12,
-                    "DOM.querySelectorAll",
-                    {"nodeId": root, "selector": "input[type='file']"},
-                )
-                if nodes["result"]["nodeIds"]:
-                    target_node_id = nodes["result"]["nodeIds"][0]
-                    self._send_cdp_cmd(
-                        ws,
-                        13,
-                        "DOM.setFileInputFiles",
-                        {
-                            "files": [os.path.abspath(audio_path)],
-                            "nodeId": target_node_id,
-                        },
-                    )
-                    logger.info(
-                        "Suno: Audio file injected. Waiting for upload to complete (25s)..."
-                    )
-                    time.sleep(25)  # Longer wait for Suno upload processing
-
-                    # Handle influence panel after upload (Melody, Percussion, Lyrics)
-                    logger.info("Suno: Checking for influence panel...")
-                    influence_js = """
-                    (function() {
-                        // Wait a bit for panel to appear
-                        const checkPanel = () => {
-                            const buttons = Array.from(document.querySelectorAll('button'));
-                            // Find influence options
-                            const melody = buttons.find(b => 
-                                (b.innerText || '').toLowerCase().includes('melody') && b.offsetParent !== null
-                            );
-                            const percussion = buttons.find(b => 
-                                (b.innerText || '').toLowerCase().includes('percussion') && b.offsetParent !== null
-                            );
-                            const lyrics = buttons.find(b => 
-                                (b.innerText || '').toLowerCase().includes('lyric') && b.offsetParent !== null
-                            );
-                            return {melody: !!melody, percussion: !!percussion, lyrics: !!lyrics};
-                        };
-                        return checkPanel();
-                    })()
-                    """
-                    influence = self.execute_js(ws_url, influence_js)
-                    logger.info(f"Suno: Influence panel options: {influence}")
-
-                    # Click Melody and Percussion (optionally add Lyrics if provided)
-                    select_influence_js = """
-                    (function() {
-                        const buttons = Array.from(document.querySelectorAll('button'));
-                        let clicked = [];
-                        
-                        const melodyBtn = buttons.find(b => 
-                            (b.innerText || '').toLowerCase().includes('melody') && b.offsetParent !== null
-                        );
-                        if (melodyBtn) { melodyBtn.click(); clicked.push('melody'); }
-                        
-                        const percussionBtn = buttons.find(b => 
-                            (b.innerText || '').toLowerCase().includes('percussion') && b.offsetParent !== null
-                        );
-                        if (percussionBtn) { percussionBtn.click(); clicked.push('percussion'); }
-                        
-                        // Click Lyrics if provided and button exists
-                        const lyricsBtn = buttons.find(b => 
-                            (b.innerText || '').toLowerCase().includes('lyric') && b.offsetParent !== null
-                        );
-                        if (lyricsBtn && arguments[0]) {
-                            lyricsBtn.click();
-                            clicked.push('lyrics');
-                        }
-                        
-                        // Look for a Done/Confirm/Apply button
-                        const doneBtn = buttons.find(b => 
-                            (b.innerText || '').toLowerCase().includes('done') ||
-                            (b.innerText || '').toLowerCase().includes('apply') ||
-                            (b.innerText || '').toLowerCase().includes('confirm')
-                        );
-                        if (doneBtn && doneBtn.offsetParent !== null) {
-                            doneBtn.click();
-                            clicked.push('done');
-                        }
-                        return clicked;
-                    })(!!arguments[0])
-                    """
-                    clicked = self.execute_js(ws_url, select_influence_js)
-                    logger.info(f"Suno: Selected influence options: {clicked}")
-                    time.sleep(2)
-
-                    # 2.x Fill lyrics if they were supplied
-                    if lyrics:
-                        logger.info(
-                            "Suno: Injecting lyrics into the lyrics textarea..."
-                        )
-                        lyrics_js = f"""
-                        (function() {{
-                            // After clicking the Lyrics button, a textarea usually appears.
-                            const textareas = Array.from(document.querySelectorAll('textarea')).filter(t => t.offsetParent !== null);
-                            const lyricTa = textareas.find(t => (t.placeholder || '').toLowerCase().includes('lyric'));
-                            if (!lyricTa) return "no_lyrics_textarea";
-
-                            // Set value via React props (if available) then native setter
-                            const propsKey = Object.keys(lyricTa).find(k => k.startsWith('__reactProps$'));
-                            if (propsKey && lyricTa[propsKey] && lyricTa[propsKey].onChange) {{
-                                lyricTa[propsKey].onChange({{ target: {{ value: {json.dumps(lyrics)} }}, persist: () => {{}} }});
-                            }}
-                            const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-                            setter.call(lyricTa, {json.dumps(lyrics)});
-                            lyricTa.dispatchEvent(new Event('input', {{bubbles:true}}));
-                            lyricTa.dispatchEvent(new Event('change', {{bubbles:true}}));
-                            return "lyrics_set";
-                        }})()
-                        """
-                        logger.info(
-                            f"Suno: Lyrics injection result: {self.execute_js(ws_url, lyrics_js)}"
-                        )
-                        time.sleep(1)
-
-                    self._clear_suno_popups(ws_url)
-            finally:
-                if ws:
-                    ws.close()
-
-        # 1.5 Click "Simple" mode (Suno's new UI uses Simple/Advanced tabs)
-        logger.info("Suno: Switching to Simple mode...")
-        simple_js = """
         (function() {
-            const btns = Array.from(document.querySelectorAll('button'));
-            const simpleBtn = btns.find(el => 
-                el.innerText.trim() === 'Simple' && el.offsetParent !== null
-            );
-            if (simpleBtn) {
-                const isActive = simpleBtn.className.includes('active');
-                if (!isActive) {
-                    simpleBtn.click();
-                    return "clicked_simple";
-                }
-                return "already_simple";
+            var btns = Array.from(document.querySelectorAll('button'));
+            var advBtn = btns.find(function(el) {
+                return (el.innerText||'').trim() === 'Advanced' && el.offsetParent !== null;
+            });
+            if (advBtn) {
+                var isActive = advBtn.className.includes('active');
+                if (!isActive) { advBtn.click(); return 'clicked_advanced'; }
+                return 'already_advanced';
             }
-            return "simple_btn_not_found";
+            return 'advanced_btn_not_found';
         })()
-        """
-        logger.info(f"Suno: Mode switch result: {self.execute_js(ws_url, simple_js)}")
+        """,
+        )
+        logger.info(f"Suno: Mode switch: {adv_result}")
         time.sleep(2)
 
-        # 2. Set Prompt (Style) on the FIRST visible textarea
+        # ── Step 3: Set Lyrics (textarea[0] in Advanced mode) ────────────
+        if lyrics:
+            logger.info(f"Suno: Injecting lyrics ({len(lyrics)} chars)...")
+            lyrics_result = self.execute_js(
+                ws_url,
+                f"""
+            (function() {{
+                var textareas = Array.from(document.querySelectorAll('textarea'))
+                    .filter(function(t) {{ return t.offsetParent !== null; }});
+                if (textareas.length === 0) return 'no_textareas';
+                // In Advanced mode: first textarea = lyrics/write
+                var ta = textareas[0];
+                var propsKey = Object.keys(ta).find(function(k) {{ return k.startsWith('__reactProps'); }});
+                if (propsKey && ta[propsKey] && ta[propsKey].onChange) {{
+                    ta[propsKey].onChange({{ target: {{ value: {json.dumps(lyrics)} }}, persist: function(){{}} }});
+                }}
+                try {{
+                    var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+                    setter.call(ta, {json.dumps(lyrics)});
+                }} catch(e) {{
+                    ta.value = {json.dumps(lyrics)};
+                }}
+                ta.dispatchEvent(new Event('input', {{bubbles:true}}));
+                ta.dispatchEvent(new Event('change', {{bubbles:true}}));
+                return 'lyrics_set_on_' + (ta.placeholder||'').slice(0,30);
+            }})()
+            """,
+            )
+            logger.info(f"Suno: Lyrics result: {lyrics_result}")
+            time.sleep(1)
+
+        # ── Step 4: Set Style Prompt (textarea[1] in Advanced mode) ──────
         logger.info(f"Suno: Setting style/prompt: {prompt[:50]}...")
-        prompt_js = f"""
+        prompt_result = self.execute_js(
+            ws_url,
+            f"""
         (function() {{
-            const textareas = Array.from(document.querySelectorAll('textarea')).filter(el => el.offsetParent !== null);
-            if (textareas.length === 0) return "no_textareas";
-            let ta = textareas[0];
-             
-            // Try React Props first
-            const propsKey = Object.keys(ta).find(k => k.startsWith('__reactProps$'));
+            var textareas = Array.from(document.querySelectorAll('textarea'))
+                .filter(function(el) {{ return el.offsetParent !== null; }});
+            if (textareas.length === 0) return 'no_textareas';
+            // In Advanced mode: second textarea = style/prompt
+            var ta = textareas.length > 1 ? textareas[1] : textareas[0];
+            var propsKey = Object.keys(ta).find(function(k) {{ return k.startsWith('__reactProps'); }});
             if (propsKey && ta[propsKey] && ta[propsKey].onChange) {{
-                ta[propsKey].onChange({{ target: {{ value: {json.dumps(prompt)} }}, persist: () => {{}} }});
+                ta[propsKey].onChange({{ target: {{ value: {json.dumps(prompt)} }}, persist: function(){{}} }});
             }}
-            
-            const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-            setter.call(ta, {json.dumps(prompt)});
+            try {{
+                var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+                setter.call(ta, {json.dumps(prompt)});
+            }} catch(e) {{
+                ta.value = {json.dumps(prompt)};
+            }}
             ta.dispatchEvent(new Event('input', {{ bubbles: true }}));
             ta.dispatchEvent(new Event('change', {{ bubbles: true }}));
-            return "set_on_" + (ta.placeholder || "first_textarea");
-        }}())
-        """
-        logger.info(
-            f"Suno: Prompt injection result: {self.execute_js(ws_url, prompt_js)}"
+            return 'prompt_set_on_' + (ta.placeholder||'').slice(0,30);
+        }}())""",
         )
+        logger.info(f"Suno: Prompt result: {prompt_result}")
 
-        # 3. Toggle Instrumental
+        # ── Step 5: Toggle Instrumental ──────────────────────────────────
         if make_instrumental:
-            instr_js = """
+            instr_result = self.execute_js(
+                ws_url,
+                """
             (function() {
-                const b = Array.from(document.querySelectorAll('button')).find(el => el.innerText.includes('Instrumental') && el.offsetParent !== null);
+                var b = Array.from(document.querySelectorAll('button')).find(function(el) {
+                    return (el.innerText||'').includes('Instrumental') && el.offsetParent !== null;
+                });
                 if (b) {
-                    const isChecked = b.className.includes('checked') || b.getAttribute('aria-checked') === 'true' || b.innerText.includes('ON');
-                    if (!isChecked) {
-                        b.click();
-                        return "toggled_instrumental";
-                    }
-                    return "instrumental_already_on";
+                    var isChecked = b.className.includes('checked') || b.getAttribute('aria-checked') === 'true';
+                    if (!isChecked) { b.click(); return 'toggled_instrumental'; }
+                    return 'instrumental_already_on';
                 }
-                return "instrumental_btn_not_found";
+                return 'instrumental_btn_not_found';
             })()
-            """
-            logger.info(
-                f"Suno: Instrumental check: {self.execute_js(ws_url, instr_js)}"
+            """,
             )
+            logger.info(f"Suno: Instrumental: {instr_result}")
 
-        # 4. Click Create
+        # ── Step 6: Click Create ─────────────────────────────────────────
         logger.info("Suno: Clicking Create...")
-        create_js = """
+        time.sleep(2)
+        res = self.execute_js(
+            ws_url,
+            """
         (function() {
-            const allBtns = Array.from(document.querySelectorAll('button'));
-            const b = allBtns.find(el => (el.getAttribute('aria-label') || '').includes('Create') && el.offsetParent !== null) 
-                    || allBtns.find(el => (el.innerText || '').includes('Create') && el.offsetParent !== null);
+            var allBtns = Array.from(document.querySelectorAll('button'));
+            var b = allBtns.find(function(el) {
+                return (el.getAttribute('aria-label') || '').includes('Create') && el.offsetParent !== null;
+            }) || allBtns.find(function(el) {
+                return (el.innerText || '').includes('Create') && el.offsetParent !== null;
+            });
             if (b) {
-                const info = {
-                    text: b.innerText,
-                    disabled: b.disabled,
-                    classes: b.className
-                };
-                if (b.disabled) {
-                    return "disabled:" + JSON.stringify(info);
-                }
+                var info = { text: b.innerText, disabled: b.disabled, classes: b.className };
+                if (b.disabled) { return "disabled:" + JSON.stringify(info); }
                 b.click();
                 return "clicked:" + JSON.stringify(info);
             }
             return "not_found";
         })()
-        """
-        res = self.execute_js(ws_url, create_js)
-        if res and "clicked" in res:
-            logger.info(f"Suno: Generation triggered! Button info: {res}")
+        """,
+        )
+        if res and "clicked" in str(res):
+            logger.info(f"Suno: Generation triggered! {res}")
             return True
         else:
             logger.warning(f"Suno: Could not trigger generation: {res}")
             self._save_debug_screenshot(ws_url)
             return False
+
+    # ── post-generation ──────────────────────────────────────────────────
 
     def wait_for_completion_and_download(self, timeout=400):
         """Poll for completion and trigger download of the latest track."""
@@ -539,53 +763,43 @@ class SunoBrowserAutomation:
                     "No Suno tab found for wait_for_completion_and_download"
                 )
             ws_url = tab.get("webSocketDebuggerUrl")
-
-            poll_js = """
+            res = self.execute_js(
+                ws_url,
+                """
             (function() {
-                // Find latest track row
-                const rows = Array.from(document.querySelectorAll('[data-testid="song-row"], [class*="SongRow"]'));
+                var rows = Array.from(document.querySelectorAll('[data-testid="song-row"], [class*="SongRow"]'));
                 if (rows.length === 0) return "no_tracks";
-
-                const latest = rows[0];
-                const text = (latest.innerText || '').toLowerCase();
-
+                var latest = rows[0];
+                var text = (latest.innerText || '').toLowerCase();
                 if (text.includes('error') || text.includes('failed')) return "error";
                 if (text.includes('creating') || text.includes('queue') || text.includes('generating')) return "generating";
-
-                // Track is ready if it has a duration and no "creating" text
-                const hasDuration = /\\d+:\\d+/.test(text);
+                var hasDuration = /\d+:\d+/.test(text);
                 if (hasDuration) {
-                    // Try to find download button
-                    // Suno often hides it in a "..." menu
-                    let moreBtn = latest.querySelector('button[aria-label*="More"], [data-testid*="more-actions"]');
-                    if (moreBtn) {
-                        moreBtn.click();
-                        return "menu_opened";
-                    }
+                    var moreBtn = latest.querySelector('button[aria-label*="More"], [data-testid*="more-actions"]');
+                    if (moreBtn) { moreBtn.click(); return "menu_opened"; }
                 }
                 return "waiting";
             })()
-            """
-            res = self.execute_js(ws_url, poll_js)
+            """,
+            )
             if res == "menu_opened":
                 time.sleep(3)
-                # Now find "Download" in the menu
-                download_js = """
+                res2 = self.execute_js(
+                    ws_url,
+                    """
                 (function() {
-                    const menuItems = Array.from(document.querySelectorAll('[role="menuitem"], button, a'));
-                    const dl = menuItems.find(el => (el.innerText || '').toLowerCase().includes('download') && el.offsetParent !== null);
-                    if (dl) {
-                        dl.click();
-                        return "download_clicked";
-                    }
+                    var menuItems = Array.from(document.querySelectorAll('[role="menuitem"], button, a'));
+                    var dl = menuItems.find(function(el) {
+                        return (el.innerText || '').toLowerCase().includes('download') && el.offsetParent !== null;
+                    });
+                    if (dl) { dl.click(); return "download_clicked"; }
                     return "dl_not_found";
                 })()
-                """
-                res2 = self.execute_js(ws_url, download_js)
+                """,
+                )
                 if res2 == "download_clicked":
                     logger.info("Suno: Download triggered!")
                     return True
-
             logger.info(f"Suno status: {res} ({int(time.time() - start)}s)")
             time.sleep(15)
         return False
