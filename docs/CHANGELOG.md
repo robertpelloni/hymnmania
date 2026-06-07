@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.37.0 (Upcoming)
+- Added `ableton_psytrance_hymn_creator` as a submodule.
+- Enhanced `SonicVacuumProcessor` with speed-variant rendering (0.5x, 1x, 2x).
+- Implemented Suno Experiment Matrix in browser automation (9-way matrix).
+- Initialized `Psy-Mono Bridge` for reverse engineering Suno output back to Ableton MIDI/Projects.
+
+
 ## [1.35.0] - 2026-06-01
 ### Added
 - **Interactive Live Streaming Engine:**

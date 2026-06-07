@@ -6,6 +6,7 @@ import argparse
 import json
 import requests
 import time
+import numpy as np
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from dotenv import load_dotenv
@@ -114,9 +115,11 @@ def main():
         help="Directory containing input MIDI files",
     )
     parser.add_argument(
+        "--soundfont", help="Path to custom soundfont"
+    )
+    parser.add_argument(
         "--output-dir", default="hymn_remaker/output", help="Directory for output files"
     )
-    parser.add_argument("--soundfont", help="Path to custom soundfont")
     parser.add_argument(
         "--style",
         default=settings.DEFAULT_STYLE,
@@ -269,6 +272,18 @@ def main():
         choices=["1.3b", "14b"],
         help="Local video generation model size",
     )
+    parser.add_argument(
+        "--speed",
+        type=float,
+        default=1.0,
+        choices=[0.5, 1.0, 2.0],
+        help="Playback speed for Sonic Vacuum preprocessor",
+    )
+    parser.add_argument(
+        "--suno-matrix",
+        action="store_true",
+        help="v1.37.0: Execute 9-way Suno Experiment Matrix (3 speeds x 3 genres)",
+    )
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -374,10 +389,12 @@ def main():
                     local_guidance=args.local_guidance,
                     local_temperature=args.local_temperature,
                     transient=args.transient,
+                    speed=args.speed,
                     sonic_vacuum=args.sonic_vacuum,
                     symbolic_norm=args.symbolic_norm,
                     house_quantizer=args.house_quantizer,
                     hiphop_vocal_path=args.mix_vocals,
+                    suno_matrix=args.suno_matrix,
                 ): midi_path
                 for midi_path in midi_file_list
             }
@@ -565,6 +582,7 @@ def process_single_midi(
     video_model="ltx-video",
     video_model_size="1.3b",
     udio_variance=0.25,
+    speed=1.0,
     udio_neg_prompt="organ, classical, baroque, church organ, cathedral",
     local_guidance=3.0,
     local_temperature=1.0,
@@ -573,6 +591,7 @@ def process_single_midi(
     symbolic_norm=False,
     house_quantizer=False,
     hiphop_vocal_path=None,
+    suno_matrix=False,
 ):
 
     base_audio_path = remake_audio_path = metadata_path = vocal_track_path = None
@@ -664,9 +683,17 @@ def process_single_midi(
                     base_audio_path = os.path.join(
                         output_dir, "dry_render", f"{name_no_ext}_dry.wav"
                     )
-                    SonicVacuumProcessor(target_midi_path).render_dry_piano(
-                        base_audio_path
-                    )
+                    vacuum = SonicVacuumProcessor(target_midi_path)
+                    audio_arr, sr = vacuum.render_dry_piano(None, return_audio=True)
+                    # Use speed variant logic
+                    if speed == 0.5:
+                        indices = np.arange(0, len(audio_arr), 0.5)
+                        indices = np.clip(indices, 0, len(audio_arr) - 1).astype(np.int64)
+                        audio_arr = audio_arr[indices]
+                    elif speed == 2.0:
+                        audio_arr = audio_arr[::2]
+                    import scipy.io.wavfile as wavfile
+                    wavfile.write(base_audio_path, sr, (audio_arr * 32767).astype(np.int16))
 
                 if is_symbolic_norm:
                     from pipeline.processing.symbolic_norm import SymbolicNormalizer
@@ -773,6 +800,18 @@ def process_single_midi(
                 except Exception as local_err:
                     logger.warning(f"Local MusicGen failed for {filename}: {local_err}")
                     update_status("Local MusicGen error, trying fallbacks...", 42)
+
+            # --- v1.37.0: Suno Experiment Matrix ---
+            if suno_matrix and suno_remaker and suno_remaker.is_available():
+                update_status(f"Step 2/4: Executing Suno 9-way Experiment Matrix for {filename}...", 40)
+                try:
+                    lyrics_text = pre_extracted_metadata.get("raw_lyrics_text")
+                    suno_remaker.browser_automation.run_experiment_matrix(
+                        target_midi_path, output_dir, lyrics=lyrics_text
+                    )
+                    # We continue the normal pipeline with the primary remake
+                except Exception as matrix_err:
+                    logger.error(f"Suno Matrix failed: {matrix_err}")
 
             # --- Priority 1: Suno AI (audio influence -> Deep House) ---
             if (

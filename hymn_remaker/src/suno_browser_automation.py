@@ -7,6 +7,7 @@ Updated for Suno v5.5 (June 2026):
 - Advanced mode: textarea[0]=lyrics, textarea[1]=style prompt
 - WAV→MP3 conversion for faster uploads
 - Bypass Suno's 'matches existing recording' filter with audio modification
+- v1.37.0: Support for 9-way Experiment Matrix (Speeds x Genres)
 """
 
 import json
@@ -519,19 +520,7 @@ class SunoBrowserAutomation:
     def trigger_generation(
         self, prompt, audio_path=None, make_instrumental=True, lyrics=None
     ):
-        """Trigger a Suno generation with optional audio upload and lyrics.
-
-        Flow (Suno v5.5 as of 2026-06):
-        1. Navigate to /create
-        2. [If audio] Real CDP click Audio button → DOM.setFileInputFiles
-        3. [If audio] Handle 'Identify audio content' → select 'Full Song' → Continue
-        4. [If audio] Handle 'Describe Your Audio' → Continue
-        5. [If audio] Set Audio Influence
-        6. Switch to Advanced mode (for lyrics + prompt control)
-        7. Set lyrics in textarea[0], style prompt in textarea[1]
-        8. Toggle Instrumental
-        9. Click Create
-        """
+        """Trigger a Suno generation with optional audio upload and lyrics."""
         tab = self._get_active_tab(require_suno=True)
         if not tab:
             raise RuntimeError("No Suno tab found for trigger_generation")
@@ -803,3 +792,76 @@ class SunoBrowserAutomation:
             logger.info(f"Suno status: {res} ({int(time.time() - start)}s)")
             time.sleep(15)
         return False
+
+    # ── v1.37.0: Experiment Matrix ──────────────────────────────────────
+
+    def run_experiment_matrix(self, midi_path, output_dir, lyrics=None):
+        """Execute a 9-way experiment matrix (3 speeds x 3 genres) for a hymn."""
+        from pipeline.processing.sonic_vacuum import SonicVacuumProcessor
+
+        logger.info(f"Suno: Starting 9-way Experiment Matrix for {midi_path}...")
+
+        # 1. Preprocess: Generate 3 speed variants
+        vacuum = SonicVacuumProcessor(midi_path)
+        base_name = os.path.splitext(os.path.basename(midi_path))[0]
+        output_base = os.path.join(output_dir, "dry_render", base_name)
+        os.makedirs(os.path.join(output_dir, "dry_render"), exist_ok=True)
+
+        audio_array, sr = vacuum.render_dry_piano(None, return_audio=True)
+        speed_variant_paths = vacuum.export_speed_variants(audio_array, sr, output_base)
+
+        # 2. Define Genre Matrix
+        genres = {
+            "Deep House": "deep house, 122 bpm, melodic house, structural synth pluck, minimal driving 4x4 groove, pristine club mix",
+            "Drum and Bass": "liquid drum and bass, 174 bpm, rolling reesebass, high velocity synth arpeggio, sharp breakbeat drums",
+            "Psytrance": "modern full-on psytrance, 145 bpm, rolling bassline, acid squelch, twilight psytrance driving groove, fm synthesizer leads"
+        }
+
+        speeds = ["0.5x", "1x", "2x"]
+
+        results = []
+
+        # 3. Iterate through Matrix
+        for i, speed_path in enumerate(speed_variant_paths):
+            speed_label = speeds[i]
+            for genre_name, style_prompt in genres.items():
+                logger.info(f"--- Experiment: {speed_label} | {genre_name} ---")
+
+                # Full prompt with speed and genre context
+                full_prompt = f"{style_prompt}. Inspired by the attached melody (rendered at {speed_label} speed)."
+
+                success = self.trigger_generation(
+                    prompt=full_prompt,
+                    audio_path=speed_path,
+                    make_instrumental=True,
+                    lyrics=lyrics
+                )
+
+                if success:
+                    # In experiment mode, we trigger but don't necessarily block
+                    # and wait for each download one-by-one to save time,
+                    # as Suno generates in batches.
+                    # However, for robustness we'll wait for completion and download here.
+                    dl_ok = self.wait_for_completion_and_download()
+                    if dl_ok:
+                        results.append({
+                            "speed": speed_label,
+                            "genre": genre_name,
+                            "status": "success"
+                        })
+                    else:
+                        results.append({
+                            "speed": speed_label,
+                            "genre": genre_name,
+                            "status": "download_failed"
+                        })
+                else:
+                    results.append({
+                        "speed": speed_label,
+                        "genre": genre_name,
+                        "status": "trigger_failed"
+                    })
+
+                time.sleep(10) # Cooling off between matrix steps
+
+        return results

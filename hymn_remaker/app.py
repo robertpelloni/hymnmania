@@ -19,7 +19,7 @@ if os.path.exists(_env_path):
 from hymn_remaker import settings
 
 # Load global version
-VERSION = "1.36.0"
+VERSION = "1.37.0"
 try:
     v_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "VERSION")
     if os.path.exists(v_root):
@@ -45,6 +45,7 @@ from hymn_remaker.src.omr_processor import OMRProcessor
 from hymn_remaker.src.stem_separator import StemSeparator
 from hymn_remaker.src.local_remaker import LocalMusicRemaker
 from hymn_remaker.src.quality_evaluator import QualityEvaluator
+from hymn_remaker.src.psy_mono_bridge import PsyMonoBridge
 from hymn_remaker.main import process_single_midi
 
 st.title("🎵 Hymn Remaker Pipeline")
@@ -67,15 +68,16 @@ def load_modules():
         udio_oauth_remaker = UdioOAuthRemaker()
         local_remaker = LocalMusicRemaker()
         quality_eval = QualityEvaluator()
-        return renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval
+        psy_mono_bridge = PsyMonoBridge()
+        return renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval, psy_mono_bridge
     except Exception as e:
         import traceback
         st.error(f"Failed to initialize modules: {e}")
         st.code(traceback.format_exc())
-        return [None] * 13
+        return [None] * 14
 
 modules = load_modules()
-renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval = modules
+renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval, psy_mono_bridge = modules
 
 st.sidebar.header("Environment & API")
 missing_keys = []
@@ -108,10 +110,12 @@ max_workers = st.sidebar.slider("Concurrent Tasks", min_value=1, max_value=4, va
 
 st.sidebar.markdown("### Experimental Preprocessors")
 with st.sidebar.expander("Udio/Suno Optimizers", expanded=False):
+    speed = st.selectbox("Sonic Vacuum Speed", [0.5, 1.0, 2.0], index=1, help="Adjust playback speed for dry render.")
     sonic_vacuum = st.checkbox("Sonic Vacuum (Dry Render)", value=False, help="Render transient-only audio to prevent soundfont bleed.")
     symbolic_norm = st.checkbox("Symbolic Norm (Velocity 100)", value=False, help="Strip performance baggage and flatten velocity.")
     house_quantizer = st.checkbox("House Structural Quantizer", value=False, help="Force snap to 124 BPM electronic grid.")
     mix_hiphop_vocals = st.text_input("Hip-Hop Vocal Remix (Path/URL)", help="Provide a local path or YouTube URL to an acapella or hip-hop track to remix into the psytrance track.")
+    suno_matrix = st.checkbox("Suno 9-Way Matrix (v1.37.0)", value=False, help="Execute 3 speeds x 3 genres matrix generation.")
 
 st.sidebar.markdown("### Pipeline Options")
 video_format = st.sidebar.selectbox("Video Format", ["Standard 16:9", "Vertical 9:16"])
@@ -204,10 +208,12 @@ with tab1:
                             udio_variance=udio_variance,
                             local_guidance=local_guidance,
                             local_temperature=local_temperature,
+                            speed=speed,
                             sonic_vacuum=sonic_vacuum,
                             symbolic_norm=symbolic_norm,
                             house_quantizer=house_quantizer,
-                            hiphop_vocal_path=mix_hiphop_vocals if mix_hiphop_vocals else None
+                            hiphop_vocal_path=mix_hiphop_vocals if mix_hiphop_vocals else None,
+                            suno_matrix=suno_matrix
                         )
                         status.update(label=f"Finished {filename}!", state="complete")
                     except Exception as e:
@@ -591,22 +597,29 @@ with tab4:
                     with c1:
                         st.audio(f_path)
 
-                    if c3.button("🎹 Load Studio", key=f"load_{f}"):
-                        if f.endswith('.wav'):
-                            # Check if there is a matching MIDI for playback or just load the WAV
-                            # For simplicity we just stop existing and load
-                            st.session_state.psy_player.stop_realtime()
-                            # We need a MIDI for the player load, if we only have WAV we can't play via FluidSynth
-                            # but we can at least show it was clicked.
-                            st.info(f"Loading {f} to studio player...")
-                            # If it's studio_output.mid's render, we can load the mid
-                            name_base = f.replace(".wav", "")
-                            possible_mid = os.path.join(output_dir, f"{name_base}.mid")
-                            if os.path.exists(possible_mid):
-                                st.session_state.psy_player.load(possible_mid)
-                                st.session_state.psy_player.start_realtime()
-                                st.session_state.psy_player.play()
-                                st.success(f"Playing {name_base}.mid")
+                    with c3:
+                        if st.button("🎹 Load Studio", key=f"load_{f}"):
+                            if f.endswith('.wav'):
+                                st.session_state.psy_player.stop_realtime()
+                                st.info(f"Loading {f} to studio player...")
+                                name_base = f.replace(".wav", "")
+                                possible_mid = os.path.join(output_dir, f"{name_base}.mid")
+                                if os.path.exists(possible_mid):
+                                    st.session_state.psy_player.load(possible_mid)
+                                    st.session_state.psy_player.start_realtime()
+                                    st.session_state.psy_player.play()
+                                    st.success(f"Playing {name_base}.mid")
+
+                        if st.button("🔄 Reverse to Ableton", key=f"rev_{f}"):
+                            with st.spinner(f"Reverse engineering {f}..."):
+                                try:
+                                    success = psy_mono_bridge.run_full_reversal(f_path, output_dir)
+                                    if success:
+                                        st.success("Successfully pushed to Ableton!")
+                                    else:
+                                        st.error("Reverse engineering failed. Check logs.")
+                                except Exception as re_err:
+                                    st.error(f"Error: {re_err}")
                 else:
                     with c1:
                         st.video(f_path)
