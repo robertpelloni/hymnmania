@@ -1,11 +1,11 @@
 # TODO
 
 ### v1.37.0 - The Studio Reversal
-- [ ] Implement `export_speed_variants` in `SonicVacuumProcessor` (0.5x, 1x, 2x).
-- [ ] Update `SunoBrowserAutomation` to loop through speed variants and genre tags.
-- [ ] Create `hymn_remaker/src/psy_mono_bridge.py` for the Ableton reversal pipeline.
-- [ ] Integrate `demucs` and `basic-pitch` for audio-to-MIDI in the bridge.
-- [ ] Add Ableton assembly logic via OSC (`pylive`).
+- [x] Implement `export_speed_variants` in `SonicVacuumProcessor` (0.5x, 1x, 2x).
+- [x] Update `SunoBrowserAutomation` to loop through speed variants and genre tags.
+- [x] Create `hymn_remaker/src/psy_mono_bridge.py` for the Ableton reversal pipeline.
+- [x] Integrate `demucs` and `basic-pitch` for audio-to-MIDI in the bridge.
+- [x] Add Ableton assembly logic via OSC (`pylive`).
 
 ### Immediate Fixes
 - [x] Implement LALAL.AI REST API integration as a fall-back for local Demucs.

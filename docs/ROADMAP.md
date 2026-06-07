@@ -10,8 +10,8 @@
 - [x] Symbolic Normalization: Velocity flattening and grid alignment.
 - [x] House Structural Quantization: Snap to 124 BPM.
 - [x] Suno & Udio browser automation (CDP).
-- [ ] **v1.37.0: Suno Experiment Matrix (0.5x, 1x, 2x speeds across Deep House, DnB, Psytrance).**
-- [ ] **v1.37.0: Reverse Engineering Pipeline (Audio -> MIDI -> Ableton).**
+- [x] **v1.37.0: Suno Experiment Matrix (0.5x, 1x, 2x speeds across Deep House, DnB, Psytrance).**
+- [x] **v1.37.0: Reverse Engineering Pipeline (Audio -> MIDI -> Ableton).**
 
 ## Phase 3: Advanced Studio Integration
 - [ ] VST3 hosting in C++ engine.
