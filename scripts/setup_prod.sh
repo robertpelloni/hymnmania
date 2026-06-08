@@ -13,7 +13,7 @@ echo "Installing system dependencies..."
 # 2. Python Environment
 echo "Installing Python dependencies..."
 pip install -r hymn_remaker/requirements.txt
-pip install demucs basic-pitch pylive requests_oauthlib diffusers accelerate
+pip install demucs basic-pitch pylive requests_oauthlib diffusers accelerate flask
 
 # 3. Native Engine Build
 echo "Building C++ engine..."

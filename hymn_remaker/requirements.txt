@@ -30,4 +30,5 @@ diffusers
 transformers
 accelerate
 basic-pitch
+tensorflow-cpu
 pylive

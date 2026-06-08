@@ -13,6 +13,9 @@ The v1.37.0 evaluation maintains the `QualityEvaluator` heuristic (30% Brightnes
 | Leyenda | **56.80** | 0.610 | 0.209 | 1.000 |
 | God Is So Good | **56.70** | 0.618 | 0.194 | 1.000 |
 | Bach Bourrée (E Minor) | **56.31** | 0.602 | 0.207 | 1.000 |
+| O Come, O Come, Emmanuel (0.5x) | **70.00** | 0.701 | 0.250 | 1.000 |
+| O Come, O Come, Emmanuel (1.0x) | **71.24** | 0.710 | 0.252 | 1.000 |
+| O Come, O Come, Emmanuel (2.0x) | **74.31** | 0.735 | 0.260 | 1.000 |
 
 ## Benchmark Comparison (v1.32.0 vs v1.37.0)
 

@@ -33,7 +33,7 @@ def run_health_check():
     print("--- Hymnmania Health Check ---")
 
     binaries = ["ffmpeg", "fluidsynth", "basic-pitch"]
-    modules = ["mido", "librosa", "torch", "transformers", "diffusers", "requests_oauthlib", "live"]
+    modules = ["mido", "librosa", "torch", "transformers", "diffusers", "requests_oauthlib", "live", "flask"]
 
     all_ok = True
 

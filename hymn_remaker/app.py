@@ -61,8 +61,13 @@ with st.expander("👋 Welcome Tester! (v1.37.0 Highlights)", expanded=True):
     if st.button("🚀 Run Batch Demo (Mock Data)"):
         st.info("Simulating batch generation for library populating...")
         os.makedirs(output_dir, exist_ok=True)
+        import scipy.io.wavfile as wavfile
+        import numpy as np
+        # Create a tiny 1-second silent valid wav file
+        silent_audio = np.zeros(44100, dtype=np.int16)
         for demo in ["Emmanuel", "Amazing Grace", "Holy Holy Holy"]:
-            with open(os.path.join(output_dir, f"{demo}_remake.wav"), "wb") as f: f.write(b"demo data")
+            wav_path = os.path.join(output_dir, f"{demo}_remake.wav")
+            wavfile.write(wav_path, 44100, silent_audio)
             with open(os.path.join(output_dir, f"{demo}_metadata.json"), "w") as f: json.dump({"title": demo}, f)
         st.success("Demo items created! Check the Library.")
 st.write("Convert MIDI files into modern music videos with AI!")
