@@ -170,6 +170,46 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 Automated Pipeline", "🎹 Hymn Ed
 
 with tab1:
     uploaded_files = st.file_uploader("Upload MIDI/MusicXML", type=["mid", "midi", "mxl", "xml"], accept_multiple_files=True)
+    if st.button("🔍 Preview Preprocessing (Local Render)"):
+        if not uploaded_files:
+            st.warning("Please upload a MIDI file first.")
+        else:
+            with st.status("Generating Preview...") as status:
+                for uf in uploaded_files:
+                    temp_in = os.path.join(settings.INPUT_DIR, f"preview_{uf.name}")
+                    with open(temp_in, "wb") as f: f.write(uf.getbuffer())
+
+                    temp_mid = temp_in
+                    if symbolic_norm:
+                         from pipeline.processing.symbolic_norm import SymbolicNormalizer
+                         norm_out = temp_in.replace(".mid", "_norm.mid")
+                         SymbolicNormalizer(temp_in).normalize(norm_out)
+                         temp_mid = norm_out
+                    if house_quantizer:
+                         from pipeline.processing.house_quantizer import HouseStructuralQuantizer
+                         quant_out = temp_mid.replace(".mid", "_quant.mid")
+                         HouseStructuralQuantizer(temp_mid).quantize(quant_out)
+                         temp_mid = quant_out
+
+                    out_wav = os.path.join(settings.OUTPUT_DIR, "preprocessing_preview.wav")
+                    if sonic_vacuum:
+                        from pipeline.processing.sonic_vacuum import SonicVacuumProcessor
+                        vacuum = SonicVacuumProcessor(temp_mid)
+                        audio_arr, sr = vacuum.render_dry_piano(None, return_audio=True)
+                        if speed == 0.5:
+                            indices = np.arange(0, len(audio_arr), 0.5)
+                            indices = np.clip(indices, 0, len(audio_arr) - 1).astype(np.int64)
+                            audio_arr = audio_arr[indices]
+                        elif speed == 2.0:
+                            audio_arr = audio_arr[::2]
+                        import scipy.io.wavfile as wavfile
+                        wavfile.write(out_wav, sr, (audio_arr * 32767).astype(np.int16))
+                    else:
+                        renderer.render(temp_mid, out_wav)
+
+                    st.write(f"Preview for **{uf.name}**")
+                    st.audio(out_wav)
+                status.update(label="Preview Ready!", state="complete")
     if st.button("Start Processing", type="primary"):
         st.session_state["is_processing"] = True
         st.session_state["uploaded_files_data"] = []
@@ -303,6 +343,9 @@ with tab3:
             algo_style = st.selectbox("Algorithmic Style", ["None", "Full-On", "DarkPsy", "Progressive", "Morning"], key="psy_algo_style")
             density = st.slider("Euclidean Density", 1, 16, 5, key="psy_density")
             gallop = st.selectbox("Gallop Variant", ["classic", "triplet", "rolling"], key="psy_gallop")
+            st.write("**Preprocessors**")
+            live_sym_norm = st.checkbox("Symbolic Norm", key="psy_live_sym_norm")
+            live_house_quant = st.checkbox("House Quantizer", key="psy_live_house_quant")
         else:
             bpm = st.session_state.get("psy_bpm", 145)
             algo_style = st.session_state.get("psy_algo_style", "None")
@@ -387,6 +430,10 @@ with tab3:
 
     with col2:
         st.subheader("Performance Monitor & Event Log")
+        metrics_cols = st.columns(3)
+        metrics_cols[0].metric("BPM", f"{bpm}")
+        metrics_cols[1].metric("Density", f"{density}")
+        metrics_cols[2].metric("Preprocessors", f"{int(st.session_state.get("psy_live_sym_norm", False)) + int(st.session_state.get("psy_live_house_quant", False))}")
 
         log_container = st.container(height=150)
         with log_container:
@@ -423,6 +470,19 @@ with tab3:
         if c1.button("▶️ GENERATE & PLAY"):
             st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] Trigger: Generate & Play ({algo_style})")
             if input_midi_path:
+                # Apply live preprocessors if selected
+                live_proc_path = input_midi_path
+                if st.session_state.get("psy_live_sym_norm"):
+                    from pipeline.processing.symbolic_norm import SymbolicNormalizer
+                    norm_out = os.path.join(settings.OUTPUT_DIR, "live_norm.mid")
+                    SymbolicNormalizer(live_proc_path).normalize(norm_out)
+                    live_proc_path = norm_out
+                if st.session_state.get("psy_live_house_quant"):
+                    from pipeline.processing.house_quantizer import HouseStructuralQuantizer
+                    quant_out = os.path.join(settings.OUTPUT_DIR, "live_quant.mid")
+                    HouseStructuralQuantizer(live_proc_path).quantize(quant_out)
+                    live_proc_path = quant_out
+
                 temp_output = os.path.join(output_dir, "studio_output.mid")
                 mode_str = "arrangement" if gen_mode == "Arrangement (56 bars)" else "loop"
 
@@ -456,7 +516,7 @@ with tab3:
                 st.session_state.psy_player.start_realtime()
                 st.session_state.internal_midi_thread = threading.Thread(
                     target=st.session_state.psy_gen.stream_to_port,
-                    args=(st.session_state.internal_midi_port, input_midi_path, get_live_config, st.session_state.midi_stop_event)
+                    args=(st.session_state.internal_midi_port, live_proc_path, get_live_config, st.session_state.midi_stop_event)
                 )
                 st.session_state.internal_midi_thread.start()
 
@@ -466,7 +526,7 @@ with tab3:
                         out_port = mido.open_output(midi_out_sel)
                         st.session_state.midi_out_thread = threading.Thread(
                             target=st.session_state.psy_gen.stream_to_port,
-                            args=(out_port, input_midi_path, get_live_config, st.session_state.midi_stop_event)
+                            args=(out_port, live_proc_path, get_live_config, st.session_state.midi_stop_event)
                         )
                         st.session_state.midi_out_thread.start()
                         st.info(f"Streaming to external MIDI port: {midi_out_sel}")
@@ -476,7 +536,7 @@ with tab3:
                 st.success(f"Live performance started in {mode_str} mode!")
 
                 # Still generate the MIDI file for visual preview / download
-                st.session_state.psy_gen.generate(input_midi_path, temp_output, get_live_config())
+                st.session_state.psy_gen.generate(live_proc_path, temp_output, get_live_config())
                 mid = mido.MidiFile(temp_output)
                 notes = []
                 for track in mid.tracks:

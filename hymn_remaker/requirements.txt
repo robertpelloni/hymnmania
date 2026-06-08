@@ -1,4 +1,5 @@
 midi2audio
+flask
 replicate
 openai
 google-api-python-client
