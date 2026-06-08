@@ -1,32 +1,30 @@
-# Session Handoff - v1.37.0 "Studio Reversal" - Production Readiness
+# v1.37.0 "Studio Reversal" Session Handoff
 
-## Summary of Changes
-The "Studio Reversal" update (v1.37.0) is now finalized for production deployment. This session focused on integrating automated quality gates and formalizing the production environment.
+## Overview
+This session finalized the **v1.37.0** release, focusing on the "Studio Reversal" suite which bridges generative AI audio back into professional DAW environments (Ableton Live).
 
-### 1. Production Integration
-- **Quality Gates:** `hymn_remaker/main.py` now automatically evaluates each generation using `QualityEvaluator` and logs warnings for tracks scoring below 40.0.
-- **Structural Validation:** Added a MIDI track check to flag empty or corrupt symbolic outputs early in the pipeline.
-- **Production Tools:**
-    - `scripts/setup_prod.sh`: Automates dependency installation for production servers.
-    - `scripts/health_check.py`: Verifies system sanity (binaries, python modules, submodules).
-- **Docker Update:** `Dockerfile` now includes multi-stage builds for v1.37.0 ML dependencies (`basic-pitch`, `diffusers`, `pylive`).
+## Key Achievements
+1.  **Suno 9-Way Matrix**: Implemented an automated 3x3 experiment grid (Speeds: 0.5x, 1x, 2x; Genres: Deep House, Drum & Bass, Psytrance) using Edge CDP (port 9222).
+2.  **Structural Preprocessors**:
+    - `SonicVacuumProcessor`: Generates dry, percussive variants at multiple speeds to optimize AI style transfer.
+    - `SymbolicNormalizer`: Flattens velocities and purges MIDI noise.
+    - `HouseStructuralQuantizer`: Enforces 124/126 BPM grids and automated kick/off-beat bass injection.
+3.  **Psy-Mono Bridge**: Developed the reverse-engineering path (Demucs -> Basic-Pitch -> AbletonOSC/pylive).
+4.  **UI Integration**: Updated Tab 5 with a real-time System Health Audit and Tab 1 with Preprocessing Previews.
 
-### 2. Core Enhancements (Carry-forward)
-- **Suno Experiment Matrix:** Sidebar toggle triggers a 9-way generation grid (Speeds: 0.5x, 1x, 2x | Genres: Deep House, DnB, Psytrance).
-- **Reverse Engineering Bridge:** AI tracks can be split, transcribed to MIDI, and staged for Ableton Live.
+## Quality Assurance
+- **Unit/E2E Tests**: `tests/test_e2e_v137.py` and `tests/test_matrix_preprocessing.py` are passing.
+- **Benchmarks**: `docs/DEMO_REPORT_V137.md` confirms zero regression in core synthesis quality (Avg. Score: 56.93).
+- **Frontend**: Screenshots at `/home/jules/verification/v137_expanded_sidebar.png` confirm UI layout and versioning.
 
-### 3. Documentation & Versioning
-- **Version:** v1.37.0 is now the active project version.
-- **DEPLOY.md:** Fully updated with reversal-specific environment requirements.
-- **Quality Report:** `docs/DEMO_REPORT_V137.md` confirms zero regression in synthesis quality.
+## Environment Requirements
+- **System**: ffmpeg, fluidsynth, rubberband-cli.
+- **Python**: flask, diffusers, accelerate, torch, basic-pitch, pylive.
+- **DAW**: Ableton Live with `AbletonOSC` running on port 11000 is required for full "Reverse to Ableton" automation.
 
-## Verification Highlights
-- **E2E Tests:** `tests/test_matrix_preprocessing.py` confirms 10-way trigger logic.
-- **Unit Tests:** `tests/test_sonic_vacuum_variants.py` verifies speed-scaled rendering.
-- **Health Check:** `scripts/health_check.py` provides a clear audit trail for deployment readiness.
+## Post-Session Cleanup
+- Submodule `ableton_psytrance_hymn_creator` is initialized and tracked.
+- System processes on 8501 (Streamlit) and 8000 (Streamer) have been verified.
+- All temporary verification scripts are in `/home/jules/verification/`.
 
-## Next Steps for v1.38.0
-- **Advanced Ableton Mapping:** Automated track assignment for Serum/Vital based on stem metadata.
-- **Cloud Scale:** Optimize the Suno Matrix for concurrent generation across multiple browser instances.
-
-**The pipeline is ready for ongoing production use. Party on.**
+**Status: Ready for Deployment.**
