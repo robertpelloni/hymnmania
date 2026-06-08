@@ -28,3 +28,5 @@ udio-wrapper
 diffusers
 transformers
 accelerate
+basic-pitch
+pylive

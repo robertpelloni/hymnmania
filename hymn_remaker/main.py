@@ -29,6 +29,7 @@ from hymn_remaker.src.midi_analyzer import MidiAnalyzer
 from hymn_remaker.src.psy_sequencer import PsyGenerator
 from hymn_remaker.src.vocal_remix import VocalRemixer
 from hymn_remaker.src.local_remaker import LocalMusicRemaker
+from hymn_remaker.src.quality_evaluator import QualityEvaluator
 
 # Load environment variables
 load_dotenv()
@@ -303,6 +304,9 @@ def main():
         "omr_processor": None,
         "stem_separator": None,
         "radio_streamer": None,
+        "quality_eval": None,
+        "quality_eval": None,
+        "quality_eval": None,
     }
 
     def get_comp(name):
@@ -335,6 +339,8 @@ def main():
             components[name] = OMRProcessor()
         elif name == "stem_separator":
             components[name] = StemSeparator()
+        elif name == "quality_eval":
+            components[name] = QualityEvaluator()
         elif name == "radio_streamer":
             components[name] = RadioStreamer()
         return components[name]
@@ -394,6 +400,7 @@ def main():
                     symbolic_norm=args.symbolic_norm,
                     house_quantizer=args.house_quantizer,
                     hiphop_vocal_path=args.mix_vocals,
+                    quality_evaluator=get_comp("quality_eval"),
                     suno_matrix=args.suno_matrix,
                 ): midi_path
                 for midi_path in midi_file_list
@@ -548,6 +555,7 @@ def process_single_midi(
     upload,
     renderer,
     remaker,
+    quality_evaluator=None,
     suno_remaker=None,
     udio_remaker=None,
     udio_oauth_remaker=None,
@@ -641,6 +649,15 @@ def process_single_midi(
             pre_extracted_metadata = MidiAnalyzer.extract_all_metadata(midi_path)
 
         # Apply Experimental Preprocessors
+        # Structural Validation Gate (v1.37.0)
+        if target_midi_path.endswith(".mid"):
+            try:
+                import mido
+                mid_check = mido.MidiFile(target_midi_path)
+                if len(mid_check.tracks) < 1:
+                    logger.warning(f"STRUCTURAL GATE: {filename} MIDI has no tracks!")
+            except Exception as se:
+                logger.error(f"STRUCTURAL GATE ERROR: {se}")
         if symbolic_norm:
             update_status("Experiment: Applying Symbolic Normalization...", 16)
             from pipeline.processing.symbolic_norm import SymbolicNormalizer
@@ -1122,6 +1139,15 @@ def process_single_midi(
             )
 
         # 4. Create Video
+
+        # Automated Quality Check (v1.37.0 Production Gate)
+        if quality_evaluator:
+            update_status(f"Running automated quality check for {filename}...", 84)
+            score = quality_evaluator.evaluate(remake_audio_path)
+            if score < 40.0:
+                logger.warning(f"QUALITY GATE: {filename} scored low ({score}). Manual review recommended.")
+            else:
+                logger.info(f"QUALITY GATE: {filename} passed with score {score}.")
         update_status(f"Step 4/4: Creating Video with Subtitles ({filename})...", 85)
         video_path = os.path.join(output_dir, f"{name_no_ext}.mp4")
         final_art_or_video = art_url
