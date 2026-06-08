@@ -713,6 +713,41 @@ with tab5:
 
     import pandas as pd
 
+    # Section 0: System Health Audit (v1.37.0)
+    st.subheader("🛠️ System Health Audit")
+    if st.button("Run Health Audit"):
+        with st.status("Auditing System Environment...") as status:
+            from scripts.health_check import check_binary, check_python_module
+
+            binaries = ["ffmpeg", "fluidsynth", "basic-pitch"]
+            modules = ["mido", "librosa", "torch", "transformers", "diffusers", "requests_oauthlib", "live", "flask"]
+
+            results = []
+
+            st.write("**Binaries:**")
+            for b in binaries:
+                ok = check_binary(b)
+                results.append(ok)
+                st.write(f"{'✅' if ok else '❌'} `{b}`")
+
+            st.write("**Python Modules:**")
+            for m in modules:
+                ok = check_python_module(m)
+                results.append(ok)
+                st.write(f"{'✅' if ok else '❌'} `{m}`")
+
+            st.write("**Project Integrity:**")
+            sub_ok = os.path.exists("submodules/ableton_psytrance_hymn_creator")
+            results.append(sub_ok)
+            st.write(f"{'✅' if sub_ok else '❌'} Submodule: `ableton_psytrance_hymn_creator`")
+
+            if all(results):
+                st.success("SYSTEM HEALTHY. Ready for production.")
+                status.update(label="Audit Complete: Healthy", state="complete")
+            else:
+                st.error("SYSTEM UNHEALTHY. Check failures above.")
+                status.update(label="Audit Complete: Issues Found", state="error")
+
     # Section 1: A/B/C/D Testing
     st.subheader("1. A/B/C/D Variant Testing")
     test_midi = st.file_uploader("Upload MIDI for A/B Test", type=["mid", "midi"], key="ab_midi")

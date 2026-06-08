@@ -305,8 +305,6 @@ def main():
         "stem_separator": None,
         "radio_streamer": None,
         "quality_eval": None,
-        "quality_eval": None,
-        "quality_eval": None,
     }
 
     def get_comp(name):
