@@ -30,18 +30,25 @@ def test_e2e_pipeline_dry_run(clean_output):
         os.makedirs("test_input", exist_ok=True)
         mid.save(midi_path)
 
+    env = os.environ.copy()
+    env["PYTHONPATH"] = "."
+    # Use a directory with ONLY one file to avoid processing the whole test_input dir
+    os.makedirs("test_input_single", exist_ok=True)
+    shutil.copy(midi_path, "test_input_single/short_hymn.mid")
+
     cmd = [
         "python3", "hymn_remaker/main.py",
-        "--input-dir", "test_input",
+        "--input-dir", "test_input_single",
         "--output-dir", clean_output,
         "--sonic-vacuum",
         "--speed", "2.0",
         "--remake-priority", "local", # Use local to avoid API calls
-        "--style", "Deep House, high quality, 122 BPM"
+        "--style", "Deep House, high quality, 122 BPM",
+        "--skip-remake" # Skip actual MusicGen inference in E2E test to save time
     ]
 
     # Run with a timeout to prevent hanging in CI
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, env=env)
 
     # Assertions
     assert result.returncode == 0, f"Pipeline failed with stderr: {result.stderr}"

@@ -1,0 +1,24 @@
+{
+    "title": "short_hymn (Deep House, high quality, 122 BPM Remix)",
+    "description": "A modern Deep House, high quality, 122 BPM remix of the classic hymn 'short_hymn'.",
+    "tags": [
+        "short_hymn",
+        "Deep House, high quality, 122 BPM",
+        "remix",
+        "hymn",
+        "electronic"
+    ],
+    "lyrics": [
+        {
+            "text": "--- short_hymn ---",
+            "start": 0.0,
+            "end": 4.0
+        },
+        {
+            "text": "[Deep House, high quality, 122 BPM Instrumental]",
+            "start": 4.0,
+            "end": 10.0
+        }
+    ],
+    "art_prompt": "Abstract album art for 'short_hymn (Deep House, high quality, 122 BPM Remix)'. Style: Deep House, high quality, 122 BPM, modern, sacred, high quality, digital art, vibrant colors."
+}

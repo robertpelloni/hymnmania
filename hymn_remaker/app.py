@@ -242,9 +242,15 @@ with tab1:
             for file_path in saved_files:
                 filename = os.path.basename(file_path)
                 with st.status(f"Processing {filename}...") as status:
+                    progress_bar = st.progress(0, text="Initializing...")
+                    def streamlit_status(msg, progress):
+                        status.write(msg)
+                        progress_bar.progress(progress, text=msg)
+
                     try:
                         process_single_midi(
                             midi_path=file_path,
+                            status_callback=streamlit_status,
                             output_dir=output_dir,
                             style=style,
                             skip_render=skip_render,
@@ -274,7 +280,8 @@ with tab1:
                             symbolic_norm=symbolic_norm,
                             house_quantizer=house_quantizer,
                             hiphop_vocal_path=mix_hiphop_vocals if mix_hiphop_vocals else None,
-                            suno_matrix=suno_matrix
+                            suno_matrix=suno_matrix,
+                            quality_evaluator=quality_eval
                         )
                         status.update(label=f"Finished {filename}!", state="complete")
                     except Exception as e:
@@ -675,8 +682,38 @@ with tab4:
                 if f.endswith(('.wav', '.mp3')):
                     score = quality_eval.evaluate(f_path)
                     c2.metric("Quality Score", f"{score}")
+
+                    # Metadata enrichment
+                    meta_path = f_path.rsplit(".", 1)[0] + "_metadata.json"
+                    if os.path.exists(meta_path):
+                        try:
+                            with open(meta_path, "r") as mf:
+                                meta_data = json.load(mf)
+                                title = meta_data.get('title', 'Unknown')
+                                style_used = meta_data.get('style', 'N/A')
+                                composer = meta_data.get('composer', 'Traditional')
+                                c1.markdown(f"### {title}")
+                                c1.caption(f"**Style:** {style_used} | **Composer:** {composer}")
+                                if meta_data.get('lyrics'):
+                                    with c1.expander("📜 View Lyrics"):
+                                        for line in meta_data['lyrics']:
+                                            st.write(line['text'])
+                        except: pass
+
                     with c1:
                         st.audio(f_path)
+                        with st.expander("⭐ Rate & Feedback"):
+                            f_rating = st.slider("Rating", 1, 5, 5, key=f"rate_{f}")
+                            f_comment = st.text_area("Comments", key=f"text_{f}")
+                            if st.button("Submit Feedback", key=f"btn_{f}"):
+                                with open("output/feedback_log.jsonl", "a") as flog:
+                                    flog.write(json.dumps({
+                                        "timestamp": time.time(),
+                                        "file": f,
+                                        "rating": f_rating,
+                                        "comment": f_comment
+                                    }) + "\n")
+                                st.success("Feedback saved! 🙏")
 
                     with c3:
                         if st.button("🎹 Load Studio", key=f"load_{f}"):
