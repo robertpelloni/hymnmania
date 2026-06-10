@@ -20,7 +20,12 @@ class SonicVacuumProcessor:
         """Toggle Option A: Pure Sine Wave"""
         if self.pm is None: return None
         duration = self.pm.get_end_time()
-        audio = np.zeros(int(sample_rate * duration), dtype=np.float32)
+
+        if duration <= 0:
+            logger.warning(f"MIDI file {self.midi_path} has zero duration. Generating 1s silence.")
+            audio = np.zeros(sample_rate, dtype=np.float32)
+        else:
+            audio = np.zeros(int(sample_rate * duration), dtype=np.float32)
 
         for track in self.pm.instruments:
             for note in track.notes:
@@ -43,7 +48,12 @@ class SonicVacuumProcessor:
         """Toggle Option B: Dry Piano Rendering (Staccato Sine Blend)"""
         if self.pm is None: return None if not return_audio else (None, sample_rate)
         duration = self.pm.get_end_time()
-        audio = np.zeros(int(sample_rate * duration), dtype=np.float32)
+
+        if duration <= 0:
+            logger.warning(f"MIDI file {self.midi_path} has zero duration. Generating 1s silence.")
+            audio = np.zeros(sample_rate, dtype=np.float32)
+        else:
+            audio = np.zeros(int(sample_rate * duration), dtype=np.float32)
 
         for track in self.pm.instruments:
             for note in track.notes:
