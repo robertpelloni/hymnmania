@@ -312,11 +312,17 @@ with tab3:
     import threading
 
     if "psy_player" not in st.session_state:
-        import hymn_player_ext
-        st.session_state.psy_player = hymn_player_ext.HymnPlayer(settings.DEFAULT_SOUNDFONT_PATHS[0])
-        st.session_state.psy_gen = PsyGenerator()
-        st.session_state.internal_midi_port = InternalMidiPort(st.session_state.psy_player)
-        st.session_state.audio_streamer = AudioStreamer(st.session_state.psy_player)
+        try:
+            import hymn_player_ext
+            st.session_state.psy_player = hymn_player_ext.HymnPlayer(settings.DEFAULT_SOUNDFONT_PATHS[0])
+            st.session_state.psy_gen = PsyGenerator()
+            st.session_state.internal_midi_port = InternalMidiPort(st.session_state.psy_player)
+            st.session_state.audio_streamer = AudioStreamer(st.session_state.psy_player)
+        except ImportError:
+            st.session_state.psy_player = None
+            st.session_state.psy_gen = None
+            st.session_state.internal_midi_port = None
+            st.session_state.audio_streamer = None
 
     if "event_log" not in st.session_state:
         st.session_state.event_log = []
@@ -366,15 +372,17 @@ with tab3:
 
         st.subheader("3. Live Performance Mixer")
         master_gain = st.slider("Global Gain", 0.0, 5.0, 1.0, key="psy_gain")
-        st.session_state.psy_player.set_gain(master_gain)
+        if st.session_state.psy_player:
+            st.session_state.psy_player.set_gain(master_gain)
 
         vol_k = st.slider("Kick (Ch 0)", 0.0, 1.0, 0.9, key="psy_vol_k")
         vol_b = st.slider("Bass (Ch 1)", 0.0, 1.0, 0.7, key="psy_vol_b")
         vol_l = st.slider("Lead (Ch 2)", 0.0, 1.0, 0.8, key="psy_vol_l")
 
-        st.session_state.psy_player.set_channel_volume(0, vol_k)
-        st.session_state.psy_player.set_channel_volume(1, vol_b)
-        st.session_state.psy_player.set_channel_volume(2, vol_l)
+        if st.session_state.psy_player:
+            st.session_state.psy_player.set_channel_volume(0, vol_k)
+            st.session_state.psy_player.set_channel_volume(1, vol_b)
+            st.session_state.psy_player.set_channel_volume(2, vol_l)
 
         st.subheader("External MIDI Control")
         try:
@@ -410,13 +418,15 @@ with tab3:
 
         st.subheader("4. Real-time Automation")
         cutoff = st.slider("Filter Cutoff (CC 74)", 0, 127, 100)
-        st.session_state.psy_player.send_cc(2, 74, cutoff) # Lead channel filter
+        if st.session_state.psy_player:
+            st.session_state.psy_player.send_cc(2, 74, cutoff) # Lead channel filter
         if cutoff != st.session_state.get('prev_cutoff'):
             st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 74 (Cutoff): {cutoff}")
             st.session_state.prev_cutoff = cutoff
 
         res = st.slider("Resonance (CC 71)", 0, 127, 40)
-        st.session_state.psy_player.send_cc(2, 71, res)
+        if st.session_state.psy_player:
+            st.session_state.psy_player.send_cc(2, 71, res)
         if res != st.session_state.get('prev_res'):
             st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 71 (Resonance): {res}")
             st.session_state.prev_res = res
@@ -426,26 +436,31 @@ with tab3:
         # Map macro to actual params
         cutoff_macro = int(20 + (psy_energy * 100))
         res_macro = int(10 + (psy_energy * 90))
-        st.session_state.psy_player.send_cc(2, 74, cutoff_macro)
-        st.session_state.psy_player.send_cc(2, 71, res_macro)
-        # Dynamically adjust gain based on energy
-        st.session_state.psy_player.set_gain(master_gain * (0.8 + psy_energy * 0.4))
+        if st.session_state.psy_player:
+            st.session_state.psy_player.send_cc(2, 74, cutoff_macro)
+            st.session_state.psy_player.send_cc(2, 71, res_macro)
+            # Dynamically adjust gain based on energy
+            st.session_state.psy_player.set_gain(master_gain * (0.8 + psy_energy * 0.4))
 
         st.subheader("Live Audio Stream")
         use_web_stream = st.toggle("🌐 Enable Web Stream (Browser Audio)", value=False)
         if use_web_stream:
-            st.session_state.audio_streamer.start()
-            st.markdown('<audio src="http://localhost:8000/stream.mp3" controls autoplay style="width: 100%;"></audio>', unsafe_allow_html=True)
-            st.info("Streaming live MP3 to browser. Use System Audio if running locally.")
+            if st.session_state.audio_streamer:
+                st.session_state.audio_streamer.start()
+                st.markdown('<audio src="http://localhost:8000/stream.mp3" controls autoplay style="width: 100%;"></audio>', unsafe_allow_html=True)
+                st.info("Streaming live MP3 to browser. Use System Audio if running locally.")
+            else:
+                st.error("Audio Streamer not available.")
         else:
-            st.session_state.audio_streamer.stop()
+            if st.session_state.audio_streamer:
+                st.session_state.audio_streamer.stop()
 
     with col2:
         st.subheader("Performance Monitor & Event Log")
         metrics_cols = st.columns(3)
         metrics_cols[0].metric("BPM", f"{bpm}")
         metrics_cols[1].metric("Density", f"{density}")
-        metrics_cols[2].metric("Preprocessors", f"{int(st.session_state.get("psy_live_sym_norm", False)) + int(st.session_state.get("psy_live_house_quant", False))}")
+        metrics_cols[2].metric("Preprocessors", f"{int(st.session_state.get('psy_live_sym_norm', False)) + int(st.session_state.get('psy_live_house_quant', False))}")
 
         log_container = st.container(height=150)
         with log_container:
@@ -456,7 +471,10 @@ with tab3:
 
         st.subheader("Live Waveform Visualizer")
         # Pull real peaks from streamer
-        peaks = st.session_state.audio_streamer.get_peaks()
+        if st.session_state.audio_streamer:
+            peaks = st.session_state.audio_streamer.get_peaks()
+        else:
+            peaks = [0, 0]
         if "viz_buffer" not in st.session_state:
             st.session_state.viz_buffer = np.zeros(200)
 
