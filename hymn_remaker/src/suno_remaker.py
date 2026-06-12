@@ -88,6 +88,7 @@ class SunoRemaker:
         self.ffmpeg_bin = settings.FFMPEG_BIN
 
     def is_available(self):
+<<<<<<< HEAD
         """Check if Suno API is configured and available."""
         if not self.session_token:
             return False
@@ -156,6 +157,30 @@ class SunoRemaker:
             )
             if result.returncode != 0:
                 raise RuntimeError(f"ffmpeg failed: {result.stderr[-500:]}")
+=======
+        """Check if Suno API or Browser Automation is configured."""
+        # Try API check first
+        if self.api.is_available():
+            return True
+
+        # Fallback: check if Edge is listening on 9222 for browser automation
+        try:
+            import socket
+
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            result = sock.connect_ex(("127.0.0.1", 9222))
+            sock.close()
+            if result == 0:
+                logger.info(
+                    "SunoRemaker: API not available, but Edge debugging port 9222 is open. Enabling browser mode."
+                )
+                return True
+        except Exception:
+            pass
+
+        return False
+>>>>>>> 68eaa46526673d17f724a76fb559f090c9059911
 
             mp3_size_mb = os.path.getsize(mp3_path) / (1024 * 1024)
             logger.info(f"MP3 created: {mp3_path} ({mp3_size_mb:.1f}MB)")
@@ -457,6 +482,7 @@ class SunoRemaker:
         logger.info(f"Selected clip {best.get('id', '?')} as best result")
         return best
 
+<<<<<<< HEAD
     def remake(self, wav_path, prompt, duration=30, make_instrumental=True,
                tags="deep house, electronic, club", keep_mp3=False):
         """
@@ -487,6 +513,21 @@ class SunoRemaker:
         if not self.is_available():
             raise RuntimeError("SunoRemaker not configured. Set SUNO_SESSION_TOKEN.")
 
+=======
+    def remake(
+        self,
+        wav_path,
+        prompt,
+        duration=30,
+        make_instrumental=True,
+        tags="deep house, electronic, club",
+        keep_mp3=False,
+        mode="auto",
+        turnstile_token=None,
+        lyrics=None,
+    ):
+        """Generate a Deep House remake of a hymn using Suno AI."""
+>>>>>>> 68eaa46526673d17f724a76fb559f090c9059911
         if not os.path.exists(wav_path):
             raise FileNotFoundError(f"Input WAV not found: {wav_path}")
 
@@ -516,7 +557,94 @@ class SunoRemaker:
             title=f"{hymn_name} (Deep House Remix)"
         )
 
+<<<<<<< HEAD
         # Step 4: Poll for completion
+=======
+        clips = None
+
+        # Try API mode first if session token is available
+        if mode in ("auto", "api") and self.session_token:
+            try:
+                # 1. Upload audio influence first in API mode
+                audio_influence_id = None
+                if os.path.exists(wav_path):
+                    # Prefer MP3 for upload efficiency if it exists
+                    mp3_path = wav_path.rsplit("_base.wav", 1)[0] + "_base.mp3"
+                    upload_path = mp3_path if os.path.exists(mp3_path) else wav_path
+
+                    logger.info(
+                        f"Uploading audio influence for API mode: {os.path.basename(upload_path)}"
+                    )
+                    # Use the api client's upload method
+                    upload_result = self.api.upload_audio(upload_path)
+                    if upload_result:
+                        audio_influence_id = upload_result.get("id")
+                        logger.info(f"Audio influence ID: {audio_influence_id}")
+
+                # 2. Get Turnstile token if not provided
+                if not turnstile_token:
+                    captcha = self.check_captcha()
+                    if captcha.get("required"):
+                        logger.info("CAPTCHA required, obtaining Turnstile token...")
+                        turnstile_token = self.get_turnstile_token()
+
+                # 3. Submit generation with influence
+                clips = self.api.generate_songs(
+                    prompt=full_prompt,
+                    turnstile_token=turnstile_token,
+                    make_instrumental=make_instrumental,
+                    tags=tags,
+                    title=f"{hymn_name} (Deep House Remix)",
+                    audio_influence_id=audio_influence_id,
+                    audio_influence_weight=0.8,  # Force strict melody retention
+                )
+            except Exception as e:
+                logger.warning(f"API mode failed: {e}")
+                if mode == "auto":
+                    logger.info("Falling back to browser mode...")
+                else:
+                    raise
+
+        # Fall back to browser mode (CDP)
+        if clips is None and mode in ("auto", "browser"):
+            logger.info("Triggering Suno Browser Automation (CDP)...")
+            # Prepare audio influence path (prefer MP3, fall back to WAV)
+            audio_influence = None
+            mp3_path = wav_path.rsplit("_base.wav", 1)[0] + "_base.mp3"
+            if os.path.exists(mp3_path):
+                audio_influence = mp3_path
+            elif os.path.exists(wav_path):
+                audio_influence = wav_path
+
+            try:
+                success = self.browser_automation.trigger_generation(
+                    prompt=full_prompt,
+                    audio_path=audio_influence,
+                    make_instrumental=make_instrumental,
+                    lyrics=lyrics,
+                )
+                if success:
+                    logger.info(
+                        "Suno: Browser automation triggered generation. Waiting for completion..."
+                    )
+                    if self.browser_automation.wait_for_completion_and_download():
+                        # We don't have clip IDs from browser mode easily, but we can poll the feed via API
+                        # to find the latest completed clips for this user.
+                        time.sleep(10)
+                        logger.info("Suno: Polling user feed for the new clips...")
+                        feed = self.api.get_feed()
+                        # Take the top 2 clips (Suno generates in pairs)
+                        if feed:
+                            clips = feed[:2]
+                            logger.info(f"Suno: Found {len(clips)} new clips in feed.")
+            except Exception as be:
+                logger.error(f"Suno Browser Automation failed: {be}")
+
+        if not clips:
+            raise RuntimeError("No clips generated (Suno)")
+
+        # Poll for completion
+>>>>>>> 68eaa46526673d17f724a76fb559f090c9059911
         clip_ids = [clip.get("id") for clip in clips if clip.get("id")]
         if not clip_ids:
             raise RuntimeError("Suno returned no clip IDs")
@@ -530,7 +658,15 @@ class SunoRemaker:
                 logger.error(f"Suno clip {clip.get('id')} failed: {error_msg}")
 
         # Filter out errored clips
+<<<<<<< HEAD
         valid_clips = [c for c in completed_clips if c.get("status") != "error" and c.get("audio_url")]
+=======
+        valid_clips = [
+            c
+            for c in completed_clips
+            if c.get("status") not in ("error", "failed") and c.get("audio_url")
+        ]
+>>>>>>> 68eaa46526673d17f724a76fb559f090c9059911
         if not valid_clips:
             raise RuntimeError("All Suno clips failed or have no audio_url")
 
@@ -595,6 +731,7 @@ class SunoRemaker:
         """
         Batch generate Deep House remakes for all hymn WAVs using Suno.
 
+<<<<<<< HEAD
         Processes each base WAV file through the Suno API to create
         a Deep House version. Respects rate limits and credit constraints.
 
@@ -651,3 +788,18 @@ class SunoRemaker:
         logger.info(f"Success: {success}")
         logger.info(f"Failed: {failed}")
         return success, failed
+=======
+        cmd = [
+            settings.FFMPEG_BIN,
+            "-y",
+            "-i",
+            wav_path,
+            "-codec:a",
+            "libmp3lame",
+            "-b:a",
+            bitrate,
+            mp3_path,
+        ]
+        subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        return mp3_path
+>>>>>>> 68eaa46526673d17f724a76fb559f090c9059911
