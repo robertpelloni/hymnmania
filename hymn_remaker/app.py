@@ -683,6 +683,24 @@ with tab3:
 
 with tab4:
     st.header("📚 Output Library")
+
+    demo_dir = os.path.join(output_dir, "demos")
+    if os.path.exists(demo_dir):
+        with st.expander("🌟 Official v1.37.0 Demos", expanded=True):
+            demo_files = [f for f in os.listdir(demo_dir) if f.endswith(('.wav', '.mp3'))]
+            for f in sorted(demo_files):
+                f_path = os.path.join(demo_dir, f)
+                c1, c2, c3 = st.columns([3, 1, 1])
+                c1.write(f"**{f}**")
+                c1.audio(f_path)
+                score = quality_eval.evaluate(f_path)
+                c2.metric("Quality", f"{score}")
+                if c3.button("🔄 Reverse", key=f"demo_rev_{f}"):
+                    with st.spinner("Reversing demo..."):
+                        psy_mono_bridge.run_full_reversal(f_path, output_dir)
+                st.divider()
+
+    st.subheader("Your Generations")
     if os.path.exists(output_dir):
         files = [f for f in os.listdir(output_dir) if f.endswith(('.wav', '.mp3', '.mp4'))]
         if not files:

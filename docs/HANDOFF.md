@@ -10,7 +10,13 @@ This session finalized the **v1.37.0** release, focusing on the "Studio Reversal
     - `SymbolicNormalizer`: Flattens velocities and purges MIDI noise.
     - `HouseStructuralQuantizer`: Enforces 124/126 BPM grids and automated kick/off-beat bass injection.
 3.  **Psy-Mono Bridge**: Developed the reverse-engineering path (Demucs -> Basic-Pitch -> AbletonOSC/pylive).
-4.  **UI Integration**: Updated Tab 5 with a real-time System Health Audit and Tab 1 with Preprocessing Previews.
+4.  **UI Integration & Web Gallery**:
+    - Updated Tab 5 with a real-time System Health Audit for production environment verification.
+    - Updated Tab 1 with Preprocessing Previews (Sonic Vacuum, Symbolic Norm, House Quantizer) allowing users to audition local renders before committing to AI generation.
+    - Enhanced Tab 4 (Library) with a dedicated "🌟 Official v1.37.0 Demos" gallery featuring high-quality Psytrance remixes of God Is So Good, Leyenda, and more.
+    - Integrated metadata-rich displays (Title, Style, Composer, Lyrics) and per-track feedback persistence in the Library.
+    - Full Streamlit UI restoration with hardened null-checks for missing native engines and audio streamers.
+    - **Submodule Integration**: Populated `submodules/ableton_psytrance_hymn_creator/public/published/` with v1.37.0 demos and updated its `manifest.json` for the public static gallery.
 
 ## Quality Assurance
 - **Unit/E2E Tests**: `tests/test_e2e_v137.py` and `tests/test_matrix_preprocessing.py` are passing.
