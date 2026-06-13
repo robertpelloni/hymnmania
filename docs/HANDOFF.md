@@ -28,9 +28,13 @@ This session finalized the **v1.37.0** release, focusing on the "Studio Reversal
 - **Python**: flask, diffusers, accelerate, torch, basic-pitch, pylive.
 - **DAW**: Ableton Live with `AbletonOSC` running on port 11000 is required for full "Reverse to Ableton" automation.
 
+## Deployment & testing
+- **Deployment Status:** v1.37.0 successfully deployed to the staging/testing environment using `scripts/staging_deploy.sh`.
+- **Validation Record:** See `docs/DEPLOY_V137_TEST.md` for the full record of health audits and batch MIDI validation results.
+
 ## Post-Session Cleanup
 - Submodule `ableton_psytrance_hymn_creator` is initialized and tracked.
 - System processes on 8501 (Streamlit) and 8000 (Streamer) have been verified.
 - All temporary verification scripts are in `/home/jules/verification/`.
 
-**Status: Ready for Deployment.**
+**Status: Release Finalized.**
