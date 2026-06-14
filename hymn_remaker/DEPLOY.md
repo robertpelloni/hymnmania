@@ -12,3 +12,9 @@
 2. Run `pip install -r requirements.txt`.
 3. Compile the `pybind11` C++ engine extension from the project root by running `make`.
 4. Start the UI: `python -m streamlit run app.py`
+
+## User Testing (v1.37.0)
+1. Download the `v137_testing_bundle.zip`.
+2. Extract to a local directory.
+3. Import the contents of the `audio/` and `midi/` folders into your DAW (e.g., Ableton Live) to verify the "Reverse Engineering" quality.
+4. Launch the Hymnmania Studio and use the **Library** tab to audition the "Official v1.37.0 Demos" and provide feedback using the integrated star ratings and comments.

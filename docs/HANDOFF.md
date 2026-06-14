@@ -32,9 +32,13 @@ This session finalized the **v1.37.0** release, focusing on the "Studio Reversal
 - **Deployment Status:** v1.37.0 successfully deployed to the staging/testing environment using `scripts/staging_deploy.sh`.
 - **Validation Record:** See `docs/DEPLOY_V137_TEST.md` for the full record of health audits and batch MIDI validation results.
 
+## User Testing & Packaging
+- **Release Bundle:** `v137_testing_bundle.zip` has been generated using `scripts/package_outputs.py`. It contains categorized audio stems, psytrance remixes, MIDI files, and metadata ready for user validation in DAWs.
+- **Testing Instructions:** `hymn_remaker/DEPLOY.md` has been updated with v1.37.0 testing protocols.
+
 ## Post-Session Cleanup
 - Submodule `ableton_psytrance_hymn_creator` is initialized and tracked.
 - System processes on 8501 (Streamlit) and 8000 (Streamer) have been verified.
 - All temporary verification scripts are in `/home/jules/verification/`.
 
-**Status: Release Finalized.**
+**Status: Release Packaged & Verified.**
