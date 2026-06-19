@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.38.0] - 2026-06-19
+### Added
+- **VST3 Host Stub Integration:** Added scaffolding in `src/engine/HymnPlayer.cpp` and `src/engine/HymnPlayerBinding.cpp` for native VST3 integration, and updated the roadmap tasks.
+
+### Changed
+- **Pipeline Robustness & Edge-Case Handling:**
+  - Added explicit timeouts and stderr capture to all `subprocess.run` calls in `video_uploader.py` and `vocal_remix.py` to prevent silent freezes and improve debuggability.
+  - Hardened ElevenLabs generation in `tts_generator.py` with `try...except` blocks that fallback to silent audio tracks rather than crashing the rendering pipeline upon API failures.
+
+
 ## [1.37.0] - 2026-06-05
 ### Added
 - **Studio Reversal Pipeline (The Bridge):**

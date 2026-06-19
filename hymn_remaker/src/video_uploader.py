@@ -167,12 +167,16 @@ class VideoProducer:
                 ])
 
                 logger.info(f"Running ffmpeg: {' '.join(cmd)}")
-                result = subprocess.run(cmd, capture_output=True, text=True)
-                if result.returncode != 0:
-                    logger.error(f"FFmpeg stderr: {result.stderr[:500]}")
-                    raise subprocess.CalledProcessError(
-                        result.returncode, cmd, result.stdout, result.stderr
-                    )
+                try:
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
+                    if result.returncode != 0:
+                        logger.error(f"FFmpeg stderr: {result.stderr[:500]}")
+                        raise subprocess.CalledProcessError(
+                            result.returncode, cmd, result.stdout, result.stderr
+                        )
+                except subprocess.TimeoutExpired as e:
+                    logger.error(f"FFmpeg timed out after {e.timeout}s.")
+                    raise
 
             # Attempt 1: With subtitles (if available)
             # Attempt 2: With sanitized subtitles (ASCII only)
@@ -269,11 +273,14 @@ class VideoProducer:
 
         try:
             logger.info(f"Running ffmpeg: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600)
             logger.info(f"Shorts generated successfully in {shorts_dir}")
         except subprocess.CalledProcessError as e:
             error_msg = e.stderr.decode() if e.stderr else str(e)
             logger.error(f"FFmpeg shorts extraction failed: {error_msg}")
+            raise e
+        except subprocess.TimeoutExpired as e:
+            logger.error(f"FFmpeg shorts extraction timed out after {e.timeout}s.")
             raise e
 
     def upload_to_youtube(self, video_path, metadata, progress_callback=None):

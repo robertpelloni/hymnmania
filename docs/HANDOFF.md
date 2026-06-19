@@ -28,3 +28,8 @@ This session finalized the **v1.37.0** release, focusing on the "Studio Reversal
 - All temporary verification scripts are in `/home/jules/verification/`.
 
 **Status: Ready for Deployment.**
+
+## Session VST3 & Robustness Improvements
+1. **VST3 Scaffold:** Added a C++ stub for loading VST3 plugins and setting parameters in `src/engine/HymnPlayer.cpp` and exposed it to Python via Pybind11. Updated the ROADMAP and TODO lists accordingly.
+2. **Media Pipeline Hardening:** Enforced explicit `timeout` and `capture_output` in FFmpeg, Demucs, and yt-dlp `subprocess.run` calls to prevent headless freezing. Also added a silent fallback wrapper for the ElevenLabs API inside `tts_generator.py` to handle generation failures gracefully without aborting the render.
+3. **Docs sync:** Validated that earlier submodules correctly handled real-time "Jam Mode", audio-reactive visuals, and harmonizations, crossing them off `docs/TODO.md` and `docs/ROADMAP.md`.
