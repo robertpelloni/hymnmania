@@ -44,7 +44,18 @@ def test_e2e_pipeline_dry_run(clean_output):
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 
     # Assertions
-    pass
+    assert result.returncode == 0, f"Pipeline failed with stderr: {result.stderr}"
+
+    # Check for dry render artifacts
+    dry_dir = os.path.join(clean_output, "dry_render")
+    assert os.path.exists(dry_dir), "Sonic Vacuum dry_render directory missing"
+
+    # Check for logs indicating quality gate activity
+    assert "QUALITY GATE" in result.stdout or "QUALITY GATE" in result.stderr, "Quality Gate was not executed"
+
+    # Check for final remake audio
+    remakes = [f for f in os.listdir(clean_output) if f.endswith("_remake.wav")]
+    assert len(remakes) > 0, "Remake audio was not generated"
 
 if __name__ == "__main__":
     pytest.main([__file__])

@@ -20,14 +20,7 @@ class VocalRemixer:
         work_path = input_path
         if input_path.startswith("http"):
             work_path = "vocal_download.wav"
-            try:
-                subprocess.run(["yt-dlp", "-x", "--audio-format", "wav", "-o", work_path, input_path], check=True, timeout=60, capture_output=True)
-            except subprocess.TimeoutExpired as e:
-                print(f"yt-dlp download timed out: {e}")
-                return None
-            except subprocess.CalledProcessError as e:
-                print(f"yt-dlp download failed: {e}")
-                return None
+            subprocess.run(["yt-dlp", "-x", "--audio-format", "wav", "-o", work_path, input_path], check=True)
 
         # 2. Separate Stems (using Demucs with LALAL.AI fallback)
         # Note: In a production environment, we'd check if it's already an acapella
@@ -36,7 +29,7 @@ class VocalRemixer:
             print("Attempting vocal separation...")
             try:
                 print("Running local Demucs separation...")
-                subprocess.run(["python", "-m", "demucs.separate", "--two-stems=vocals", work_path, "-o", "separated"], check=True, timeout=300, capture_output=True)
+                subprocess.run(["python", "-m", "demucs.separate", "--two-stems=vocals", work_path, "-o", "separated"], check=True)
                 filename = os.path.splitext(os.path.basename(work_path))[0]
                 vocal_path = os.path.join("separated", "htdemucs", filename, "vocals.wav")
             except Exception as e:

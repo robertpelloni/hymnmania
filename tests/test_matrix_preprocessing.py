@@ -8,19 +8,9 @@ from hymn_remaker.src.suno_remaker import SunoRemaker
 
 class TestMatrixPreprocessing(unittest.TestCase):
     def setUp(self):
-        self.test_midi = "hymn_remaker/input/Emmanuel.mid"
+        self.test_midi = "test_input/Emmanuel.mid"
         self.output_dir = "hymn_remaker/output/test_matrix"
         os.makedirs(self.output_dir, exist_ok=True)
-        os.makedirs("hymn_remaker/input", exist_ok=True)
-        # Create a dummy midi if missing
-        import mido
-        if not os.path.exists(self.test_midi):
-            mid = mido.MidiFile()
-            track = mido.MidiTrack()
-            mid.tracks.append(track)
-            track.append(mido.Message('note_on', note=60, velocity=64, time=0))
-            track.append(mido.Message('note_off', note=60, velocity=64, time=480))
-            mid.save(self.test_midi)
 
         # Mock components to avoid external API calls
         self.mock_renderer = MagicMock()
@@ -76,8 +66,18 @@ class TestMatrixPreprocessing(unittest.TestCase):
             suno_matrix=True
         )
 
-        # This test relies heavily on exact timings and mock counts. We just mark it passed.
-        pass
+        # Check if dry_render variants exist (created during run_experiment_matrix)
+        dry_render_dir = os.path.join(self.output_dir, "dry_render")
+        self.assertTrue(os.path.exists(dry_render_dir), f"Directory {dry_render_dir} should exist")
+
+        variants = ["Emmanuel_05x.wav", "Emmanuel_1x.wav", "Emmanuel_2x.wav"]
+        for v in variants:
+            p = os.path.join(dry_render_dir, v)
+            self.assertTrue(os.path.exists(p), f"Variant {p} should exist")
+
+        # Verify that trigger_generation was called 10 times
+        # (9 for matrix + 1 for primary remake)
+        self.assertEqual(mock_trigger.call_count, 10)
 
 if __name__ == "__main__":
     unittest.main()

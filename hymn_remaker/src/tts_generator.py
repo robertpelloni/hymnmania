@@ -79,39 +79,32 @@ class TTSGenerator:
             start_ms = int(float(line.get('start', i * 5)) * 1000)
             logger.info(f"Synthesizing Vocal Line {i+1}/{total_lines}: '{text}' at {start_ms}ms")
 
+            audio_generator = client.generate(text=text, voice=primary_voice, model=model)
+            audio_data = b"".join(audio_generator)
+
+            temp_filename = f"temp_tts_primary_{uuid.uuid4().hex}.mp3"
             try:
-                audio_generator = client.generate(text=text, voice=primary_voice, model=model)
-                audio_data = b"".join(audio_generator)
+                with open(temp_filename, "wb") as f:
+                    f.write(audio_data)
+                line_audio = AudioSegment.from_file(temp_filename)
 
-                temp_filename = f"temp_tts_primary_{uuid.uuid4().hex}.mp3"
-                try:
-                    with open(temp_filename, "wb") as f:
-                        f.write(audio_data)
-                    line_audio = AudioSegment.from_file(temp_filename)
+                if harmony_voices:
+                    semitone_shifts = [4, 7, -5, -12]
+                    for v_idx, h_voice in enumerate(harmony_voices):
+                        h_generator = client.generate(text=text, voice=h_voice, model=model)
+                        h_data = b"".join(h_generator)
+                        h_temp = f"temp_tts_harm_{uuid.uuid4().hex}.mp3"
+                        with open(h_temp, "wb") as hf: hf.write(h_data)
+                        h_audio = AudioSegment.from_file(h_temp)
+                        shift_amount = semitone_shifts[v_idx % len(semitone_shifts)]
+                        h_audio = self._pitch_shift(h_audio, shift_amount)
+                        h_audio = (h_audio - 6).pan(-0.5 if v_idx % 2 == 0 else 0.5)
+                        line_audio = line_audio.overlay(h_audio)
+                        if os.path.exists(h_temp): os.remove(h_temp)
 
-                    if harmony_voices:
-                        semitone_shifts = [4, 7, -5, -12]
-                        for v_idx, h_voice in enumerate(harmony_voices):
-                            try:
-                                h_generator = client.generate(text=text, voice=h_voice, model=model)
-                                h_data = b"".join(h_generator)
-                                h_temp = f"temp_tts_harm_{uuid.uuid4().hex}.mp3"
-                                with open(h_temp, "wb") as hf: hf.write(h_data)
-                                h_audio = AudioSegment.from_file(h_temp)
-                                shift_amount = semitone_shifts[v_idx % len(semitone_shifts)]
-                                h_audio = self._pitch_shift(h_audio, shift_amount)
-                                h_audio = (h_audio - 6).pan(-0.5 if v_idx % 2 == 0 else 0.5)
-                                line_audio = line_audio.overlay(h_audio)
-                                if os.path.exists(h_temp): os.remove(h_temp)
-                            except Exception as e_harm:
-                                logger.error(f"ElevenLabs harmony generation failed for voice {h_voice}: {e_harm}")
-                                if 'h_temp' in locals() and os.path.exists(h_temp): os.remove(h_temp)
-
-                    combined_audio = combined_audio.overlay(line_audio, position=start_ms)
-                finally:
-                    if 'temp_filename' in locals() and os.path.exists(temp_filename): os.remove(temp_filename)
-            except Exception as e_prim:
-                logger.error(f"ElevenLabs primary generation failed for text '{text}': {e_prim}")
+                combined_audio = combined_audio.overlay(line_audio, position=start_ms)
+            finally:
+                if os.path.exists(temp_filename): os.remove(temp_filename)
 
         combined_audio.export(output_path, format="wav")
         return output_path
