@@ -15,4 +15,4 @@
 ### Enhancements
 - [x] Multi-voice vocal harmonization for hip-hop acapellas using ElevenLabs.
 - [x] Automated video generation matching the 145 BPM grid with audio-reactive visuals.
-- [ ] Real-time "Jam Mode" where the sequencer responds to live MIDI controller input.
+- [x] Real-time "Jam Mode" where the sequencer responds to live MIDI controller input.
