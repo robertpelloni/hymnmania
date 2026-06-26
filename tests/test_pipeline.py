@@ -41,7 +41,7 @@ class TestPipeline(unittest.TestCase):
         mid = mido.MidiFile(output)
         for track in mid.tracks:
             for msg in track:
-                if msg.type == 'note_on':
+                if msg.type == 'note_on' and msg.velocity > 0:
                     self.assertEqual(msg.velocity, 100)
 
     def test_house_quantizer(self):
