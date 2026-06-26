@@ -130,6 +130,9 @@ def main():
         "--upload", action="store_true", help="Upload to YouTube after generation"
     )
     parser.add_argument(
+        "--upload-tiktok", action="store_true", help="Upload the final video to TikTok"
+    )
+    parser.add_argument(
         "--skip-render", action="store_true", help="Skip MIDI rendering if WAV exists"
     )
     parser.add_argument(
@@ -598,6 +601,8 @@ def process_single_midi(
     house_quantizer=False,
     hiphop_vocal_path=None,
     suno_matrix=False,
+    upload_tiktok=False,
+    tiktok_uploader=None,
 ):
 
     base_audio_path = remake_audio_path = metadata_path = vocal_track_path = None
@@ -1197,8 +1202,15 @@ def process_single_midi(
             video_producer.create_shorts(video_path, output_dir)
         if upload:
             video_id = video_producer.upload_to_youtube(video_path, metadata)
-            update_status(f"Video uploaded: https://youtu.be/{video_id}", 100)
-        else:
+            update_status(f"Video uploaded to YouTube: https://youtu.be/{video_id}", 100)
+
+        if upload_tiktok and tiktok_uploader:
+            tiktok_title = f"{metadata.get('title', 'Unknown')} - Deep House Remix #deep_house #remix"
+            publish_id = tiktok_uploader.upload(video_path, tiktok_title)
+            if publish_id:
+                update_status(f"Video uploaded to TikTok: ID {publish_id}", 100)
+
+        if not upload and not upload_tiktok:
             update_status(f"Finished processing {filename}", 100)
 
     except Exception as e:
