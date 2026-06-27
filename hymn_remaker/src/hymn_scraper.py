@@ -79,7 +79,7 @@ SOURCES = {
         midi_selector='a[href$=".mid"]',
         title_selector="h1, .piece-title",
         author_selector=".composer",
-        pagination="/cgibin/make-table.cgi?searchingfor=hymn&startat={page}",
+        pagination="/cgibin/piece-search.cgi?startat={page}",
         max_pages=50,
         delay=2.0,
     ),
@@ -236,12 +236,7 @@ class HymnScraper:
         name_no_ext = Path(base).stem
         return f"{source_name}_{name_no_ext}_{url_hash}.mid"
 
-    def scrape_source(
-        self,
-        source_key: str,
-        max_pages: Optional[int] = None,
-        start_page: int = 1,
-    ) -> int:
+    def scrape_source(self, source_key: str, max_pages: Optional[int] = None) -> int:
         """Scrape a single source."""
         if source_key not in SOURCES:
             raise ValueError(f"Unknown source: {source_key}")
@@ -250,11 +245,9 @@ class HymnScraper:
         pages = max_pages or source.max_pages
         downloaded = 0
 
-        logger.info(
-            f"Starting scrape of {source.name} ({pages} pages, starting at {start_page})"
-        )
+        logger.info(f"Starting scrape of {source.name} ({pages} pages)")
 
-        for page in range(start_page, start_page + pages):
+        for page in range(1, pages + 1):
             if source.pagination:
                 page_url = urljoin(source.base_url, source.pagination.format(page=page))
             else:
@@ -263,7 +256,7 @@ class HymnScraper:
             if not page_url:
                 break
 
-            logger.info(f"  Page {page}/{start_page + pages - 1}: {page_url}")
+            logger.info(f"  Page {page}/{pages}: {page_url}")
             resp = self._respectful_get(page_url, delay=source.delay)
             if not resp:
                 self.stats["errors"] += 1
@@ -328,10 +321,7 @@ class HymnScraper:
         return downloaded
 
     def scrape_all(
-        self,
-        sources: Optional[List[str]] = None,
-        max_pages: Optional[int] = None,
-        start_page: int = 1,
+        self, sources: Optional[List[str]] = None, max_pages: Optional[int] = None
     ) -> Dict[str, int]:
         """Scrape multiple sources."""
         targets = sources or list(SOURCES.keys())
@@ -339,7 +329,7 @@ class HymnScraper:
 
         for src in targets:
             try:
-                count = self.scrape_source(src, max_pages, start_page)
+                count = self.scrape_source(src, max_pages)
                 results[src] = count
             except Exception as e:
                 logger.error(f"Source {src} failed: {e}")
@@ -364,12 +354,6 @@ def main():
     )
     parser.add_argument(
         "--download-dir", default="hymn_remaker/input", help="Download directory"
-    )
-    parser.add_argument(
-        "--start-page",
-        type=int,
-        default=1,
-        help="Page number to start scraping from (default: 1)",
     )
     parser.add_argument("--list", action="store_true", help="List available sources")
     parser.add_argument(
@@ -397,7 +381,7 @@ def main():
         return
 
     print(f"Scraping sources: {', '.join(args.sources)}")
-    results = scraper.scrape_all(args.sources, args.max_pages, args.start_page)
+    results = scraper.scrape_all(args.sources, args.max_pages)
 
     print("\n=== Scraping Complete ===")
     print(f"Total found:    {scraper.stats['found']}")

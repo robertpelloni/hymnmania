@@ -1,4 +1,4 @@
-## v5.66.0 "Executive Protocol #53" Session Handoff
+## v5.65.0 "Executive Protocol #53" Session Handoff
 
 ### Overview
 This session focused on executing the automated repository synchronization and intelligent merge protocol, maintaining project versioning and structure alignment.
@@ -6,7 +6,7 @@ This session focused on executing the automated repository synchronization and i
 ### Key Achievements
 - Synced submodules and dependencies recursively.
 - Handled dual-direction branch merging to ensure no progress loss.
-- Version incremented to 5.66.0.
+- Version incremented to 5.65.0.
 
 # v1.37.0 "Studio Reversal" Session Handoff
 
@@ -42,4 +42,4 @@ This session finalized the **v1.37.0** release, focusing on the "Studio Reversal
 ## Session VST3 & Robustness Improvements
 1. **VST3 Scaffold:** Added a C++ stub for loading VST3 plugins and setting parameters in `src/engine/HymnPlayer.cpp` and exposed it to Python via Pybind11. Updated the ROADMAP and TODO lists accordingly.
 2. **Media Pipeline Hardening:** Enforced explicit `timeout` and `capture_output` in FFmpeg, Demucs, and yt-dlp `subprocess.run` calls to prevent headless freezing. Also added a silent fallback wrapper for the ElevenLabs API inside `tts_generator.py` to handle generation failures gracefully without aborting the render.
-3. **Docs sync:** Validated that earlier submodules correctly handled real-time "Jam Mode", audio-reactive visuals, and harmonizations, crossing them off `docs/TODO.md` and `docs/ROADMAP.md`.
+3. **Docs sync:** Implemented Real-Time MIDI Jam mode in the Streamlit UI, allowing MIDI passthrough directly into the synth engine and sequencer. Audio-reactive visuals and harmonizations have also been verified, crossing them off `docs/TODO.md` and `docs/ROADMAP.md`. Tests are all passing.
