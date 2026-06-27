@@ -46,7 +46,6 @@ from hymn_remaker.src.stem_separator import StemSeparator
 from hymn_remaker.src.local_remaker import LocalMusicRemaker
 from hymn_remaker.src.quality_evaluator import QualityEvaluator
 from hymn_remaker.src.psy_mono_bridge import PsyMonoBridge
-from hymn_remaker.src.social.tiktok_uploader import TikTokUploader
 from hymn_remaker.main import process_single_midi
 
 st.title("🎵 Hymn Remaker Pipeline")
@@ -91,16 +90,15 @@ def load_modules():
         local_remaker = LocalMusicRemaker()
         quality_eval = QualityEvaluator()
         psy_mono_bridge = PsyMonoBridge()
-        tiktok_uploader = TikTokUploader()
-        return renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval, psy_mono_bridge, tiktok_uploader
+        return renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval, psy_mono_bridge
     except Exception as e:
         import traceback
         st.error(f"Failed to initialize modules: {e}")
         st.code(traceback.format_exc())
-        return [None] * 15
+        return [None] * 14
 
 modules = load_modules()
-renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval, psy_mono_bridge, tiktok_uploader = modules
+renderer, remaker, suno_remaker, udio_remaker, content_gen, video_producer, tts_generator, mxl_parser, omr_processor, stem_separator, udio_oauth_remaker, local_remaker, quality_eval, psy_mono_bridge = modules
 
 st.sidebar.header("Environment & API")
 missing_keys = []
@@ -153,7 +151,6 @@ local_guidance = st.sidebar.slider("Local Guidance Scale", 1.0, 10.0, 3.0)
 local_temperature = st.sidebar.slider("Local Temperature", 0.1, 2.0, 1.0)
 
 upload = st.sidebar.checkbox("Upload to YouTube", value=False)
-upload_tiktok = st.sidebar.checkbox("Upload to TikTok", value=False)
 
 skip_render = st.sidebar.checkbox("Skip Render if exists", value=False, help="If the intermediate base WAV file already exists, don't re-render it from MIDI.")
 skip_remake = st.sidebar.checkbox("Skip Remake if exists", value=False, help="If the remade audio already exists, don't call the MusicGen API again.")
@@ -284,9 +281,7 @@ with tab1:
                             house_quantizer=house_quantizer,
                             hiphop_vocal_path=mix_hiphop_vocals if mix_hiphop_vocals else None,
                             suno_matrix=suno_matrix,
-                            quality_evaluator=quality_eval,
-                            upload_tiktok=upload_tiktok,
-                            tiktok_uploader=tiktok_uploader if upload_tiktok else None
+                            quality_evaluator=quality_eval
                         )
                         status.update(label=f"Finished {filename}!", state="complete")
                     except Exception as e:
