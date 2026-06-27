@@ -14,6 +14,6 @@
 - [x] **v1.37.0: Reverse Engineering Pipeline (Audio -> MIDI -> Ableton).**
 
 ## Phase 3: Advanced Studio Integration
-- [x] VST3 hosting in C++ engine.
+- [ ] VST3 hosting in C++ engine.
 - [ ] Real-time MIDI jam mode.
 - [ ] Automated YouTube/TikTok channel management.

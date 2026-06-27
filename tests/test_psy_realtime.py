@@ -20,12 +20,5 @@ class TestPsySequencerRealtime(unittest.TestCase):
         dna = self.gen._extract_dna(None)
         self.assertEqual(dna, ([], []))
 
-    def test_jam_mode_toggled(self):
-        # Dummy test to simulate jam mode routing
-        # In actual execution, jam mode is tested manually via streamlt UI
-        # We ensure no syntax errors and state toggles correctly.
-        jam_mode = True
-        self.assertTrue(jam_mode)
-
 if __name__ == "__main__":
     unittest.main()

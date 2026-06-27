@@ -395,42 +395,8 @@ with tab3:
         midi_in_sel = st.selectbox("MIDI Input (Hardware/Controller)", ["None"] + in_ports)
         midi_out_sel = st.selectbox("MIDI Output (External VST/Synth)", ["None"] + out_ports)
 
-        # Real-Time Jam Mode Feature: Full MIDI Passthrough and Jam Integration
-        jam_mode = st.toggle("🎸 Real-Time Jam Mode", value=False, help="Route live MIDI input directly to the synth engine and sequencer.")
-
-        if jam_mode and midi_in_sel != "None":
-            st.info("Jam Mode Active: Play your MIDI controller to hear the synth engine in real-time.")
-            if st.session_state.get("last_midi_in") != midi_in_sel:
-                # Setup input callback for jam mode
-                def jam_callback(message):
-                    if st.session_state.psy_player:
-                        if message.type == 'note_on':
-                            st.session_state.psy_player.note_on(2, message.note, message.velocity)
-                        elif message.type == 'note_off':
-                            st.session_state.psy_player.note_off(2, message.note)
-                        elif message.type == 'control_change':
-                            # Map CC 1 (Mod wheel) to Energy
-                            if message.control == 1:
-                                 st.session_state.psy_energy_val = message.value / 127.0
-                            # Map CC 74 (Brightness) to Cutoff
-                            elif message.control == 74:
-                                 st.session_state.psy_player.send_cc(2, 74, message.value)
-                            # Passthrough other CCs to lead synth
-                            else:
-                                 st.session_state.psy_player.send_cc(2, message.control, message.value)
-                        elif message.type == 'pitchwheel':
-                            st.session_state.psy_player.send_pitch_bend(2, message.pitch)
-
-                try:
-                    if "midi_in_port" in st.session_state and hasattr(st.session_state.midi_in_port, 'close'):
-                        st.session_state.midi_in_port.close()
-                    st.session_state.midi_in_port = mido.open_input(midi_in_sel, callback=jam_callback)
-                    st.session_state.last_midi_in = midi_in_sel
-                    st.success(f"Connected to {midi_in_sel} for Jamming")
-                except Exception as e:
-                    st.error(f"MIDI In Error: {e}")
-        elif not jam_mode and midi_in_sel != "None" and st.session_state.get("last_midi_in") != midi_in_sel:
-            # Setup input callback (Standard Controller Mapping)
+        if midi_in_sel != "None" and st.session_state.get("last_midi_in") != midi_in_sel:
+            # Setup input callback
             def midi_callback(message):
                 if message.type == 'control_change':
                     # Map CC 1 (Mod wheel) to Energy
@@ -442,7 +408,7 @@ with tab3:
                          st.session_state.psy_player.send_cc(2, 74, message.value)
 
             try:
-                if "midi_in_port" in st.session_state and hasattr(st.session_state.midi_in_port, 'close'):
+                if "midi_in_port" in st.session_state:
                     st.session_state.midi_in_port.close()
                 st.session_state.midi_in_port = mido.open_input(midi_in_sel, callback=midi_callback)
                 st.session_state.last_midi_in = midi_in_sel

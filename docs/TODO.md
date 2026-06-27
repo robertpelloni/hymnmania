@@ -13,6 +13,6 @@
 - [x] Add more complex Markov-chain transition rules to the arpeggiator for "peak climax" variations.
 
 ### Enhancements
-- [x] Multi-voice vocal harmonization for hip-hop acapellas using ElevenLabs.
-- [x] Automated video generation matching the 145 BPM grid with audio-reactive visuals.
+- [ ] Multi-voice vocal harmonization for hip-hop acapellas using ElevenLabs.
+- [ ] Automated video generation matching the 145 BPM grid with audio-reactive visuals.
 - [ ] Real-time "Jam Mode" where the sequencer responds to live MIDI controller input.

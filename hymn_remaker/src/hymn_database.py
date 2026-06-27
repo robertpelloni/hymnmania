@@ -111,6 +111,24 @@ class HymnDatabase:
             )
             return [dict(row) for row in cursor.fetchall()]
 
+    def find_by_id(self, hymn_id: int) -> Optional[Dict[str, Any]]:
+        """Find a hymn by its database ID."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute("SELECT * FROM hymns WHERE id = ?", (hymn_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def find_by_path(self, source_path: str) -> Optional[Dict[str, Any]]:
+        """Find a hymn by its source path."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute(
+                "SELECT * FROM hymns WHERE source_path = ?", (source_path,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
     def get_all(self) -> List[Dict[str, Any]]:
         """Get all hymns."""
         with sqlite3.connect(self.db_path) as conn:

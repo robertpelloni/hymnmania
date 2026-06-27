@@ -7,7 +7,7 @@ from pydub.generators import Sine
 
 # Ensure hymn_remaker path is valid for importing tts_generator
 sys.path.insert(0, os.path.abspath('hymn_remaker'))
-from src.tts_generator import TTSGenerator
+from hymn_remaker.src.tts_generator import TTSGenerator
 
 
 def test_pitch_shift_length_and_samples():
