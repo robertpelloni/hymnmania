@@ -5,11 +5,6 @@
 - **Executive Protocol #53:** Executed automated repository synchronization and intelligent merge.
 
 
-## [5.65.0] - 2026-06-26
-### Changed
-- **Executive Protocol #53:** Executed automated repository synchronization and intelligent merge.
-
-
 ## [1.38.0] - 2026-06-19
 ### Added
 - **VST3 Host Stub Integration:** Added scaffolding in `src/engine/HymnPlayer.cpp` and `src/engine/HymnPlayerBinding.cpp` for native VST3 integration, and updated the roadmap tasks.
