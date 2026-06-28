@@ -19,7 +19,7 @@ if os.path.exists(_env_path):
 from hymn_remaker import settings
 
 # Load global version
-VERSION = "5.70.0"
+VERSION = "5.79.0"
 try:
     v_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "VERSION")
     if os.path.exists(v_root):
