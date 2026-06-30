@@ -134,3 +134,5 @@
 - Updated documentation across the entire project to reflect the new Psy-Mono architecture.
 ## [5.87.0] - 2026-06-30
 - Rollback broken merge and execute autonomous roadmap step (Real-Time Jam)
+## [5.88.0] - 2026-06-30
+- Run comprehensive test suite and verify build stability following merge rollback
