@@ -1,2 +1,2 @@
 # Handoff
-Continuing to iterate and stand by.
+Standing by for a valid request.
