@@ -138,3 +138,5 @@
 - Run comprehensive test suite and verify build stability following merge rollback
 ## [5.89.0] - 2026-06-30
 - Supervisor initiated protocol review. Found no MilkDrop3, NPM, or pnpm references in this repository context. Verified project stability.
+## [5.90.0] - 2026-06-30
+- Execute protocol review and confirm pipeline integrity.
