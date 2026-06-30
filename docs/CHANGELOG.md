@@ -1,54 +1,5 @@
 # Changelog
 
-## [5.81.0] - 2026-06-26
-### Changed
-- **Executive Protocol #56:** Executed automated repository synchronization and intelligent merge.
-- Verified test suite and security updates.
-
-
-## [5.80.0] - 2026-06-26
-### Changed
-- **Executive Protocol #56:** Executed automated repository synchronization and intelligent merge.
-- Verified test suite and security updates.
-
-
-## [5.70.0] - 2026-06-26
-### Changed
-- **Executive Protocol #56:** Executed automated repository synchronization and intelligent merge.
-- Verified test suite and security updates.
-
-
-## [5.78.0] - 2026-06-26
-### Changed
-- **Executive Protocol #56:** Executed automated repository synchronization and intelligent merge.
-- Verified test suite and security updates.
-
-
-## [5.77.0] - 2026-06-26
-### Changed
-- **Executive Protocol #56:** Executed automated repository synchronization and intelligent merge.
-
-
-## [5.76.0] - 2026-06-26
-### Changed
-- **Executive Protocol #56:** Executed automated repository synchronization and intelligent merge. Verified the integrity of submodules.
-
-
-## [5.75.0] - 2026-06-26
-### Changed
-- **Executive Protocol #56:** Executed automated repository synchronization and intelligent merge. Verified the integrity of submodules.
-
-
-## [5.74.0] - 2026-06-26
-### Changed
-- **Executive Protocol #56:** Executed automated repository synchronization and intelligent merge. Verified the integrity of submodules.
-
-
-## [5.65.0] - 2026-06-26
-### Changed
-- **Executive Protocol #53:** Executed automated repository synchronization and intelligent merge.
-
-
 ## [1.38.0] - 2026-06-19
 ### Added
 - **VST3 Host Stub Integration:** Added scaffolding in `src/engine/HymnPlayer.cpp` and `src/engine/HymnPlayerBinding.cpp` for native VST3 integration, and updated the roadmap tasks.
@@ -181,3 +132,5 @@
 ### Changed
 - Shifted project philosophy from "black box" AI audio generation to hybrid symbolic-algorithmic composition + neural texture mapping.
 - Updated documentation across the entire project to reflect the new Psy-Mono architecture.
+## [5.87.0] - 2026-06-30
+- Rollback broken merge and execute autonomous roadmap step (Real-Time Jam)
