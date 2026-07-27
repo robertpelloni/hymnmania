@@ -107,17 +107,8 @@ def build_description(title):
     else:
         song_title = hymn_name
     
-    desc = f"""🎵 Stream/Download {song_title}: Coming Soon
-
-Connect with Resurrecting Beats:
-Stream: Coming Soon
-Instagram: Coming Soon
-TikTok: Coming Soon
-
-Track Details:
-
-🏷️ Artist: HYMNMANIA
-🏢 Record Label: RESURRECTING BEATS
+    desc = f"""Track Details:
+🏷️ Artist: Resurrecting Beats ft. {author}
 🎼 Track: {song_title}
 🎹 Genre: {genre_name} / Electronic Worship
 📅 Year: 2026
@@ -148,11 +139,14 @@ The tracks on this channel are generated and meticulously produced using Hymnman
 Contact: ResurrectingBeats@gmail.com
 
 🔗 Follow Our Playlists & Socials:
-Spotify: Coming Soon
-Instagram: Coming Soon
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Facebook: https://www.facebook.com/profile.php?id=61588784931149&sk=directory_links
+Instagram: https://www.instagram.com/resurrectingbeats?igsh=MWRxbGM4NHppZ2c2bw== @ResurrectingBeats
+TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 
-#ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicWorship #WorshipMusic #MusicTherapy #MentalHealthAwareness #AIMusic #{genre_name.replace(' ', '').replace('/', '')}"""
+🎵 Stream/Download {song_title}: Coming Soon
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness"""
     
     return desc
 

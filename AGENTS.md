@@ -13,8 +13,7 @@
 
 | Category | YouTube | Facebook |
 |----------|---------|----------|
-| Artist | `Artist: HYMNMANIA` | `FULL ARTIST: RESURRECTING BEATS / HYMNMANIA` |
-| Record Label | `Record Label: RESURRECTING BEATS` | — |
+| Artist | `Artist: Resurrecting Beats ft. [Author]` | `FULL ARTIST: RESURRECTING BEATS / HYMNMANIA` |
 | Genre | `Genre: {genre_name} / Electronic Worship` | `GENRE: {genre} / Electronic Worship` |
 | Year | `Year: 2026` | `YEAR: 2026` |
 
@@ -38,17 +37,8 @@ Examples:
 ## YouTube Description Template
 
 ```
-🎵 Stream/Download [Song Title]: Coming Soon
-
-Connect with Resurrecting Beats:
-Stream: Coming Soon
-Instagram: Coming Soon
-TikTok: Coming Soon
-
 Track Details:
-
-🏷️ Artist: HYMNMANIA
-🏢 Record Label: RESURRECTING BEATS
+🏷️ Artist: Resurrecting Beats ft. [Original Hymn/Author]
 🎼 Track: [Song Title]
 🎹 Genre: [Genre] / Electronic Worship
 📅 Year: 2026
@@ -58,13 +48,35 @@ About this video:
 [2-3 sentences about the visual style]
 
 🙏 Our Mission:
-[mission text]
+Welcome to Resurrecting Beats, your ultimate destination for electronic worship. Our mission is to bring the world Psytrance and other electronic genres reimagined with the hymns we have all grown to love over the years. We want to honor God by taking every hymn we can and mixing them with futuristic soundscapes. We believe that psytrance is more than just music — it's life, and a powerful vehicle for spiritual and mental elevation.
 
 🧠 The Science of Psytrance & Healing:
-[science text]
+We love psytrance because it profoundly engages the brain. Characterized by hypnotic, complex, and repetitive arpeggiated melodies with fast tempos (140-150+ BPM), the highly rhythmic patterns stimulate the motor cortex, while the structural build-ups and unpredictable drops activate the reward pathway, releasing dopamine.
+
+Its driving, repetitive qualities can induce a state of "transient hypofrontality," quieting the brain's overactive analytical centers — similar to deep meditation, prayer, or non-REM sleep stages. Highly immersive music can also modulate the amygdala (the brain's emotional "almond"), helping regulate responses to stress and trauma when paired with positive stimuli or the catharsis of dancing.
+
+While active and mindful listening to music is a scientifically proven tool that helps reduce symptoms of anxiety by lowering cortisol (the primary stress hormone) and boosting neurochemicals like serotonin, it is not a cure for clinical depression. It acts as an incredibly effective adjunctive treatment to counteract feelings of hopelessness.
+
+*If you are experiencing depression, it is highly recommended to seek professional support. You can locate accredited therapists and mental health resources via the SAMHSA National Helpline: https://www.samhsa.gov/find-help/helplines/national-helpline*
 
 ⚙️ How We Make Our Music:
-[production text]
+The tracks on this channel are generated and meticulously produced using Hymnmania, a custom software automation tool and orchestration platform engineered by creators Bob & Lum to fuse faith, code, and electronic music. Visuals are created using the art skills of our creators and multiple digital media tools to achieve the correct blend of the psychedelic experience.
+
+📅 New Music Videos Uploaded Every Week.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 Business Inquiries:
+Contact: ResurrectingBeats@gmail.com
+
+🔗 Follow Our Playlists & Socials:
+Facebook: https://www.facebook.com/profile.php?id=61588784931149&sk=directory_links
+Instagram: https://www.instagram.com/resurrectingbeats?igsh=MWRxbGM4NHppZ2c2bw== @ResurrectingBeats
+TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
+
+🎵 Stream/Download [Song Title]: Coming Soon
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
 ```
 
 ---
