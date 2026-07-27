@@ -1,6 +1,6 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.1**
+> **Version: 5.97.4**
 > **Last updated: 2026-07-22**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: FULLY WORKING end-to-end**
@@ -83,31 +83,41 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 
 ## Facebook Post Template
 
+The `daily_scheduler.py` script posts using this proven 3-step method.
+
+### Posting Method (CRITICAL)
+
+1. **Paste bare YouTube URL** into the composer — this triggers Facebook's link scraper to generate the video preview card
+2. **Wait for preview** — poll for `img[src*=ytimg]` in the dialog, up to 20 seconds
+3. **Select all + replace** — `document.execCommand('selectAll')` then `insertText` with full template text followed by the YouTube link at the bottom
+4. **Wait for preview to regenerate** — Facebook re-scrapes the link after replacement
+5. **Click Post** — post renders with full text structure AND video thumbnail preview card
+
+### Post Body Template
+
 ```
 {{HOOK_TEXT}} 🚀
 
 🎵 Track: {{SONG_TITLE}}
-🎹 Vibe: {{GENRE_OR_VIBE}}
-📺 Watch the full visual journey on YouTube! {{LINK_CTA_TEXT}}
+🎹 Vibe: {{GENRE_OR_VIBE}} / Electronic Worship
 
 {{VISUAL_EXPERIENCE_SUMMARY}} Our visuals are crafted by our creators using multiple digital media tools to deliver the ultimate psychedelic experience.
 
 Every track is meticulously produced using Hymnmania, a custom software automation tool engineered by Bob & Lum to fuse faith, code, and electronic music. We believe psytrance is more than music — its fast, repetitive tempos stimulate the brain's reward pathways and induce a state of deep meditation and stress relief. 🙏🧠
 
-Head over to the Resurrecting Beats YouTube channel to stream it now! Let us know in the comments how this frequency makes you feel. 👇
+Watch the full 4K visual journey on YouTube!
+
+{{YOUTUBE_LINK}}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
 ```
 
-### Facebook Posting Rules
-
-1. Paste **bare YouTube URL** into the composer — Facebook's scraper generates the video preview card automatically
-2. Wait 5-10 seconds for the preview to populate (YouTube thumbnail + title from Open Graph tags)
-3. Add caption text ABOVE the link after preview loads (text first, then URL in composer)
-4. Click Post — result shows: thumbnail image, YOUTUBE.COM label, video title
-5. The preview card renders on the feed as a clickable video link
-6. Use the exact fixed hashtag block
+### Spacing Rules
+- Double newlines (`\n\n`) between EVERY section
+- Space after links and hashtags
+- YouTube link MUST be on its own line at the bottom for preview regeneration
+- Fixed hashtag block on EVERY post — no dynamic hashtags
 
 ## Instagram Post Template
 
@@ -126,15 +136,18 @@ Same template as Facebook, but:
 
 ## Pipeline Scripts
 
-| Step | Script |
-|------|--------|
-| YouTube Descriptions | `youtube_update_descriptions.py` |
-| YouTube Title Rename | `rename_youtube_titles.py` |
-| Facebook Poster | `daily_scheduler.py` |
+| Step | Script | Notes |
+|------|--------|-------|
+| YouTube Descriptions | `youtube_update_descriptions.py` | Artist: Resurrecting Beats ft. author |
+| YouTube Title Rename | `rename_youtube_titles.py` | Standard format |
+| Facebook Poster | `daily_scheduler.py` | Bare URL → preview → selectAll → full text |
+| Beat Video Composer | `quick_composer.py` | ffmpeg crossfade + Magnific clips |
 
 ## Credentials
 
 - **YouTube**: `token.json` (OAuth refreshable)
 - **Facebook**: via Edge CDP browser (port 9222, profile `edge-cdp-profile`)
+- **Instagram**: `resurrectingbeats@gmail.com` / `Temppass0!` (in `.secrets.json`)
 - **Magnific**: `~/.env` (needs credits)
 - **Channel**: Resurrecting Beats (@ResurrectingBeats)
+- **Facebook Page**: lumkourlos@gmail.com / Page ID 61588784931149
