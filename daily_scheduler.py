@@ -134,26 +134,32 @@ def build_post(vid, hymn, genre):
 
 Every track is meticulously produced using Hymnmania, a custom software automation tool engineered by Bob & Lum to fuse faith, code, and electronic music. We believe psytrance is more than music — its fast, repetitive tempos stimulate the brain's reward pathways and induce a state of deep meditation and stress relief. 🙏🧠
 
-Watch the full 4K visual journey on YouTube:
-https://www.youtube.com/watch?v={vid}
+Watch the full 4K visual journey on YouTube!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{FIXED_HASHTAGS}"""
     return post, f"https://www.youtube.com/watch?v={vid}"
 
 def post_to_facebook(page, post_text, yt_link):
-    page.goto("https://www.facebook.com/")
+    """Post to Facebook using sharer.php for guaranteed video preview."""
+    page.goto(f"https://www.facebook.com/sharer/sharer.php?u={yt_link}&display=popup")
+    page.wait_for_timeout(10000)
+    page.evaluate(
+        f"""(function(){{
+            var ta = document.querySelector('textarea, [contenteditable=true], [role=textbox], div[data-lexical-editor]');
+            if(ta){{ta.focus();document.execCommand('insertText',false,{json.dumps(post_text)});}}
+        }})()"""
+    )
     page.wait_for_timeout(5000)
     page.evaluate(
-        """(function(){var a=document.querySelectorAll('div[role=button],span');for(var e of a){if((e.innerText||'').trim().includes("What's on your mind")){e.click();return}}})()"""
-    )
-    page.wait_for_timeout(3000)
-    page.evaluate(
-        f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();document.execCommand('insertText',false,{json.dumps(post_text)});}}}})()"""
-    )
-    # Wait 20s for Facebook to scrape YouTube link and generate video preview card
-    time.sleep(20)
-    page.evaluate(
-        """(function(){var a=document.querySelectorAll('[role=dialog] div[role=button], [role=dialog] span');for(var e of a){if((e.innerText||'').trim()==='Post'){e.click();return}}})()"""
+        """(function(){
+            var btns = document.querySelectorAll('div[role=button],span,button');
+            for(var b of btns){{
+                var t = (b.innerText||'').trim().toLowerCase();
+                if(t==='share' || t==='post' || t==='share now' || t==='post to facebook'){{
+                    b.click(); return;
+                }}
+            }}
+        })()"""
     )
     page.wait_for_timeout(5000)
     return True
