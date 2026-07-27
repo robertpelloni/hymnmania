@@ -129,11 +129,13 @@ def build_post(vid, hymn, genre):
 
 🎵 Track: {hymn}
 🎹 Vibe: {genre} / Electronic Worship
-📺 Watch the full visual journey on YouTube! (Full 4K visual journey on YouTube - link in top comment! 🔗)
 
 {visual} Our visuals are crafted by our creators using multiple digital media tools to deliver the ultimate psychedelic experience.
 
 Every track is meticulously produced using Hymnmania, a custom software automation tool engineered by Bob & Lum to fuse faith, code, and electronic music. We believe psytrance is more than music — its fast, repetitive tempos stimulate the brain's reward pathways and induce a state of deep meditation and stress relief. 🙏🧠
+
+📺 Watch the full 4K visual journey on YouTube:
+https://www.youtube.com/watch?v={vid}
 
 Head over to the Resurrecting Beats YouTube channel to stream it now! Let us know in the comments how this frequency makes you feel. 👇
 
@@ -150,17 +152,12 @@ def post_to_facebook(page, post_text, yt_link):
     page.evaluate(
         f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();document.execCommand('insertText',false,{json.dumps(post_text)});}}}})()"""
     )
-    page.wait_for_timeout(8000)
+    # Wait for Facebook to generate link preview from YouTube URL
+    time.sleep(12)
     page.evaluate(
         """(function(){var a=document.querySelectorAll('[role=dialog] div[role=button], [role=dialog] span');for(var e of a){if((e.innerText||'').trim()==='Post'){e.click();return}}})()"""
     )
     page.wait_for_timeout(5000)
-    # YouTube link as comment
-    time.sleep(3)
-    page.evaluate(
-        f"""(function(){{var c=document.querySelector('[role=article] [role=textbox], [role=article] div[contenteditable=true]');if(c){{c.focus();document.execCommand('insertText',false,{json.dumps(yt_link)});}}}})()"""
-    )
-    page.wait_for_timeout(3000)
     return True
 
 def run(count=3):

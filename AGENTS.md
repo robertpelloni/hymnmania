@@ -102,11 +102,11 @@ Head over to the Resurrecting Beats YouTube channel to stream it now! Let us kno
 
 ### Facebook Posting Rules
 
-1. Post the generated text to the Resurrecting Beats Facebook Page
-2. Set `{{LINK_CTA_TEXT}}` to: `(Full 4K visual journey on YouTube - link in top comment! 🔗)`
-3. After posting, add a follow-up comment with the direct YouTube link: `{{YOUTUBE_VIDEO_URL}}`
-4. Upload the MP4 video file directly if possible (native video upload), otherwise post text + link
-5. **CRITICAL**: Use the exact fixed hashtag block — no dynamic genre hashtags
+1. Post the generated text with the YouTube URL embedded directly in the body
+2. The YouTube link in the post body triggers Facebook's link preview card (video thumbnail)
+3. Wait 12 seconds after pasting for Facebook to generate the preview before clicking Post
+4. **CRITICAL**: URL must be in the main post body, NOT a comment — comments don't generate previews
+5. Use the exact fixed hashtag block
 
 ## Instagram Post Template
 
