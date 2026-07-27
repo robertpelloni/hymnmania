@@ -140,36 +140,36 @@ Watch the full 4K visual journey on YouTube!
     return post, f"https://www.youtube.com/watch?v={vid}"
 
 def post_to_facebook(page, post_text, yt_link):
-    """Post to Facebook with video preview card.
-    Posts just the YouTube link first (triggers Facebook's link scraper),
-    then adds caption text above the preview."""
+    """Post with video preview: paste bare URL first, then replace with full text+link."""
     page.goto("https://www.facebook.com/")
     page.wait_for_timeout(5000)
     
-    # Open composer
     page.evaluate(
         """(function(){var a=document.querySelectorAll('div[role=button],span');for(var e of a){if((e.innerText||'').trim().includes("What")){e.click();return}}})()"""
     )
     page.wait_for_timeout(3000)
     
-    # Paste ONLY the YouTube link first — this triggers Facebook's link scraper
+    # Step 1: Paste bare URL to trigger Facebook's link scraper
     page.evaluate(
         f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();document.execCommand('insertText',false,{json.dumps(yt_link)});}}}})()"""
     )
     
-    # Wait for Facebook to generate link preview
-    for i in range(15):
+    # Wait for preview
+    for _ in range(10):
         time.sleep(2)
-        has_preview = page.evaluate('!!document.querySelector("[role=dialog] a[href*=youtu]")')
-        if has_preview: break
+        if page.evaluate('!!document.querySelector("[role=dialog] img[src*=ytimg]")'): break
     
-    # Now add caption text ABOVE the link preview
+    # Step 2: Select all and replace with full text + link at bottom
+    full = post_text + chr(10) + chr(10) + yt_link
     page.evaluate(
-        f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();var sel=window.getSelection();sel.modify('move','backward','documentboundary');document.execCommand('insertText',false,{json.dumps(post_text + chr(10) + chr(10))});}}}})()"""
+        f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();document.execCommand('selectAll',false,null);document.execCommand('insertText',false,{json.dumps(full)});}}}})()"""
     )
-    page.wait_for_timeout(3000)
     
-    # Click Post
+    # Wait for preview to regenerate
+    for _ in range(15):
+        time.sleep(2)
+        if page.evaluate('!!document.querySelector("[role=dialog] img[src*=ytimg]")'): break
+    
     page.evaluate(
         """(function(){var a=document.querySelectorAll('[role=dialog] div[role=button], [role=dialog] span');for(var e of a){if((e.innerText||'').trim()==='Post'){e.click();return}}})()"""
     )
