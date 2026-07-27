@@ -13,12 +13,12 @@
 
 | Category | YouTube | Facebook |
 |----------|---------|----------|
-| Artist | `Artist: Resurrecting Beats ft. [Author]` | `FULL ARTIST: RESURRECTING BEATS / HYMNMANIA` |
-| Genre | `Genre: {genre_name} / Electronic Worship` | `GENRE: {genre} / Electronic Worship` |
-| Year | `Year: 2026` | `YEAR: 2026` |
+| Artist | `Artist: Resurrecting Beats ft. [Author]` | — (see template) |
+| Genre | `Genre: {genre_name} / Electronic Worship` | `🎹 Vibe: {genre}` |
+| Year | `Year: 2026` | — |
 
 - Use spaces around slashes: `" / "` NOT `"/"`
-- On Facebook, use double newlines between categories
+- Facebook uses the full `HYMNMANIA_SOCIAL_POST_TEMPLATE` structure
 - YouTube uses single newlines with emoji bullets
 
 ---
@@ -84,21 +84,42 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 ## Facebook Post Template
 
 ```
-[Headline: 1-2 punchy sentences with emojis]
+{{HOOK_TEXT}} 🚀
 
-FULL ARTIST: RESURRECTING BEATS / HYMNMANIA
+🎵 Track: {{SONG_TITLE}}
+🎹 Vibe: {{GENRE_OR_VIBE}}
+📺 Watch the full visual journey on YouTube! {{LINK_CTA_TEXT}}
 
-YEAR: 2026
+{{VISUAL_EXPERIENCE_SUMMARY}} Our visuals are crafted by our creators using multiple digital media tools to deliver the ultimate psychedelic experience.
 
-GENRE: [Genre] / Electronic Worship
+Every track is meticulously produced using Hymnmania, a custom software automation tool engineered by Bob & Lum to fuse faith, code, and electronic music. We believe psytrance is more than music — its fast, repetitive tempos stimulate the brain's reward pathways and induce a state of deep meditation and stress relief. 🙏🧠
 
-Listen and watch the full journey here:
-[YouTube Link]
+Head over to the Resurrecting Beats YouTube channel to stream it now! Let us know in the comments how this frequency makes you feel. 👇
 
-#ResurrectingBeats #Hymnmania #ElectronicWorship [genre hashtags]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
 ```
 
-**CRITICAL**: Double newlines (blank line) between EVERY category for proper rendering. Spaces around slashes.
+### Facebook Posting Rules
+
+1. Post the generated text to the Resurrecting Beats Facebook Page
+2. Set `{{LINK_CTA_TEXT}}` to: `(Full 4K visual journey on YouTube - link in top comment! 🔗)`
+3. After posting, add a follow-up comment with the direct YouTube link: `{{YOUTUBE_VIDEO_URL}}`
+4. Upload the MP4 video file directly if possible (native video upload), otherwise post text + link
+5. **CRITICAL**: Use the exact fixed hashtag block — no dynamic genre hashtags
+
+## Instagram Post Template
+
+Same template as Facebook, but:
+- Set `{{LINK_CTA_TEXT}}` to: `(Full 4K visual journey link in our bio! 🔗)`
+- Update Instagram bio link to the YouTube video URL
+- Upload MP4 video to Instagram Reels/Feed
+
+## Instagram Credentials
+
+- **Login**: resurrectingbeats@gmail.com
+- **Password**: Temppass0!
+- **Profile**: @ResurrectingBeats
 
 ---
 

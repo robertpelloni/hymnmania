@@ -1,24 +1,24 @@
 """DAILY SOCIAL MEDIA SCHEDULER - Resurrecting Beats
-Posts to Facebook with staggered content using the brand template.
+Posts to Facebook using HYMNMANIA_SOCIAL_POST_TEMPLATE.
 
 Template:
-  [Headline: 1-2 punchy sentences with emojis]
-  
-  FULL ARTIST: RESURRECTING BEATS/HYMNMANIA
-  YEAR: 2026
-  GENRE: [Genre]
-  
-  Listen and watch the full journey here:
-  🔗 [Link]
-  
-  #ResurrectingBeats #Hymnmania #[3-5 hashtags]
+  {{HOOK_TEXT}} (rocket)
+
+  Track: {{SONG_TITLE}}
+  Vibe: {{GENRE_OR_VIBE}}
+  Watch on YouTube! {{LINK_CTA_TEXT}}
+
+  {{VISUAL_EXPERIENCE_SUMMARY}} ...
+
+  Every track ... Hymnmania ... Bob & Lum ...
+
+  Fixed hashtag block
 
 Features:
 - Staggered posting (no duplicate songs back-to-back)
-- Alternating genres
-- Interleaved YouTube + Suno links
+- YouTube link posted as follow-up comment
+- Fixed hashtag block on EVERY post
 - Posted-video tracking to prevent repeats
-- Daily batch posting
 """
 import os, sys, json, time, random
 from playwright.sync_api import sync_playwright
@@ -60,50 +60,20 @@ VIDEOS = {
     "RPfiWqQnGSg": ("Praise Him Praise Him", "Psytrance"),
 }
 
-HEADLINES = {
-    "Psytrance": [
-        "Prepare your mind and spirit for a high-frequency journey! 🌌 Our latest Psytrance hymn remix is here to elevate your soul and rewire your brain.",
-        "Hyper-dimensional sacred geometry meets 145 BPM worship! 🌀 This Psytrance hymn remix will take you somewhere transcendent.",
-    ],
-    "Deep House": [
-        "Smooth, soulful, and deeply spiritual. 🏠✨ Our Deep House hymn remix brings warm golden-hour energy to classic worship.",
-        "Golden hour waves meet sacred melody. 🌊 This Deep House hymn remix flows with warmth and intention.",
-    ],
-    "Dubstep": [
-        "Prepare your mind for a bass-drop journey! 🔥 Our latest Dubstep hymn remix is here to rattle your soul.",
-        "When sacred melody meets earth-shattering bass! 💀 This Dubstep hymn remix transforms worship into pure energy.",
-    ],
-    "Drum and Bass": [
-        "High-energy breakbeats meet timeless hymns! ⚡ Our Drum and Bass remix pulses with relentless spiritual energy.",
-        "Rain-soaked neon streets and breakbeat worship! 🔊 This DnB hymn remix drives through cyberpunk cathedrals.",
-    ],
-    "Chiptune": [
-        "Retro 8-bit worship just dropped! 👾 Our Chiptune hymn remix brings arcade nostalgia to sacred melody.",
-        "Pixel-perfect praise! 🎮 This Chiptune hymn remix is a glitching digital journey through classic worship.",
-    ],
-    "Gabba": [
-        "Industrial hardcore meets divine frequency! ⛓️ Our Gabba hymn remix is pure adrenaline for the spirit.",
-        "Warehouse strobes and pounding kicks transform this hymn! 🔨 Gabba hardcore worship at its most intense.",
-    ],
-    "Detroit Techno": [
-        "Stark industrial beauty meets rhythmic precision! 🏭 Our Detroit Techno hymn remix breathes new life into tradition.",
-        "Warehouse shadows and light — Detroit Techno reimagines this hymn for the underground. 🌃",
-    ],
-    "Detroit House": [
-        "Deep Motor City grooves meet sacred melody! 🏙️ Our Detroit House hymn remix flows with warmth and soul.",
-        "Jackin grooves and warm textures transform this classic hymn! 🎹 Detroit House worship for the dance floor.",
-    ],
-}
+FIXED_HASHTAGS = """
+#ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness"""
 
-HASHTAGS = {
-    "Psytrance": "#Psytrance #ChristianPsytrance #145BPM #PsychedelicWorship",
-    "Deep House": "#DeepHouse #ElectronicWorship #SoulfulVibes #HouseMusic",
-    "Dubstep": "#Dubstep #BassMusic #ElectronicWorship #WobbleWorship",
-    "Drum and Bass": "#DrumAndBass #BreakbeatWorship #ElectronicWorship #DNB",
-    "Chiptune": "#Chiptune #8BitWorship #RetroWorship #PixelPraise",
-    "Gabba": "#Gabba #HardcoreWorship #IndustrialGospel #Hardcore",
-    "Detroit Techno": "#DetroitTechno #TechnoWorship #UndergroundGospel",
-    "Detroit House": "#DetroitHouse #HouseMusic #MotorCityGospel",
+VISUAL_EXPERIENCES = {
+    "Psytrance": "A hyper-dimensional visual journey blending sacred geometry with neon aesthetics, matching the high-energy frequency of this classic hymn.",
+    "Deep House": "Warm, atmospheric visuals flow like golden-hour light through cathedral architecture, matching the smooth, soulful energy.",
+    "Dubstep": "Seismic bass visualizations ripple through futuristic cathedral spaces as strobes and particle systems erupt with each drop.",
+    "Drum and Bass": "Rain-soaked neon streets and cyberpunk cityscapes pulse in sync with the relentless breakbeats.",
+    "Chiptune": "Pixel-perfect 8-bit cathedrals and glitching digital stained glass create a retro worship arcade experience.",
+    "Gabba": "Industrial warehouse visuals with raw strobe effects and pounding kick-drum visualizations match the intensity of this hardcore worship track.",
+    "Detroit Techno": "Stark warehouse shadows and light — a monochromatic journey through the birthplace of techno, reimagined for spiritual elevation.",
+    "Detroit House": "Warm Motor City textures flow through cathedral architecture, blending soulful house grooves with sacred geometry.",
+    "Hardstyle Trance": "Euphoric laser shows and soaring light columns match the euphoric kicks and melodies.",
+    "Synthwave": "Neon-drenched retro grids stretch into infinite digital horizons as this synthwave reimagining unfolds.",
 }
 
 
@@ -144,30 +114,40 @@ def pick_videos(posted, count=3):
 
 
 def build_post(vid, hymn, genre):
-    """Build a post using the exact brand template."""
-    headlines = HEADLINES.get(genre, ["New electronic hymn remix just dropped! 🎵"])
-    headline = random.choice(headlines)
-    hashtags_block = HASHTAGS.get(genre, "")
+    """Build a post using HYMNMANIA_SOCIAL_POST_TEMPLATE."""
+    hooks = {
+        "Psytrance": "Prepare your mind and spirit for a high-frequency journey through sacred geometry and neon cathedrals!",
+        "Deep House": "Smooth, soulful, and deeply spiritual — warm golden-hour energy meets classic worship.",
+        "Dubstep": "When sacred melody meets earth-shattering bass drops — pure electronic worship energy.",
+        "Drum and Bass": "High-energy breakbeats meet timeless hymns — relentless spiritual energy through cyberpunk cathedrals.",
+        "Chiptune": "Retro 8-bit worship just dropped — arcade nostalgia meets sacred melody in pixel-perfect praise.",
+        "Gabba": "Industrial hardcore meets divine frequency — pure adrenaline for the spirit at 200+ BPM.",
+        "Detroit Techno": "Stark industrial beauty meets rhythmic precision — Detroit Techno reimagines this hymn for the underground.",
+        "Detroit House": "Deep Motor City grooves meet sacred melody — Detroit House worship for the dance floor.",
+        "Hardstyle Trance": "Euphoric hardstyle kicks and soaring melodies transform this hymn into pure energy.",
+        "Synthwave": "Neon-drenched retro-future worship reimagined through vintage synths and pulsing basslines.",
+    }
+    hook = hooks.get(genre, f"New {hymn} electronic remix just dropped!")
+    visual = VISUAL_EXPERIENCES.get(genre, "Our visuals are crafted to deliver the ultimate psychedelic experience.")
     
-    link = f"https://www.youtube.com/watch?v={vid}"
-    
-    post = f"""{headline}
+    post = f"""{hook} 🚀
 
-FULL ARTIST: RESURRECTING BEATS / HYMNMANIA
+🎵 Track: {hymn}
+🎹 Vibe: {genre} / Electronic Worship
+📺 Watch the full visual journey on YouTube! (Full 4K visual journey on YouTube - link in top comment! 🔗)
 
-YEAR: 2026
+{visual} Our visuals are crafted by our creators using multiple digital media tools to deliver the ultimate psychedelic experience.
 
-GENRE: {genre} / Electronic Worship
+Every track is meticulously produced using Hymnmania, a custom software automation tool engineered by Bob & Lum to fuse faith, code, and electronic music. We believe psytrance is more than music — its fast, repetitive tempos stimulate the brain's reward pathways and induce a state of deep meditation and stress relief. 🙏🧠
 
-Listen and watch the full journey here:
-{link}
+Head over to the Resurrecting Beats YouTube channel to stream it now! Let us know in the comments how this frequency makes you feel. 👇
 
-#ResurrectingBeats #Hymnmania {hashtags_block}"""
-    return post
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{FIXED_HASHTAGS}"""
+    return post, f"https://www.youtube.com/watch?v={vid}"
 
 
-def post_to_facebook(page, post_text):
-    """Post to Facebook via CDP browser."""
+def post_to_facebook(page, post_text, yt_link):
+    """Post to Facebook via CDP browser, then add YouTube link as comment."""
     page.goto("https://www.facebook.com/")
     page.wait_for_timeout(5000)
 
@@ -188,6 +168,23 @@ def post_to_facebook(page, post_text):
         """(function(){var a=document.querySelectorAll('[role=dialog] div[role=button], [role=dialog] span');for(var e of a){if((e.innerText||'').trim()==='Post'){e.click();return}}})()"""
     )
     page.wait_for_timeout(5000)
+    
+    # Add YouTube link as a follow-up comment
+    time.sleep(3)
+    page.evaluate(
+        f"""(function(){{
+            var comments = document.querySelectorAll('[role=textbox], div[contenteditable=true]');
+            for(var c of comments){{
+                if(c.offsetParent !== null && c.closest('[role=article]')){{
+                    c.focus();
+                    document.execCommand('insertText', false, {json.dumps(yt_link)});
+                    c.dispatchEvent(new KeyboardEvent('keydown', {{key: 'Enter', bubbles: true}}));
+                    return;
+                }}
+            }}
+        }})()"""
+    )
+    page.wait_for_timeout(3000)
     return True
 
 
@@ -207,13 +204,13 @@ def run(count=3):
         fb = b.contexts[0].new_page()
 
         for vid, hymn, genre in selected:
-            post = build_post(vid, hymn, genre)
-            success = post_to_facebook(fb, post)
+            post, yt_link = build_post(vid, hymn, genre)
+            success = post_to_facebook(fb, post, yt_link)
             if success:
                 posted.add(vid)
                 save_posted(posted)
                 print(f"  OK {hymn} - {genre}")
-                print(f"     https://www.youtube.com/watch?v={vid}")
+                print(f"     {yt_link}")
                 print()
             time.sleep(3)
 
