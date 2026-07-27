@@ -134,10 +134,8 @@ def build_post(vid, hymn, genre):
 
 Every track is meticulously produced using Hymnmania, a custom software automation tool engineered by Bob & Lum to fuse faith, code, and electronic music. We believe psytrance is more than music — its fast, repetitive tempos stimulate the brain's reward pathways and induce a state of deep meditation and stress relief. 🙏🧠
 
-📺 Watch the full 4K visual journey on YouTube:
+Watch the full 4K visual journey on YouTube:
 https://www.youtube.com/watch?v={vid}
-
-Head over to the Resurrecting Beats YouTube channel to stream it now! Let us know in the comments how this frequency makes you feel. 👇
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{FIXED_HASHTAGS}"""
     return post, f"https://www.youtube.com/watch?v={vid}"
@@ -152,8 +150,8 @@ def post_to_facebook(page, post_text, yt_link):
     page.evaluate(
         f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();document.execCommand('insertText',false,{json.dumps(post_text)});}}}})()"""
     )
-    # Wait for Facebook to generate link preview from YouTube URL
-    time.sleep(12)
+    # Wait 20s for Facebook to scrape YouTube link and generate video preview card
+    time.sleep(20)
     page.evaluate(
         """(function(){var a=document.querySelectorAll('[role=dialog] div[role=button], [role=dialog] span');for(var e of a){if((e.innerText||'').trim()==='Post'){e.click();return}}})()"""
     )
