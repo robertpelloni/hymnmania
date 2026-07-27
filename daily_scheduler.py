@@ -140,26 +140,38 @@ Watch the full 4K visual journey on YouTube!
     return post, f"https://www.youtube.com/watch?v={vid}"
 
 def post_to_facebook(page, post_text, yt_link):
-    """Post to Facebook using sharer.php for guaranteed video preview."""
-    page.goto(f"https://www.facebook.com/sharer/sharer.php?u={yt_link}&display=popup")
-    page.wait_for_timeout(10000)
-    page.evaluate(
-        f"""(function(){{
-            var ta = document.querySelector('textarea, [contenteditable=true], [role=textbox], div[data-lexical-editor]');
-            if(ta){{ta.focus();document.execCommand('insertText',false,{json.dumps(post_text)});}}
-        }})()"""
-    )
+    """Post to Facebook with video preview card.
+    Posts just the YouTube link first (triggers Facebook's link scraper),
+    then adds caption text above the preview."""
+    page.goto("https://www.facebook.com/")
     page.wait_for_timeout(5000)
+    
+    # Open composer
     page.evaluate(
-        """(function(){
-            var btns = document.querySelectorAll('div[role=button],span,button');
-            for(var b of btns){{
-                var t = (b.innerText||'').trim().toLowerCase();
-                if(t==='share' || t==='post' || t==='share now' || t==='post to facebook'){{
-                    b.click(); return;
-                }}
-            }}
-        })()"""
+        """(function(){var a=document.querySelectorAll('div[role=button],span');for(var e of a){if((e.innerText||'').trim().includes("What")){e.click();return}}})()"""
+    )
+    page.wait_for_timeout(3000)
+    
+    # Paste ONLY the YouTube link first — this triggers Facebook's link scraper
+    page.evaluate(
+        f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();document.execCommand('insertText',false,{json.dumps(yt_link)});}}}})()"""
+    )
+    
+    # Wait for Facebook to generate link preview
+    for i in range(15):
+        time.sleep(2)
+        has_preview = page.evaluate('!!document.querySelector("[role=dialog] a[href*=youtu]")')
+        if has_preview: break
+    
+    # Now add caption text ABOVE the link preview
+    page.evaluate(
+        f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();var sel=window.getSelection();sel.modify('move','backward','documentboundary');document.execCommand('insertText',false,{json.dumps(post_text + chr(10) + chr(10))});}}}})()"""
+    )
+    page.wait_for_timeout(3000)
+    
+    # Click Post
+    page.evaluate(
+        """(function(){var a=document.querySelectorAll('[role=dialog] div[role=button], [role=dialog] span');for(var e of a){if((e.innerText||'').trim()==='Post'){e.click();return}}})()"""
     )
     page.wait_for_timeout(5000)
     return True
