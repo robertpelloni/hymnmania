@@ -102,11 +102,12 @@ Head over to the Resurrecting Beats YouTube channel to stream it now! Let us kno
 
 ### Facebook Posting Rules
 
-1. Post the generated text with the YouTube URL embedded directly in the body
-2. The YouTube link in the post body triggers Facebook's link preview card (video thumbnail)
-3. Wait 12 seconds after pasting for Facebook to generate the preview before clicking Post
-4. **CRITICAL**: URL must be in the main post body, NOT a comment — comments don't generate previews
-5. Use the exact fixed hashtag block
+1. **Paste YouTube link FIRST** (bare URL) — this triggers Facebook's link scraper to generate the video preview card
+2. **Wait for preview** — poll for `a[href*=youtu]` in the dialog, up to 30 seconds
+3. **Move cursor to top** — `Selection.modify('move','backward','documentboundary')` then insert caption text ABOVE the link
+4. **Click Post** — the post renders with video thumbnail and text
+5. Text + URL pasted together does NOT trigger the scraper — must be bare URL first
+6. Use the exact fixed hashtag block
 
 ## Instagram Post Template
 
