@@ -22,7 +22,7 @@ SONGS_ENDPOINT = "/api/songs"
 class UdioAPIClient:
     """Low-level HTTP client for the Udio AI API.
 
-    Handles authentication headers, song generation requests, 
+    Handles authentication headers, song generation requests,
     and completion polling.
     """
 
@@ -45,7 +45,7 @@ class UdioAPIClient:
             "Referer": f"{self.base_url}/create",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
         }
-        
+
         if self.oauth_token:
             headers["Authorization"] = f"Bearer {self.oauth_token}"
             if self.cookie_string:
@@ -54,7 +54,7 @@ class UdioAPIClient:
                 headers["Cookie"] = f"sb-api-auth-token={self.oauth_token}"
         elif self.cookie_string:
             headers["Cookie"] = self.cookie_string
-            
+
         if not get_request:
             headers.update({
                 "sec-ch-ua": '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"',
@@ -100,7 +100,7 @@ class UdioAPIClient:
 
         # Combining style and prompt for the Udio prompt if style is provided
         full_prompt = f"{style}, {prompt}" if style else prompt
-        
+
         data = {
             "prompt": full_prompt,
             "samplerOptions": {
@@ -115,7 +115,7 @@ class UdioAPIClient:
         url = f"{self.base_url}{GENERATE_ENDPOINT}"
 
         response = requests.post(url, json=data, headers=headers, timeout=30)
-        
+
         if response.status_code == 401:
             raise RuntimeError("UDIO_OAUTH_TOKEN is invalid or expired.")
         if response.status_code != 200:
@@ -134,7 +134,7 @@ class UdioAPIClient:
         """
         headers = self._get_headers(get_request=True)
         url = f"{self.base_url}/api/songs/me?pageSize=20"
-        
+
         response = requests.get(url, headers=headers, timeout=15)
         if response.status_code == 200:
             data = response.json()
@@ -156,7 +156,7 @@ class UdioAPIClient:
         """
         interval = interval or settings.UDIO_POLL_INTERVAL
         timeout = timeout or settings.UDIO_POLL_TIMEOUT
-        
+
         start_time = time.time()
         while time.time() - start_time < timeout:
             status_data = self.get_song_status(track_ids)
@@ -169,8 +169,7 @@ class UdioAPIClient:
                         ready_songs = [s for s in matched_songs if s.get("song_path")]
                         if ready_songs:
                             return ready_songs[0].get("song_path")
-            
-            time.sleep(interval)
-        
-        raise TimeoutError(f"Udio generation timed out for tracks {track_ids}")
 
+            time.sleep(interval)
+
+        raise TimeoutError(f"Udio generation timed out for tracks {track_ids}")

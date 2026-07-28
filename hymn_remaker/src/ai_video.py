@@ -17,7 +17,7 @@ class AIVideoGenerator:
         """Initialize the AI Video Generator."""
         self.api_token = api_token or os.environ.get("REPLICATE_API_TOKEN")
         self.local_gen = None
-        
+
         if self.api_token:
             logger.info("AIVideoGenerator initialized (lazy client).")
         else:
@@ -33,14 +33,14 @@ class AIVideoGenerator:
         """High level dispatch for video generation."""
         if force_local:
             return self._get_local_gen().generate_video(audio_path, image_url, output_path, prompt=prompt, tempo=tempo, model_type=model_type, model_size=model_size, quotes=quotes)
-        
+
         import requests
         import replicate
         # ... rest of method
         """
         Generate an audio-reactive AI video.
         Supports cloud models via Replicate or local GPU generation.
-        
+
         Args:
             audio_path (str): Path to the rendered song WAV/MP3.
             image_url (str): URL or local path to the generated album art.
@@ -51,7 +51,7 @@ class AIVideoGenerator:
             model_type (str): Local model type ('ltx-video' or 'wan').
             model_size (str): Local model size (e.g. '1.3b', '14b').
             quotes (list): Optional list of dicts representing beat-synced text quotes.
-            
+
         Returns:
             str: Path to the generated video file.
         """
@@ -70,7 +70,7 @@ class AIVideoGenerator:
                 logger.info(f"Local video generation forced. Model: {model_type} ({model_size})")
             else:
                 logger.info("REPLICATE_API_TOKEN is missing. Attempting local programmatic video generation...")
-                
+
             self.local_gen = LocalVideoGenerator(model_type=model_type, model_size=model_size)
             if self.local_gen.check_dependencies():
                 local_image_path = image_url
@@ -86,7 +86,7 @@ class AIVideoGenerator:
                     except Exception as e:
                         logger.warning(f"Could not download image for local video generation: {e}")
                         local_image_path = None
-                
+
                 # Execute local beat-synchronized generation
                 res = self.local_gen.generate_beat_synced_video(
                     audio_path=audio_path,
@@ -97,7 +97,7 @@ class AIVideoGenerator:
                     duration_sec=10.0,
                     quotes=quotes
                 )
-                
+
                 # Cleanup temporary downloaded image
                 if local_image_path and local_image_path != image_url and os.path.exists(local_image_path):
                     os.remove(local_image_path)
@@ -108,7 +108,7 @@ class AIVideoGenerator:
 
         try:
             logger.info(f"Starting Replicate AI Video Generation (LTX-Video) for {os.path.basename(audio_path)}...")
-            
+
             # Using lucataco/ltx-video on Replicate for higher reliability
             output = replicate.run(
                 "lucataco/ltx-video:603957f6e07662c5e533b34479e09d5930e104e54884260908865f80b2a7576f",
@@ -126,13 +126,13 @@ class AIVideoGenerator:
 
             video_url = output
             logger.info(f"AI Video generated! Downloading from {video_url}...")
-            
+
             response = requests.get(video_url, timeout=120)
             response.raise_for_status()
-            
+
             with open(output_path, "wb") as f:
                 f.write(response.content)
-                
+
             logger.info(f"AI Video saved to {output_path}")
             return output_path
 
@@ -143,4 +143,3 @@ class AIVideoGenerator:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     gen = AIVideoGenerator()
-

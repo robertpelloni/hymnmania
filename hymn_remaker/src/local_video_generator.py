@@ -22,7 +22,7 @@ class LocalVideoGenerator:
         except ImportError:
             pass
         self.pipeline = None
-        
+
         if self.device == "cpu":
             logger.warning("No CUDA detected. Local video generation will be EXTREMELY slow.")
 
@@ -32,32 +32,32 @@ class LocalVideoGenerator:
 
         import torch
         from diffusers import LTXImageToVideoPipeline, WanImageToVideoPipeline
-        
+
         try:
             if self.model_type == "ltx-video":
                 model_id = "Lightricks/LTX-Video"
                 logger.info(f"Loading LTX-Video pipeline from {model_id}...")
                 self.pipeline = LTXImageToVideoPipeline.from_pretrained(
-                    model_id, 
+                    model_id,
                     torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
                 ).to(self.device)
                 # Optimization for 1080 Ti (11GB VRAM)
                 self.pipeline.enable_model_cpu_offload()
-                
+
             elif self.model_type == "wan":
                 # For Wan 2.1, model size matters
                 if self.model_size == "1.3b":
                     model_id = "Wan-AI/Wan2.1-T2V-1.3B-Diffusers"
                 else:
                     model_id = "Wan-AI/Wan2.1-T2V-14B-Diffusers"
-                
+
                 logger.info(f"Loading Wan 2.1 ({self.model_size}) pipeline from {model_id}...")
                 self.pipeline = WanImageToVideoPipeline.from_pretrained(
                     model_id,
                     torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
                 ).to(self.device)
                 self.pipeline.enable_model_cpu_offload()
-            
+
             logger.info(f"Pipeline {self.model_type} loaded successfully on {self.device}.")
         except Exception as e:
             logger.error(f"Failed to load video pipeline: {e}")
@@ -79,10 +79,10 @@ class LocalVideoGenerator:
         """
         self._load_pipeline()
         logger.info(f"Generating {num_frames} frames for prompt: {prompt[:50]}...")
-        
+
         try:
             enhanced_prompt = f"{prompt}, cinematic, high resolution, fluid motion, masterpiece."
-            
+
             # Load and process image if provided
             input_image = None
             if image:
@@ -91,14 +91,14 @@ class LocalVideoGenerator:
                     input_image = Image.open(image).convert("RGB")
                 elif isinstance(image, Image.Image):
                     input_image = image
-            
+
             with torch.inference_mode():
                 if self.model_type == "ltx-video":
                     video_frames = self.pipeline(
                         prompt=enhanced_prompt,
                         image=input_image,
                         num_frames=num_frames,
-                        width=768, 
+                        width=768,
                         height=512,
                         num_inference_steps=25,
                         guidance_scale=7.5
@@ -117,7 +117,7 @@ class LocalVideoGenerator:
             from diffusers.utils import export_to_video
             temp_video = "temp_generated_loop.mp4"
             export_to_video(video_frames, temp_video, fps=24)
-            
+
             import subprocess
             from hymn_remaker import settings
             logger.info(f"Upscaling generated loop to 1080p: {output_path}")

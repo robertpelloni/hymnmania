@@ -26,9 +26,9 @@ class GeminiContentGenerator:
         self.client_secrets_file = client_secrets_file
         self.model_name = "gemini-2.5-flash"
         self.image_model_name = "imagen-4.0-fast-generate-001"
-        self.video_model_name = "veo-3.0-generate-001" 
+        self.video_model_name = "veo-3.0-generate-001"
         self.client = None
-        
+
     def _get_client(self):
         if self.client: return self.client
         try:
@@ -46,23 +46,23 @@ class GeminiContentGenerator:
         """Authenticate via Google OAuth2 and return a genai.Client."""
         creds = None
         token_path = "token_gemini.json"
-        
+
         if os.path.exists(token_path):
             creds = Credentials.from_authorized_user_file(token_path, GEMINI_SCOPES)
-            
+
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
                 if not os.path.exists(self.client_secrets_file):
                     raise FileNotFoundError(f"Client secrets file not found: {self.client_secrets_file}")
-                
+
                 flow = InstalledAppFlow.from_client_secrets_file(self.client_secrets_file, GEMINI_SCOPES)
                 creds = flow.run_local_server(port=0)
-                
+
             with open(token_path, "w") as token:
                 token.write(creds.to_json())
-        
+
         return genai.Client(credentials=creds)
 
     def analyze_audio_for_content(self, audio_path, hymn_name, style="Deep House"):
@@ -73,7 +73,7 @@ class GeminiContentGenerator:
 
         try:
             logger.info(f"Analyzing audio via Gemini 2.0 Flash: {audio_path}")
-            
+
             # 1. Upload the audio file with explicit mime_type
             with open(audio_path, "rb") as f:
                 audio_file = client.files.upload(file=f, config=types.UploadFileConfig(mime_type="audio/wav"))
@@ -96,9 +96,9 @@ class GeminiContentGenerator:
                 contents=[audio_file, prompt],
                 config=types.GenerateContentConfig(response_mime_type="application/json")
             )
-            
+
             data = json.loads(response.text)
-            
+
             # 4. Clean up
             client.files.delete(name=audio_file.name)
             return data
@@ -116,7 +116,7 @@ class GeminiContentGenerator:
 
         try:
             logger.info(f"Generating image via Imagen 3: {prompt[:50]}...")
-            
+
             response = client.models.generate_images(
                 model=self.image_model_name,
                 prompt=prompt,
@@ -125,18 +125,18 @@ class GeminiContentGenerator:
                     output_mime_type="image/png"
                 )
             )
-            
+
             if not response.generated_images:
                 raise RuntimeError("Imagen 3 returned no images.")
 
             image = response.generated_images[0]
-            
+
             if not output_path:
                 output_path = f"temp_art_{hashlib.md5(prompt.encode()).hexdigest()}.png"
 
             with open(output_path, "wb") as f:
                 f.write(image.image_bytes)
-                
+
             logger.info(f"Imagen 3 image saved to {output_path}")
             return output_path
 
@@ -153,7 +153,7 @@ class GeminiContentGenerator:
 
         try:
             logger.info(f"Generating AI Video via Google Veo: {prompt[:50]}...")
-            
+
             # Handle image_url (if local, it needs to be uploaded or handled)
             # Veo usually takes prompts and sometimes image references via URI
             response = client.models.generate_video(
@@ -164,7 +164,7 @@ class GeminiContentGenerator:
                     fps=24
                 )
             )
-            
+
             while response.state.name in ("PROCESSING", "PENDING"):
                 time.sleep(10)
                 response = client.models.get_video(name=response.name)
@@ -174,12 +174,12 @@ class GeminiContentGenerator:
 
             video_uri = response.video.uri
             logger.info(f"Veo video generated! Downloading from {video_uri}...")
-            
+
             res = requests.get(video_uri)
             res.raise_for_status()
             with open(output_path, "wb") as f:
                 f.write(res.content)
-            
+
             return output_path
 
         except Exception as e:

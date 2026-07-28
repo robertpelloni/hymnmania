@@ -38,10 +38,10 @@ class MusicRemaker:
                     "continuation": False
                 }
             )
-        
+
         if not output:
             raise RuntimeError("Music generation returned no output.")
-            
+
         logger.info(f"Music remake generated: {output}")
         return output
 

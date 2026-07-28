@@ -18,7 +18,7 @@ class UdioRemaker:
         self.auth_token = auth_token or os.environ.get("UDIO_OAUTH_TOKEN") or settings.UDIO_AUTH_TOKEN
         self.cookie_string = cookie_string or os.environ.get("UDIO_COOKIE_STRING")
         self.client = None
-        
+
         if self.auth_token:
             try:
                 from udio_wrapper import UdioWrapper
@@ -28,7 +28,7 @@ class UdioRemaker:
             except Exception as e:
                 try: logger.warning(f"Failed to initialize UdioWrapper: {e}")
                 except: print(f"Failed to initialize UdioWrapper: {e}")
-        
+
         # Initialize CDP automation for Edge
         try:
             from hymn_remaker.src.udio_browser_automation import UdioBrowserAutomation
@@ -115,13 +115,13 @@ class UdioRemaker:
 
             full_prompt = f"{prompt}. [Audio Influence: {variance}]"
             self.client.extend(prompt=full_prompt, audio_conditioning_path=public_url, seed=-1)
-            
+
             download_dir = "extend_songs"
-            time.sleep(10) 
+            time.sleep(10)
             files = glob.glob(os.path.join(download_dir, "*.mp3"))
             if not files: raise RuntimeError("No downloaded MP3 found.")
             latest_mp3 = max(files, key=os.path.getmtime)
-            
+
             output_dir = os.path.dirname(wav_path)
             hymn_name = os.path.basename(wav_path).replace("_base.wav", "")
             final_path = os.path.join(output_dir, f"{hymn_name}_remake.wav")
@@ -143,17 +143,17 @@ class UdioRemaker:
         mp3_upload_path = source_audio.replace(".wav", f"_upload_{timestamp}.mp3")
         if not mp3_upload_path.endswith(".mp3"): mp3_upload_path += ".mp3"
         subprocess.run([settings.FFMPEG_BIN, "-y", "-i", source_audio, "-codec:a", "libmp3lame", "-q:a", "2", mp3_upload_path], check=True, capture_output=True)
-        
+
         try:
             logger.info("Triggering Edge Automation (CDP)...")
             # tag_prompt used if prompt is generic, otherwise use provided prompt
             success = self.edge_auto.trigger_generation(prompt=prompt, audio_path=mp3_upload_path, variance=variance, negative_prompt=negative_prompt)
             if not success: raise RuntimeError("Edge automation failed.")
-            
+
             logger.info("Generation triggered! Waiting for completion...")
             download_triggered = self.edge_auto.wait_for_completion_and_download(timeout=300)
             if not download_triggered: raise RuntimeError("Edge automation failed to trigger download.")
-            
+
             download_dir = os.path.join(os.path.expanduser("~"), "Downloads")
             start_time = time.time()
             final_path = None
@@ -165,9 +165,9 @@ class UdioRemaker:
                         final_path = latest_mp3
                         break
                 time.sleep(5)
-            
+
             if not final_path: raise RuntimeError("Timed out waiting for file in Downloads.")
-            
+
             output_dir = os.path.dirname(wav_path)
             hymn_name = os.path.basename(wav_path).replace("_base.wav", "")
             remake_path = os.path.join(output_dir, f"{hymn_name}_remake.wav")

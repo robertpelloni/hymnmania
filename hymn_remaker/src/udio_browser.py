@@ -31,7 +31,7 @@ def generate_songs_browser(audio_path, prompt, variance=0.35, prompt_strength=0.
         # 2. Add Authentication Cookies
         cookie0 = os.environ.get("UDIO_COOKIE_0", "")
         cookie1 = os.environ.get("UDIO_COOKIE_1", "")
-        
+
         if not cookie0:
             raise RuntimeError("UDIO_COOKIE_0 not found in environment. Run refresh_udio_token.py first.")
 
@@ -91,7 +91,7 @@ def generate_songs_browser(audio_path, prompt, variance=0.35, prompt_strength=0.
             variance_input = page.locator("input[aria-label='Audio Influence']").or_(page.locator("input[aria-label='Variance']"))
             if variance_input.is_visible():
                 variance_input.fill(str(variance))
-            
+
             strength_input = page.locator("input[aria-label='Prompt Strength']")
             if strength_input.is_visible():
                 strength_input.fill(str(prompt_strength))
@@ -125,13 +125,13 @@ def generate_songs_browser(audio_path, prompt, variance=0.35, prompt_strength=0.
                         with page.expect_download() as download_info:
                             page.get_by_role("menuitem", name="Download").click()
                         download = download_info.value
-                        
+
                         output_dir = os.path.dirname(audio_path)
                         final_path = os.path.join(output_dir, f"{Path(audio_path).stem}_remake.mp3")
                         download.save_as(final_path)
                         logger.info(f"Download complete: {final_path}")
                         break
-                
+
                 logger.info(f"  Still generating... ({int(time.time() - start_time)}s)")
                 time.sleep(15)
 

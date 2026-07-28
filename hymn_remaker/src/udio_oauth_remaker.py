@@ -26,7 +26,7 @@ class UdioOAuthRemaker:
         self.client_secret = client_secret or os.environ.get("UDIO_CLIENT_SECRET")
         self.token = token or os.environ.get("UDIO_OAUTH_TOKEN")
         self.session = None
-        
+
         if (self.client_id and self.client_secret) or self.token:
             self._authenticate()
         else:
@@ -85,7 +85,7 @@ class UdioOAuthRemaker:
 
             # 2. Upload audio as reference (Official API pattern)
             logger.info(f"Uploading reference audio to Udio API: {os.path.basename(mp3_upload_path)}")
-            
+
             with open(mp3_upload_path, "rb") as f:
                 # Request upload slot
                 upload_res = self.session.post(
@@ -95,9 +95,9 @@ class UdioOAuthRemaker:
                         "content_type": "audio/mpeg"
                     }
                 )
-                
+
                 logger.info(f"Udio Upload Response ({upload_res.status_code}): {upload_res.text[:500]}")
-                
+
                 if not upload_res.ok:
                     upload_res.raise_for_status()
 
@@ -108,24 +108,24 @@ class UdioOAuthRemaker:
                         upload_data = json.loads(upload_data)
                     except:
                         pass
-                
+
                 upload_id = upload_data.get("id") if isinstance(upload_data, dict) else None
                 s3_url = upload_data.get("upload_url") if isinstance(upload_data, dict) else None
-                
+
                 if not s3_url:
                     raise RuntimeError(f"No upload URL returned from Udio: {upload_data}")
 
                 # Upload to S3
                 logger.info("  Uploading to Udio storage...")
                 requests.put(s3_url, data=f, headers={"Content-Type": "audio/mpeg"})
-            
+
             # Cleanup temp upload file
             if os.path.exists(mp3_upload_path):
                 os.remove(mp3_upload_path)
-                
+
             # 3. Trigger Remix
             logger.info(f"Triggering remix generation (Influence: 0.35, Prompt Strength: 0.65, Manual: True)...")
-            
+
             gen_res = self.session.post(
                 f"{UDIO_API_BASE}generate",
                 json={
@@ -142,7 +142,7 @@ class UdioOAuthRemaker:
                     }
                 }
             )
-            
+
             if not gen_res.ok:
                 logger.error(f"Udio Generation Request Failed: {gen_res.status_code}")
                 logger.error(f"Response: {gen_res.text}")
@@ -152,26 +152,26 @@ class UdioOAuthRemaker:
                 task_id = gen_res.json().get("task_id")
             except Exception:
                 raise RuntimeError(f"Udio API returned invalid JSON during generate: {gen_res.text[:200]}")
-            
+
             # 3. Poll for completion
             logger.info(f"Remix task started: {task_id}. Polling...")
             start_time = time.time()
             audio_url = None
-            
+
             while time.time() - start_time < settings.UDIO_POLL_TIMEOUT:
                 status_res = self.session.get(f"{UDIO_API_BASE}tasks/{task_id}")
                 status_data = status_res.json()
                 status = status_data.get("status", "").lower()
-                
+
                 if status == "completed":
                     audio_url = status_data.get("result", {}).get("audio_url")
                     break
                 elif status == "failed":
                     raise RuntimeError(f"Udio API task failed: {status_data.get('error')}")
-                
+
                 logger.info(f"  Status: {status} ({int(time.time() - start_time)}s)")
                 time.sleep(settings.UDIO_POLL_INTERVAL)
-                
+
             if not audio_url:
                 raise TimeoutError("Udio API remake timed out.")
 
@@ -179,13 +179,13 @@ class UdioOAuthRemaker:
             output_dir = os.path.dirname(wav_path)
             hymn_name = os.path.basename(wav_path).replace("_base.wav", "")
             final_path = os.path.join(output_dir, f"{hymn_name}_remake.wav")
-            
+
             logger.info(f"Downloading Udio v4 remake...")
             audio_data = requests.get(audio_url).content
             temp_file = f"temp_udio_{task_id}.wav"
             with open(temp_file, "wb") as f:
                 f.write(audio_data)
-                
+
             # Final conversion to match project sample rate
             conv_cmd = [
                 settings.FFMPEG_BIN, "-y",
@@ -195,7 +195,7 @@ class UdioOAuthRemaker:
             ]
             subprocess.run(conv_cmd, check=True, capture_output=True)
             os.remove(temp_file)
-            
+
             logger.info(f"Udio OAuth remake finalized at {final_path}")
             return final_path
 

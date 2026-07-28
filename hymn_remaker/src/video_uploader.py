@@ -133,19 +133,19 @@ class VideoProducer:
                     # - If tempo is provided, we can add karaoke-style highlighting to the text!
                     # For karaoke, we can split text into words and highlight them matching the beats.
                     effect_prefix = "{\\fad(300,300)}"
-                    
+
                     if tempo_bpm and " " in text:
                         words = text.split()
                         num_words = len(words)
                         duration_cs = int((end - start) * 100)
                         word_duration_cs = max(1, duration_cs // num_words)
-                        
+
                         # Form karaoke string: {\kf25}Word1 {\kf30}Word2 ...
                         # AND add a pulsing pulse effect to the whole line!
                         # We add multiple \t tags to scale up and down on every beat.
                         beat_len_sec = 60.0 / tempo_bpm
                         beat_len_cs = int(beat_len_sec * 100)
-                        
+
                         pulse_tags = ""
                         curr_cs = 0
                         while curr_cs < duration_cs:
@@ -158,7 +158,7 @@ class VideoProducer:
                         karaoke_parts = []
                         for word in words:
                             karaoke_parts.append(f"{{\\kf{word_duration_cs}}}{word}")
-                        
+
                         formatted_text = f"{effect_prefix}{pulse_tags}" + " ".join(karaoke_parts)
                     else:
                         formatted_text = f"{effect_prefix}{text}"
@@ -227,7 +227,7 @@ class VideoProducer:
 
             # 3. Use ffmpeg to combine background and audio
             base_cmd = [settings.FFMPEG_BIN, "-y"]
-            
+
             if temp_image_path is None:
                 # Solid color mode (lavfi color source doesn't use -loop)
                 color_name = image_url.lower()
@@ -237,7 +237,7 @@ class VideoProducer:
                 base_cmd.extend(["-stream_loop", "-1", "-i", temp_image_path])
             else:
                 base_cmd.extend(["-loop", "1", "-i", temp_image_path])
-                
+
             base_cmd.extend(["-i", audio_path])
 
             # Helper to execute ffmpeg
@@ -247,7 +247,7 @@ class VideoProducer:
                 # Determine base filters depending on format
                 base_vf = ""
                 target_w, target_h = (1080, 1920) if video_format == "Vertical 9:16 (TikTok/Reels)" else (1920, 1080)
-                
+
                 if video_format == "Vertical 9:16 (TikTok/Reels)":
                     # Scale to 1080 width, then pad to 1080x1920, ensuring even dimensions
                     base_vf = f"[0:v]scale=1080:trunc(1080/a/2)*2,pad={target_w}:{target_h}:(ow-iw)/2:(oh-ih)/2:black[v_base]"
@@ -281,7 +281,7 @@ class VideoProducer:
                     else:
                         vis_filter = f"[1:a]showwaves=s={w_viz}x{h_viz}:mode={visualizer_mode}:colors=white@0.5[wave];[v_base][wave]overlay=x=0:y={y_pos}:format=yuv420[v_pre]"
                         filters.append(vis_filter)
-                    
+
                     # Ensure the overlay result is exactly the target size
                     filters.append(f"[v_pre]scale={target_w}:{target_h}[v]")
                 else:

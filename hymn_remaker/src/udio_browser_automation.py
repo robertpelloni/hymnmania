@@ -31,7 +31,7 @@ class UdioBrowserAutomation:
             except Exception as e:
                 logger.warning(f"Could not connect to Edge debugging port {self.port}: {e}")
                 return []
-        
+
         return [t for t in targets if t.get('type') == 'page' and 'webSocketDebuggerUrl' in t]
 
     def _get_active_tab(self, require_udio=False):
@@ -44,7 +44,7 @@ class UdioBrowserAutomation:
                 if '/create' in t.get('url', '').lower(): res_tab = t; break
             logger.info(f"Selected Udio tab: {res_tab.get('url')} (ID: {res_tab.get('id')})")
             return res_tab
-        
+
         if require_udio:
             raise RuntimeError("No Udio tab found.")
         return targets[0] if targets else None
@@ -132,10 +132,10 @@ class UdioBrowserAutomation:
         }})()
         """
         coords = self.execute_js(ws_url, find_js)
-        if not coords: 
+        if not coords:
             logger.warning(f"Could not find or visible element for selector: {selector}")
             return False
-        
+
         logger.info(f"Clicking coords {coords} for {selector}")
         self._cdp_click_coords(ws_url, coords[0], coords[1])
         return True
@@ -156,15 +156,15 @@ class UdioBrowserAutomation:
             }
 
             const all = Array.from(document.querySelectorAll('*')).filter(el => el.tagName !== 'SCRIPT' && el.tagName !== 'STYLE');
-            
+
             // 0. Credit Check
             const creditEl = all.find(el => el.textContent.includes('Credits') && /\\d+/.test(el.textContent) && el.offsetParent !== null && el.children.length === 0);
             const credits = creditEl ? creditEl.textContent.trim() : "Unknown";
 
             // 1. Confirm Modals (Prioritized)
             const confirmBtn = findByText('i understand and confirm') || findByText('confirm') || findByText('i understand') || findByText('got it');
-            if (confirmBtn) { 
-                return { action: "click_confirm", text: confirmBtn.textContent.trim(), credits: credits }; 
+            if (confirmBtn) {
+                return { action: "click_confirm", text: confirmBtn.textContent.trim(), credits: credits };
             }
 
             // 2. Selection Mode
@@ -176,10 +176,10 @@ class UdioBrowserAutomation:
 
             // 3. Close/Dismiss Modals
             const closeBtn = findByText('close') || findByText('dismiss') || findByText('ok') || all.find(el => (el.getAttribute('aria-label') || '').toLowerCase().includes('close') && el.offsetParent !== null);
-            if (closeBtn) { 
+            if (closeBtn) {
                 const t = closeBtn.textContent.trim() || closeBtn.getAttribute('aria-label') || 'close';
                 if (!t.toLowerCase().includes('play') && !t.toLowerCase().includes('track')) {
-                    return { action: "close_modal", text: t, credits: credits }; 
+                    return { action: "close_modal", text: t, credits: credits };
                 }
             }
 
@@ -192,13 +192,13 @@ class UdioBrowserAutomation:
             if popup:
                 credits = popup.get('credits', 'Unknown')
                 if i == 0: logger.info(f"  Current Udio Credits: {credits}")
-                
+
                 action = popup.get('action')
                 if action:
                     text = popup.get('text')
                     selector = popup.get('selector')
                     logger.info(f"  Action (attempt {i+1}): {action} on {text or selector}")
-                    
+
                     if text:
                         click_js = f"""
                         (function() {{
@@ -237,10 +237,10 @@ class UdioBrowserAutomation:
                             self._cdp_click_coords(ws_url, coords[0], coords[1])
                     else:
                         self.cdp_click(ws_url, selector)
-                    
+
                     time.sleep(3)
                     if i >= 10: self.execute_js(ws_url, "window.location.reload()"); time.sleep(12); return True
-                else: 
+                else:
                     time.sleep(1)
                     if i > 1: break
         return True
@@ -308,10 +308,10 @@ class UdioBrowserAutomation:
         tab = self._get_active_tab(require_udio=True)
         ws_url = tab.get('webSocketDebuggerUrl')
         self.navigate_to_create(tab)
-        
+
         if audio_path and os.path.exists(audio_path):
             logger.info(f"Uploading {audio_path}...")
-            
+
             # Click the Upload button first to "wake it up"
             self.execute_js(ws_url, "(function() { const b = Array.from(document.querySelectorAll('button')).find(el => el.textContent.trim().includes('Upload Audio')); if(b) b.click(); })()")
             time.sleep(3)
@@ -322,11 +322,11 @@ class UdioBrowserAutomation:
                 ws = websocket.create_connection(ws_url.replace('localhost', '127.0.0.1'), suppress_origin=True, timeout=15)
                 self._send_cdp_cmd(ws, 10, "DOM.enable")
                 root = self._send_cdp_cmd(ws, 11, "DOM.getDocument")['result']['root']['nodeId']
-                
+
                 # Find the visible file input index
                 file_input_idx = self.execute_js(ws_url, "(function() { return Array.from(document.querySelectorAll('input[type=file]')).findIndex(el => el.offsetParent !== null); })()")
                 if file_input_idx == -1: file_input_idx = 0
-                
+
                 nodes = self._send_cdp_cmd(ws, 12, "DOM.querySelectorAll", {"nodeId": root, "selector": "input[type='file']"})
                 target_node_id = nodes['result']['nodeIds'][file_input_idx]
                 self._send_cdp_cmd(ws, 13, "DOM.setFileInputFiles", {"files": [os.path.abspath(audio_path)], "nodeId": target_node_id})
@@ -367,15 +367,15 @@ class UdioBrowserAutomation:
                 let rect = el.getBoundingClientRect();
                 return rect.width > 0 && rect.height > 20 && el.offsetParent !== null && (p.includes('describe') || p.includes('prompt') || p.includes('imagine'));
             });
-            if (inp) { 
-                inp.focus(); 
+            if (inp) {
+                inp.focus();
                 const r = inp.getBoundingClientRect();
                 return [r.left + r.width/2, r.top + r.height/2];
             }
             return null;
         })()
         """.replace("%VARIANCE%", str(variance)).replace("%NEG_PROMPT%", negative_prompt.replace('"', '\\"').replace('\n', ' '))
-        
+
         coords = self.execute_js(ws_url, focus_js)
         if coords:
             self._cdp_click_coords(ws_url, coords[0], coords[1])
@@ -410,21 +410,21 @@ class UdioBrowserAutomation:
             # Try specific Magenta button first
             if self.cdp_click(ws_url, "button.bg-brand-magenta"):
                 logger.info("SUCCESS: CDP Click triggered! Verifying...")
-                
+
                 for j in range(12):
                     time.sleep(5)
                     verify_js = "(function() { return document.body.innerText.includes('Creating') || document.body.innerText.includes('Generating') || document.body.innerText.includes('Remixing') || document.body.innerText.includes('HYMNMANIA') || document.body.innerText.includes('0/4'); })()"
                     if self.execute_js(ws_url, verify_js):
                         logger.info("SUCCESS: Generation verified.")
                         return True
-                    
+
                     # Aggressive retry click during verification
                     self.execute_js(ws_url, "(function() { const b = Array.from(document.querySelectorAll('button')).find(el => (el.textContent.trim() === 'Create' || el.textContent.trim() === 'Remix') && el.offsetParent !== null); if(b) b.click(); })()")
-                    
+
                     screen_text = self.execute_js(ws_url, "(function() { return document.body.innerText.substring(0, 1000).replace(/\\n/g, ' '); })()")
                     logger.info(f"  Verifying... (attempt {j+1}/12). Screen: {screen_text}")
                     if j == 11: self._save_debug_screenshot(ws_url)
-            
+
             logger.warning(f"Injection attempt {i+1} failed or verification timed out. Retrying...")
             self._clear_udio_popups(ws_url)
             time.sleep(5)
@@ -441,7 +441,7 @@ class UdioBrowserAutomation:
             except Exception as e:
                 logger.warning(f"Waiting for Udio tab recovery: {e}")
                 time.sleep(15); continue
-            
+
             poll_js = """
             (function() {
                 const clearBtn = document.querySelector('button[aria-label*="clear selected"]');
@@ -466,7 +466,7 @@ class UdioBrowserAutomation:
                 if (text.includes('error') || text.includes('failed')) return "error_row";
                 const isReady = text.includes(':') && !text.includes('creating') && !text.includes('generating') && !text.includes('0/4');
                 if (!isReady) return "generating (" + text.substring(0, 30).replace(/\\n/g, ' ') + ")";
-                
+
                 // Try Download button directly in the row if present
                 let d = latest.querySelector('button[aria-label*="Download"], button[title*="Download"]');
                 if (d && d.offsetParent !== null) { d.click(); return "clicked_direct_download"; }
@@ -475,7 +475,7 @@ class UdioBrowserAutomation:
                 if (!b) {
                     b = document.querySelector('button[aria-label*="Download"]');
                 }
-                
+
                 // If the download button was already clicked and the sub-menu is open, find "Audio"
                 const subMenuItems = Array.from(document.querySelectorAll('*')).filter(el => {
                     const t = (el.textContent || '').trim().toLowerCase();
@@ -495,7 +495,7 @@ class UdioBrowserAutomation:
                     b.click();
                     return "clicked_download_init";
                 }
-                
+
                 const allMenu = Array.from(document.querySelectorAll('[role="menu"] *, .menu *, [class*="menu"] *')).map(el => el.textContent.trim()).filter(t => t.length > 1 && t.length < 30);
                 return "ready_no_btn_menu:" + allMenu.join('|').substring(0, 100);
             })()

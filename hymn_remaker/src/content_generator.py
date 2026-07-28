@@ -189,4 +189,3 @@ if __name__ == "__main__":
             print("Usage: python content_generator.py <hymn_name>")
     else:
         print("OPENAI_API_KEY not set. Skipping real test.")
-
