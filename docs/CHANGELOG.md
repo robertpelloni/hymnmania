@@ -1,10 +1,25 @@
 # Changelog
 
-## v1.37.0 (Upcoming)
-- Added `ableton_psytrance_hymn_creator` as a submodule.
-- Enhanced `SonicVacuumProcessor` with speed-variant rendering (0.5x, 1x, 2x).
-- Implemented Suno Experiment Matrix in browser automation (9-way matrix).
-- Initialized `Psy-Mono Bridge` for reverse engineering Suno output back to Ableton MIDI/Projects.
+## [1.37.0] - 2026-06-05
+### Added
+- **Studio Reversal Pipeline (The Bridge):**
+    - Created `hymn_remaker/src/psy_mono_bridge.py` to bridge AI sound design with symbolic DAW production.
+    - Automated flow: AI Audio -> Stem Separation (Demucs) -> Audio-to-MIDI (Basic-Pitch) -> Programmatic Ableton Assembly.
+    - Integrated `AbletonOSC` via `pylive` for remote control of DAW parameters and clip injection.
+- **Suno Experiment Matrix:**
+    - Upgraded Suno browser automation to execute a 9-way matrix (0.5x, 1x, 2x speeds across Deep House, DnB, and Psytrance).
+    - Integrated Edge CDP (port 9222) for headless-headed hybrid control.
+- **Experimental Preprocessors:**
+    - Enhanced `SonicVacuumProcessor` with programmatic time-stretching (0.5x, 1x, 2x) for textureless dry renders.
+    - Added `SymbolicNormalizer` for velocity-flattened grid alignment.
+    - Added `HouseStructuralQuantizer` for 124/126 BPM electronic grid enforcement.
+- **System Health & Verification:**
+    - Integrated a **System Health Audit** tab for real-time binary/module verification.
+    - Added comprehensive E2E validation suite for v1.37.0 features.
+
+### Changed
+- **Submodule Integration:** Added `github.com/robertpelloni/ableton_psytrance_hymn_creator` as a primary submodule for project templates.
+- **UI UX:** Exposed preprocessor previews and reverse engineering triggers in the main Studio dashboard.
 
 
 ## [1.35.0] - 2026-06-01

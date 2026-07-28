@@ -242,9 +242,15 @@ with tab1:
             for file_path in saved_files:
                 filename = os.path.basename(file_path)
                 with st.status(f"Processing {filename}...") as status:
+                    progress_bar = st.progress(0, text="Initializing...")
+                    def streamlit_status(msg, progress):
+                        status.write(msg)
+                        progress_bar.progress(progress, text=msg)
+
                     try:
                         process_single_midi(
                             midi_path=file_path,
+                            status_callback=streamlit_status,
                             output_dir=output_dir,
                             style=style,
                             skip_render=skip_render,
@@ -274,7 +280,8 @@ with tab1:
                             symbolic_norm=symbolic_norm,
                             house_quantizer=house_quantizer,
                             hiphop_vocal_path=mix_hiphop_vocals if mix_hiphop_vocals else None,
-                            suno_matrix=suno_matrix
+                            suno_matrix=suno_matrix,
+                            quality_evaluator=quality_eval
                         )
                         status.update(label=f"Finished {filename}!", state="complete")
                     except Exception as e:
@@ -305,11 +312,17 @@ with tab3:
     import threading
 
     if "psy_player" not in st.session_state:
-        import hymn_player_ext
-        st.session_state.psy_player = hymn_player_ext.HymnPlayer(settings.DEFAULT_SOUNDFONT_PATHS[0])
-        st.session_state.psy_gen = PsyGenerator()
-        st.session_state.internal_midi_port = InternalMidiPort(st.session_state.psy_player)
-        st.session_state.audio_streamer = AudioStreamer(st.session_state.psy_player)
+        try:
+            import hymn_player_ext
+            st.session_state.psy_player = hymn_player_ext.HymnPlayer(settings.DEFAULT_SOUNDFONT_PATHS[0])
+            st.session_state.psy_gen = PsyGenerator()
+            st.session_state.internal_midi_port = InternalMidiPort(st.session_state.psy_player)
+            st.session_state.audio_streamer = AudioStreamer(st.session_state.psy_player)
+        except ImportError:
+            st.session_state.psy_player = None
+            st.session_state.psy_gen = None
+            st.session_state.internal_midi_port = None
+            st.session_state.audio_streamer = None
 
     if "event_log" not in st.session_state:
         st.session_state.event_log = []
@@ -359,15 +372,17 @@ with tab3:
 
         st.subheader("3. Live Performance Mixer")
         master_gain = st.slider("Global Gain", 0.0, 5.0, 1.0, key="psy_gain")
-        st.session_state.psy_player.set_gain(master_gain)
+        if st.session_state.psy_player:
+            st.session_state.psy_player.set_gain(master_gain)
 
         vol_k = st.slider("Kick (Ch 0)", 0.0, 1.0, 0.9, key="psy_vol_k")
         vol_b = st.slider("Bass (Ch 1)", 0.0, 1.0, 0.7, key="psy_vol_b")
         vol_l = st.slider("Lead (Ch 2)", 0.0, 1.0, 0.8, key="psy_vol_l")
 
-        st.session_state.psy_player.set_channel_volume(0, vol_k)
-        st.session_state.psy_player.set_channel_volume(1, vol_b)
-        st.session_state.psy_player.set_channel_volume(2, vol_l)
+        if st.session_state.psy_player:
+            st.session_state.psy_player.set_channel_volume(0, vol_k)
+            st.session_state.psy_player.set_channel_volume(1, vol_b)
+            st.session_state.psy_player.set_channel_volume(2, vol_l)
 
         st.subheader("External MIDI Control")
         try:
@@ -403,13 +418,15 @@ with tab3:
 
         st.subheader("4. Real-time Automation")
         cutoff = st.slider("Filter Cutoff (CC 74)", 0, 127, 100)
-        st.session_state.psy_player.send_cc(2, 74, cutoff) # Lead channel filter
+        if st.session_state.psy_player:
+            st.session_state.psy_player.send_cc(2, 74, cutoff) # Lead channel filter
         if cutoff != st.session_state.get('prev_cutoff'):
             st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 74 (Cutoff): {cutoff}")
             st.session_state.prev_cutoff = cutoff
 
         res = st.slider("Resonance (CC 71)", 0, 127, 40)
-        st.session_state.psy_player.send_cc(2, 71, res)
+        if st.session_state.psy_player:
+            st.session_state.psy_player.send_cc(2, 71, res)
         if res != st.session_state.get('prev_res'):
             st.session_state.event_log.append(f"[{time.strftime('%H:%M:%S')}] CC 71 (Resonance): {res}")
             st.session_state.prev_res = res
@@ -419,26 +436,31 @@ with tab3:
         # Map macro to actual params
         cutoff_macro = int(20 + (psy_energy * 100))
         res_macro = int(10 + (psy_energy * 90))
-        st.session_state.psy_player.send_cc(2, 74, cutoff_macro)
-        st.session_state.psy_player.send_cc(2, 71, res_macro)
-        # Dynamically adjust gain based on energy
-        st.session_state.psy_player.set_gain(master_gain * (0.8 + psy_energy * 0.4))
+        if st.session_state.psy_player:
+            st.session_state.psy_player.send_cc(2, 74, cutoff_macro)
+            st.session_state.psy_player.send_cc(2, 71, res_macro)
+            # Dynamically adjust gain based on energy
+            st.session_state.psy_player.set_gain(master_gain * (0.8 + psy_energy * 0.4))
 
         st.subheader("Live Audio Stream")
         use_web_stream = st.toggle("🌐 Enable Web Stream (Browser Audio)", value=False)
         if use_web_stream:
-            st.session_state.audio_streamer.start()
-            st.markdown('<audio src="http://localhost:8000/stream.mp3" controls autoplay style="width: 100%;"></audio>', unsafe_allow_html=True)
-            st.info("Streaming live MP3 to browser. Use System Audio if running locally.")
+            if st.session_state.audio_streamer:
+                st.session_state.audio_streamer.start()
+                st.markdown('<audio src="http://localhost:8000/stream.mp3" controls autoplay style="width: 100%;"></audio>', unsafe_allow_html=True)
+                st.info("Streaming live MP3 to browser. Use System Audio if running locally.")
+            else:
+                st.error("Audio Streamer not available.")
         else:
-            st.session_state.audio_streamer.stop()
+            if st.session_state.audio_streamer:
+                st.session_state.audio_streamer.stop()
 
     with col2:
         st.subheader("Performance Monitor & Event Log")
         metrics_cols = st.columns(3)
         metrics_cols[0].metric("BPM", f"{bpm}")
         metrics_cols[1].metric("Density", f"{density}")
-        metrics_cols[2].metric("Preprocessors", f"{int(st.session_state.get("psy_live_sym_norm", False)) + int(st.session_state.get("psy_live_house_quant", False))}")
+        metrics_cols[2].metric("Preprocessors", f"{int(st.session_state.get('psy_live_sym_norm', False)) + int(st.session_state.get('psy_live_house_quant', False))}")
 
         log_container = st.container(height=150)
         with log_container:
@@ -449,7 +471,10 @@ with tab3:
 
         st.subheader("Live Waveform Visualizer")
         # Pull real peaks from streamer
-        peaks = st.session_state.audio_streamer.get_peaks()
+        if st.session_state.audio_streamer:
+            peaks = st.session_state.audio_streamer.get_peaks()
+        else:
+            peaks = [0, 0]
         if "viz_buffer" not in st.session_state:
             st.session_state.viz_buffer = np.zeros(200)
 
@@ -658,6 +683,24 @@ with tab3:
 
 with tab4:
     st.header("📚 Output Library")
+
+    demo_dir = os.path.join(output_dir, "demos")
+    if os.path.exists(demo_dir):
+        with st.expander("🌟 Official v1.37.0 Demos", expanded=True):
+            demo_files = [f for f in os.listdir(demo_dir) if f.endswith(('.wav', '.mp3'))]
+            for f in sorted(demo_files):
+                f_path = os.path.join(demo_dir, f)
+                c1, c2, c3 = st.columns([3, 1, 1])
+                c1.write(f"**{f}**")
+                c1.audio(f_path)
+                score = quality_eval.evaluate(f_path)
+                c2.metric("Quality", f"{score}")
+                if c3.button("🔄 Reverse", key=f"demo_rev_{f}"):
+                    with st.spinner("Reversing demo..."):
+                        psy_mono_bridge.run_full_reversal(f_path, output_dir)
+                st.divider()
+
+    st.subheader("Your Generations")
     if os.path.exists(output_dir):
         files = [f for f in os.listdir(output_dir) if f.endswith(('.wav', '.mp3', '.mp4'))]
         if not files:
@@ -675,8 +718,38 @@ with tab4:
                 if f.endswith(('.wav', '.mp3')):
                     score = quality_eval.evaluate(f_path)
                     c2.metric("Quality Score", f"{score}")
+
+                    # Metadata enrichment
+                    meta_path = f_path.rsplit(".", 1)[0] + "_metadata.json"
+                    if os.path.exists(meta_path):
+                        try:
+                            with open(meta_path, "r") as mf:
+                                meta_data = json.load(mf)
+                                title = meta_data.get('title', 'Unknown')
+                                style_used = meta_data.get('style', 'N/A')
+                                composer = meta_data.get('composer', 'Traditional')
+                                c1.markdown(f"### {title}")
+                                c1.caption(f"**Style:** {style_used} | **Composer:** {composer}")
+                                if meta_data.get('lyrics'):
+                                    with c1.expander("📜 View Lyrics"):
+                                        for line in meta_data['lyrics']:
+                                            st.write(line['text'])
+                        except: pass
+
                     with c1:
                         st.audio(f_path)
+                        with st.expander("⭐ Rate & Feedback"):
+                            f_rating = st.slider("Rating", 1, 5, 5, key=f"rate_{f}")
+                            f_comment = st.text_area("Comments", key=f"text_{f}")
+                            if st.button("Submit Feedback", key=f"btn_{f}"):
+                                with open("output/feedback_log.jsonl", "a") as flog:
+                                    flog.write(json.dumps({
+                                        "timestamp": time.time(),
+                                        "file": f,
+                                        "rating": f_rating,
+                                        "comment": f_comment
+                                    }) + "\n")
+                                st.success("Feedback saved! 🙏")
 
                     with c3:
                         if st.button("🎹 Load Studio", key=f"load_{f}"):

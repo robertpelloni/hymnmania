@@ -109,13 +109,20 @@ class PsyMonoBridge:
                     mid = mido.MidiFile(midi_path)
                     # When iterating over mido.MidiFile, msg.time is delta time in seconds.
                     current_time = 0.0
+                    pending_notes = {} # (note, channel): (start_beat, velocity)
+
                     for msg in mid:
                         current_time += msg.time
+                        beat_pos = (current_time * target_bpm) / 60.0
+
                         if msg.type == 'note_on' and msg.velocity > 0:
-                            # Convert absolute time in seconds to beats for Ableton
-                            beat_pos = (current_time * target_bpm) / 60.0
-                            duration = 0.25 # Default staccato note
-                            clip.add_note(msg.note, beat_pos, duration, msg.velocity)
+                            pending_notes[(msg.note, msg.channel)] = (beat_pos, msg.velocity)
+                        elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
+                            key = (msg.note, msg.channel)
+                            if key in pending_notes:
+                                start_beat, velocity = pending_notes.pop(key)
+                                duration = max(0.0625, beat_pos - start_beat) # Min 1/64 note
+                                clip.add_note(msg.note, start_beat, duration, velocity)
 
             # Handle Vocals
             if vocal_path and os.path.exists(vocal_path):
