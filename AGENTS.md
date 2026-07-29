@@ -32,6 +32,8 @@ Examples:
 - `Psytrance Hymn 2026 Remix: Thy Word (Amy Grant & Michael W. Smith, 1984) | 1.0x Speed [A]`
 - `Dubstep Classical Remix - Canon in D (Johann Pachelbel, 1680) | Triple Speed (3.0x)`
 
+**Genre Detection**: When the title doesn't contain the genre keyword, the rename script extracts it from the YouTube description (`Genre: {genre} / Electronic Worship`). Never use "Electronic" as a generic genre — always use the specific genre name.
+
 ---
 
 ## YouTube Description Template
