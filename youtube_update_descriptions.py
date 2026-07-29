@@ -167,6 +167,8 @@ def update_all():
         items = resp.get("items", [])
         
         for item in items:
+            if "snippet" not in item:
+                continue
             vid = item["id"]["videoId"]
             title = item["snippet"]["title"]
             old_desc = item["snippet"]["description"]
