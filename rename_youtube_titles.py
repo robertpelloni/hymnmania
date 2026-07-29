@@ -75,16 +75,25 @@ def detect_variant(title_lower):
         return " [A]"
     return ""
 
-def build_correct_title(title):
+def build_correct_title(title, description=""):
     orig = title.lower()
     
-    # Check if already correctly formatted
-    if "hymn 2026 remix:" in orig and " | " in orig:
+    # Already correct
+    if "hymn 2026 remix:" in orig and " | " in orig and not orig.startswith("electronic "):
         return None
-    if "classical remix" in orig and " | " in orig:
+    if "classical remix" in orig and " | " in orig and not orig.startswith("electronic "):
         return None
     
     genre = detect_genre(orig)
+    
+    # If title has no genre, try extracting from description
+    if not genre and description:
+        desc_lower = description.lower()
+        if "genre:" in desc_lower:
+            genre_line = desc_lower.split("genre:")[1].split(chr(10))[0].strip()
+            # Parse "Psytrance / Electronic Worship" -> "Psytrance"
+            genre = genre_line.split(" / ")[0].strip().title()
+    
     speed = detect_speed(orig)
     variant = detect_variant(orig)
     
@@ -127,8 +136,9 @@ def rename_all():
                 continue
             vid = item["id"]["videoId"]
             title = item["snippet"]["title"]
+            desc = item["snippet"].get("description", "")
             
-            new_title = build_correct_title(title)
+            new_title = build_correct_title(title, desc)
             if new_title is None:
                 continue
             
