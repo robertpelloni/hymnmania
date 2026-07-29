@@ -94,6 +94,10 @@ def build_correct_title(title, description=""):
             # Parse "Psytrance / Electronic Worship" -> "Psytrance"
             genre = genre_line.split(" / ")[0].strip().title()
     
+    # Fallback placeholder if genre still unknown
+    if not genre:
+        genre = "[EDM LSDance]"
+    
     speed = detect_speed(orig)
     variant = detect_variant(orig)
     
@@ -101,19 +105,19 @@ def build_correct_title(title, description=""):
     for key, (name, author, year) in CLASSICAL.items():
         if key in orig:
             if not genre:
-                genre = "Electronic"
+                genre = "[EDM LSDance]"
             return f"{genre} Classical Remix - {name} ({author}, {year}) | {speed}{variant}"
     
     for key, (name, author, year) in HYMNS.items():
         if key in orig:
             if not genre:
-                genre = "Electronic"
+                genre = "[EDM LSDance]"
             return f"{genre} Hymn 2026 Remix: {name} ({author}, {year}) | {speed}{variant}"
     
     # Neon Valse
     if "neon valse" in orig:
         if not genre:
-            genre = "Electronic"
+            genre = "[EDM LSDance]"
         return f"{genre} Electronic Remix - Neon Valse (Original, 2026) | {speed}{variant}"
     
     return None
