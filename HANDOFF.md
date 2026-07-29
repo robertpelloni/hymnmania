@@ -1,62 +1,95 @@
-# Hymn Remaker — Pipeline Status
+# HANDOFF — Session Summary
 
-## 🎉 Final Database: 11,479 Hymns
+## Session: 2026-07-29 — Repository Synchronization & Intelligent Merge (v5.97.5)
 
-### ✅ Database Statistics
-| Metric | Count |
-|--------|-------|
-| **Total Hymns** | **11,479** |
-| **With Lyrics** | 1,388 |
-| **Total MIDI Files** | ~33,000 |
-| **Sources** | 7+ |
+### What Was Accomplished
 
-### ✅ Source Breakdown
-| Source | Files | Unique Added |
-|--------|-------|--------------|
-| **Cyber Hymnal (tch-mid)** | ~29,700 | ~9,657 |
-| **HymnalMidi** (4 subdirs) | 1,777 | ~283 |
-| **ZeusOfCoding** (French) | 654 | 654 |
-| **Mutopia Project** | 256 | 256 |
-| **French Hymnes et Louanges** | 299 | ~200 |
-| **LDS Hymns** | 263 | ~40 |
-| **United Methodist** | 21 | 21 |
-| **Other** | ~50 | ~50 |
+#### 1. Repository Synchronization
 
-### ✅ Pipeline Status
-- **MIDI Scraping**: ✅ Complete (11,479 hymns)
-- **Database**: ✅ Complete (SHA256 dedup)
-- **Lyrics Extraction**: ✅ 1,388 with embedded lyrics
-- **Rendering**: ✅ Working (FluidSynth + WAV/MP3 conversion)
-- **Suno Browser Automation**: ✅ Working (v5.5 compatible)
-- **Suno Generation**: ✅ 9/9 triggered in speed×genre test
+- **Force-push reconciliation**: Remote `origin/main` was force-pushed ahead of local. Created backup branch `backup/pre-sync-20260729-004935` to preserve local state, then hard-reset to `origin/main` at commit `d38f2b0` (v5.97.4).
+- **Local state preserved**: All original commits (2e2161f, c3c462e, 518b384, etc.) saved in backup branch.
+- **Remote history**: New history includes merges from `feat/v137` (Studio Reversal), `jules` (session docs), and commits v5.97.0 through v5.97.4 covering classical pipeline, YouTube/Facebook/Instagram templates, and daily scheduler.
 
-### 🔄 Suno Browser Automation (Updated 2026-06-07)
-The `trigger_generation` method was completely rewritten for Suno v5.5:
+#### 2. Documentation Restored & Updated
 
-**Correct upload flow:**
-1. **Real CDP mouse click** on Audio button (`Input.dispatchMouseEvent`) — JS `.click()` does NOT work
-2. **`DOM.setFileInputFiles`** on hidden file inputs (both nodes)
-3. **Wait for upload** — poll for "Uploaded" or Create button enabled
-4. **"Identify audio content"** — click "Full Song" → Continue
-5. **"Describe Your Audio"** — fill description → Continue
-6. **Audio Influence** — slider shows "Loose 25%"
-7. **Advanced mode** — textarea[0]=lyrics, textarea[1]=style prompt
-8. **Click Create**
+The force-push dropped 8 documentation files. All restored from backup and updated:
 
-**Key discoveries:**
-- `DOM.setFileInputFiles` works but requires a real CDP click on the Audio button first
-- JS `.click()` on the Audio button doesn't trigger React's upload flow
-- File inputs are portal-mounted (direct `<body>` children) with `display: none`
-- Suno has a copyright filter: "This audio matches an existing recording"
-- **Bypass**: Apply pitch shift (+1 semitone) + audio effects to the MP3 before upload
-- WAV→MP3 conversion is essential (18MB WAV → 1.7MB MP3 = faster upload)
-- After upload, Suno requires "Identify audio content" + "Describe Your Audio" steps
-- In Advanced mode, textareas are: [0]=lyrics/write, [1]=style/prompt (reversed from Simple)
+| File | Status |
+|------|--------|
+| `CHANGELOG.md` | Restored + entries for v5.96.0–v5.97.5 added |
+| `ROADMAP.md` | Restored + Phase 4/5 updated with FB/IG/classical/Studio Reversal |
+| `TODO.md` | Restored + updated with current tasks |
+| `README.md` | Restored + updated with social links and v5.97.5 structure |
+| `VISION.md` | Restored + updated with 5 core pillars |
+| `IDEAS.md` | Restored + new ideas added |
+| `MEMORY.md` | Restored + social media posting section added |
+| `DEPLOY.md` | Restored + updated with all pipeline commands and social accounts |
 
-**Remaining issues:**
-- Need to navigate to fresh `/create` page between generations
-- Need to test lyrics injection with a hymn that has lyrics
-- Need to verify copyright filter bypass works
-- Instrumental toggle has different UI in Advanced mode
+#### 3. Version Bump
 
-*Generated: 2026-06-07*
+- **VERSION**: `5.97.4` → `5.97.5`
+- **AGENTS.md**: Version tag updated to `5.97.5`, date to `2026-07-29`
+
+#### 4. Branch Status
+
+| Branch | Commit | Notes |
+|--------|--------|-------|
+| `main` (local) | `d38f2b0` | Synced with `origin/main` |
+| `origin/main` | `d38f2b0` | Latest remote |
+| `origin/master` | `d38f2b0` | Points to same commit |
+| `backup/pre-sync-20260729-004935` | `2e2161f` | Pre-sync safety backup |
+| Feature branches | None | `feat/v137` and `jules` already merged into main |
+
+#### 5. Submodule Status
+
+- `submodules/ableton_psytrance_hymn_creator` at commit `3256ef6` (part of remote history)
+- **Note**: Submodule remote currently points to `https://github.com/robertpelloni/hymnmania.git` (same as parent repo) — may need correction to actual `ableton_psytrance_hymn_creator` repo
+
+### Current Project State
+
+#### Active Scripts (Post-Sync)
+
+| Script | Purpose |
+|--------|---------|
+| `youtube_update_descriptions.py` | YouTube description updates with templates |
+| `rename_youtube_titles.py` | Standard YouTube title renaming |
+| `daily_scheduler.py` | Facebook/Instagram auto-poster |
+| `facebook_poster.py` | Facebook CDP posting |
+| `quick_composer.py` | FFmpeg beat video composer |
+| `demo_gen.py` | Demo generation |
+| `scripts/health_check.py` | Connectivity check |
+| `scripts/package_outputs.py` | Output packaging |
+
+#### Social Templates (from AGENTS.md)
+
+- **YouTube**: Standard title format `[Genre] Hymn 2026 Remix: [Title] ([Author], [Year]) | [Speed] [Variant]`
+- **YouTube Description**: Includes Artist: Resurrecting Beats ft. [Author], genre, social links, mission statement, science of psytrance section
+- **Facebook**: Bare YouTube URL → wait for preview → selectAll + replace with full template → post. Double newlines between sections.
+- **Instagram**: Same template as Facebook with bio-link CTA. Credentials: `resurrectingbeats@gmail.com`
+
+#### Pipeline Statistics
+
+- **400+** YouTube videos on channel
+- **11 genres** across hymns and classical pieces
+- **11,479 hymns** in database with ~33K MIDI files
+- **Facebook + Instagram** automated posting workflow operational
+
+### Credentials Reference
+
+| Service | Credential | Location |
+|---------|-----------|----------|
+| YouTube OAuth | Refreshable token | `token.json` |
+| Facebook | CDP via Edge port 9222 | Profile `edge-cdp-profile` |
+| Instagram | resurrectingbeats@gmail.com / Temppass0! | `.secrets.json` |
+| Magnific API | Key in `~/.env` | `MAGNIFIC_API_KEY` |
+| Suno | Logged into suno.com in Edge | Browser session |
+
+### Next Steps
+
+1. **Verify pipeline health**: Run `scripts/health_check.py` to confirm all services accessible
+2. **Check YouTube token**: Verify `token.json` still valid for uploads
+3. **Test Facebook posting**: Run `daily_scheduler.py` with a test post
+4. **Verify Magnific credits**: Check API credits remaining
+5. **TikTok integration**: Set up API access for cross-platform posting
+6. **Generate more content**: Batch create classical covers for all 11 genres
+7. **Fix submodule remote**: Consider correcting `ableton_psytrance_hymn_creator` remote URL if misconfigured
