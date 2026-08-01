@@ -3,7 +3,8 @@
 Hymn format:  [Genre] Hymn 2026 Remix: [Title] ([Author], [Year]) | [Speed] [Variant]
 Classical:    [Genre] Classical Remix - [Piece] ([Composer], [Year]) | [Speed]
 """
-import json, time, re
+import json
+import time
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
@@ -75,38 +76,71 @@ def detect_variant(title_lower):
         return " [A]"
     return ""
 
+MAX_TITLE_LEN = 100
+
+def truncate_title(new_title):
+    """YouTube titles are limited to 100 characters.
+    If over, drop the variant suffix, then the speed suffix, then truncate the author."""
+    if len(new_title) <= MAX_TITLE_LEN:
+        return new_title
+    # Drop variant suffix [A]/[B]
+    for marker in (" [B]", " [A]"):
+        if marker in new_title:
+            cand = new_title.replace(marker, "")
+            if len(cand) <= MAX_TITLE_LEN:
+                return cand
+    # Drop the | speed portion entirely
+    if " | " in new_title:
+        cand = new_title.split(" | ")[0]
+        if len(cand) <= MAX_TITLE_LEN:
+            return cand
+    # Hard truncate at the last space before the limit
+    if len(new_title) > MAX_TITLE_LEN:
+        cut = new_title[:MAX_TITLE_LEN]
+        if " " in cut:
+            cut = cut.rsplit(" ", 1)[0]
+        return cut
+    return new_title
+
+
 def build_correct_title(title):
     orig = title.lower()
-    
+
     # Check if already correctly formatted
-    if "hymn 2026 remix:" in orig and " | " in orig:
+    if ("hymn 2026 remix:" in orig and " | " in orig) or (
+        "classical remix" in orig and " | " in orig
+    ) or ("electronic remix" in orig and " | " in orig):
         return None
-    if "classical remix" in orig and " | " in orig:
-        return None
-    
+
     genre = detect_genre(orig)
     speed = detect_speed(orig)
     variant = detect_variant(orig)
-    
+
     # Find which piece
     for key, (name, author, year) in CLASSICAL.items():
         if key in orig:
             if not genre:
                 genre = "Electronic"
-            return f"{genre} Classical Remix - {name} ({author}, {year}) | {speed}{variant}"
-    
+            return truncate_title(
+                f"{genre} Classical Remix - {name} ({author}, {year}) | {speed}{variant}"
+            )
+
     for key, (name, author, year) in HYMNS.items():
         if key in orig:
             if not genre:
                 genre = "Electronic"
-            return f"{genre} Hymn 2026 Remix: {name} ({author}, {year}) | {speed}{variant}"
-    
+            return truncate_title(
+                f"{genre} Hymn 2026 Remix: {name} ({author}, {year}) | {speed}{variant}"
+            )
+
     # Neon Valse
     if "neon valse" in orig:
         if not genre:
             genre = "Electronic"
-        return f"{genre} Electronic Remix - Neon Valse (Original, 2026) | {speed}{variant}"
-    
+        return truncate_title(
+            f"{genre} Electronic Remix - Neon Valse (Original, 2026) | {speed}{variant}"
+        )
+
     return None
 
 
