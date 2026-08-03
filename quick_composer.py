@@ -96,6 +96,15 @@ def compose(audio_fp, hymn, genre_tag, beats_per_phrase=8, add_branding=True):
         tempo = 130
     
     beat_dur = 60.0 / tempo
+    # Scale beats_per_phrase with tempo to keep clip duration in 3-6s range
+    if tempo >= 160:      # Gabba, fast DnB — 16 beats per phrase
+        beats_per_phrase = 16
+    elif tempo >= 130:    # Psytrance, Hardstyle — 12 beats
+        beats_per_phrase = 12
+    elif tempo >= 100:    # Deep House, Detroit — 8 beats
+        beats_per_phrase = 8
+    else:                 # Half-speed, ambient — 4 beats
+        beats_per_phrase = 4
     cut_dur = beats_per_phrase * beat_dur
     n_cuts = max(5, int(audio_dur / cut_dur))
     cut_dur = audio_dur / n_cuts

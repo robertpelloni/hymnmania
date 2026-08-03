@@ -148,10 +148,16 @@ Same template as Facebook, but:
 ## Beat Video Branding
 
 ### Beat Synchronization
-Every video is beat-synced to the music:
+Every video is beat-synced to the music with tempo-scaled phrase lengths:
 1. **librosa** detects BPM from the audio track (range 60-200 BPM)
-2. Clips are cut to musical phrase length (`beats_per_phrase=8` beats → `cut_dur = 8 × 60/BPM`)
-3. `n_cuts` = total audio duration / cut_dur, ensuring smooth phrase-aligned transitions
+2. Clip duration scales with tempo to keep cuts in the 3-6 second sweet spot:
+
+| Tempo Range | Beats/Phrase | Clip Duration | Genres |
+|------------|-------------|---------------|--------|
+| >160 BPM | 16 beats | ~5-6s | Gabba, fast DnB |
+| 130-160 BPM | 12 beats | ~4.5-5.5s | Psytrance, Hardstyle |
+| 100-130 BPM | 8 beats | ~3.7-4.8s | Deep House, Detroit, Dubstep |
+| <100 BPM | 4 beats | ~2.4-4s | Half-speed, ambient |
 
 ### Intro/Outro
 - **Intro (2.5s)**: "RESURRECTING BEATS" + genre name over random Magnific clip with genre-matched colors
