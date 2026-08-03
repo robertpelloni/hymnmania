@@ -145,6 +145,7 @@ Same template as Facebook, but:
 | Facebook Poster | `daily_scheduler.py` | Bare URL → preview → selectAll → full text |
 | Beat Video Composer | `quick_composer.py` | ffmpeg crossfade + Magnific clips + intro/outro + thumbnails |
 | YouTube Shorts | `shorts_composer.py` | 9:16 vertical 60s clips from beat videos |
+| YouTube Community | CDP browser | Static SEO posts on Community tab (requires 500+ subscribers) |
 | TikTok Poster | `tiktok_poster.py` | Convert to vertical + upload via CDP browser |
 | Scheduler Bot | `scheduler_bot.py` | Weekly auto-posting Mon-Fri to TikTok + Facebook |
 | AI Metadata | Embedded JSON-LD | Schema.org MusicRecording for AI crawler indexing |
@@ -274,3 +275,12 @@ Auto-run: leave running and it posts on schedule hourly check
 - **Last 20s**: End screen with subscribe CTA
 - **Description**: Clear call-to-action to subscribe
 - **Cross-promote**: Link Facebook + TikTok in every description
+
+### YouTube Post Types (All 3)
+| Type | Format | Method | Min Subs |
+|------|--------|--------|----------|
+| Full Video | 16:9 MP4 | API videos().insert() | 0 |
+| Shorts | 9:16 vertical <60s | API + #Shorts tag | 0 |
+| Community (Static) | Text + link | CDP browser Community tab | 500 |
+
+Community tab blocked until 500 subscribers. Script ready.
