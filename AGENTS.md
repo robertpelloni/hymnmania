@@ -145,6 +145,8 @@ Same template as Facebook, but:
 | Facebook Poster | `daily_scheduler.py` | Bare URL → preview → selectAll → full text |
 | Beat Video Composer | `quick_composer.py` | ffmpeg crossfade + Magnific clips + intro/outro + thumbnails |
 | YouTube Shorts | `shorts_composer.py` | 9:16 vertical 60s clips from beat videos |
+| TikTok Poster | `tiktok_poster.py` | Convert to vertical + upload via CDP browser |
+| Scheduler Bot | `scheduler_bot.py` | Weekly auto-posting Mon-Fri to TikTok + Facebook |
 | AI Metadata | Embedded JSON-LD | Schema.org MusicRecording for AI crawler indexing |
 
 ## Beat Video Branding
@@ -255,10 +257,17 @@ Resurrected from the vault! High-energy 138 BPM Psytrance beat packed with spiri
 | **P2** | Pinned comment: "Which hymn should we remix next?" | Low | Low |
 
 ### Weekly Cadence
-- 5-10 YouTube uploads per quota window
-- 2-3 Facebook posts per day (staggered genres)
-- 1 TikTok/Short per day from best segments
-- Rotate featured playlists weekly
+| Day | Time (EST) | Content Type | Platform |
+|-----|-----------|-------------|----------|
+| MON | 3-5 PM | HOOK_DROP (15s loop) | TikTok + FB |
+| TUE | 2-6 PM | VAULT_STORY (30s background) | TikTok + FB |
+| WED | 1-6 PM | HOOK_DROP (15s loop) | TikTok + FB |
+| THU | 1-5 PM | CONVERSION (30s YT promo) | TikTok + FB |
+| FRI | 3-5 PM | HOOK_DROP (15s loop) | TikTok + FB |
+| SAT/SUN | — | Rest / Queue Reset | — |
+
+Run manually: `python scheduler_bot.py HOOK_DROP`
+Auto-run: leave running and it posts on schedule hourly check
 
 ### Subscriber Hooks
 - **First 3s**: RESURRECTING BEATS intro flash
