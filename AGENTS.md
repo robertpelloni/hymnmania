@@ -143,7 +143,23 @@ Same template as Facebook, but:
 | YouTube Descriptions | `youtube_update_descriptions.py` | Artist: Resurrecting Beats ft. author |
 | YouTube Title Rename | `rename_youtube_titles.py` | Standard format |
 | Facebook Poster | `daily_scheduler.py` | Bare URL → preview → selectAll → full text |
-| Beat Video Composer | `quick_composer.py` | ffmpeg crossfade + Magnific clips |
+| Beat Video Composer | `quick_composer.py` | ffmpeg crossfade + Magnific clips + intro/outro |
+
+## Beat Video Branding
+
+Every composed beat video includes:
+- **Intro (2.5s)**: "RESURRECTING BEATS" + genre name over a random Magnific clip — genre-matched colors/effects
+- **Outro (3s)**: "RESURRECTING BEATS" + "Subscribe for more!" with fade-out
+- **Unique previews**: Random starting frame from a random clip ensures every thumbnail is different
+- Genre styles: Psytrance=purple neon, Dubstep=red bass, Deep House=gold, Synthwave=magenta neon, etc.
+
+## TikTok Posting
+
+- **Channel**: @resurrecting.beat
+- **URL**: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
+- **Video format**: Vertical 9:16 (1080x1920) for TikTok/Reels
+- **Posting**: To be automated via CDP browser (tikok.com/upload)
+- **Template**: (awaiting verbiage — to be documented)
 
 ## Credentials
 
