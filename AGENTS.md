@@ -199,3 +199,31 @@ Every video is beat-synced to the music with tempo-scaled phrase lengths:
 - **Magnific**: `~/.env` (needs credits)
 - **Channel**: Resurrecting Beats (@ResurrectingBeats)
 - **Facebook Page**: lumkourlos@gmail.com / Page ID 61588784931149
+
+## Growth Recommendations
+
+### Immediate (can implement now)
+| Priority | Feature | Impact | Effort |
+|----------|---------|--------|--------|
+| **P0** | Crossfade transitions between clips (0.3-0.5s xfade) | High | Low |
+| **P0** | YouTube Shorts - 60s vertical highlights from beat videos | High | Medium |
+| **P0** | End screens - Subscribe + next video card on last 20s | High | Low |
+| **P1** | Custom thumbnails - genre + hymn title overlay | Medium | Medium |
+| **P1** | Audio-reactive waveform/spectrum overlay synced to beat | Medium | Medium |
+| **P1** | Playlist auto-organization by hymn, genre, speed | Medium | Low |
+| **P1** | TikTok/Reels cross-post - 9:16 vertical cuts | High | Medium |
+| **P2** | Comment auto-engagement - reply with YT link | Low | Low |
+| **P2** | Ken Burns zoom/pan on static clips | Medium | Low |
+| **P2** | Pinned comment: "Which hymn should we remix next?" | Low | Low |
+
+### Weekly Cadence
+- 5-10 YouTube uploads per quota window
+- 2-3 Facebook posts per day (staggered genres)
+- 1 TikTok/Short per day from best segments
+- Rotate featured playlists weekly
+
+### Subscriber Hooks
+- **First 3s**: RESURRECTING BEATS intro flash
+- **Last 20s**: End screen with subscribe CTA
+- **Description**: Clear call-to-action to subscribe
+- **Cross-promote**: Link Facebook + TikTok in every description
