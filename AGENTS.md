@@ -147,11 +147,35 @@ Same template as Facebook, but:
 
 ## Beat Video Branding
 
-Every composed beat video includes:
-- **Intro (2.5s)**: "RESURRECTING BEATS" + genre name over a random Magnific clip — genre-matched colors/effects
+### Beat Synchronization
+Every video is beat-synced to the music:
+1. **librosa** detects BPM from the audio track (range 60-200 BPM)
+2. Clips are cut to musical phrase length (`beats_per_phrase=8` beats → `cut_dur = 8 × 60/BPM`)
+3. `n_cuts` = total audio duration / cut_dur, ensuring smooth phrase-aligned transitions
+
+### Intro/Outro
+- **Intro (2.5s)**: "RESURRECTING BEATS" + genre name over random Magnific clip with genre-matched colors
 - **Outro (3s)**: "RESURRECTING BEATS" + "Subscribe for more!" with fade-out
-- **Unique previews**: Random starting frame from a random clip ensures every thumbnail is different
-- Genre styles: Psytrance=purple neon, Dubstep=red bass, Deep House=gold, Synthwave=magenta neon, etc.
+
+### Genre Style Map
+| Genre | Text Color | Effect |
+|-------|-----------|--------|
+| Psytrance | Purple neon | Neon glow |
+| Dubstep | Red | Bass shake |
+| Deep House | Gold | Warm fade |
+| Drum and Bass | Cyan | Fast pulse |
+| Chiptune | Lime green | Pixel glitch |
+| Gabba | Orange | Hardcore flash |
+| Detroit Techno | Silver | Industrial |
+| Detroit House | Gold | Smooth |
+| Hardstyle Trance | Yellow | Laser blast |
+| Synthwave | Magenta | Neon grid |
+| Japanese Hardcore | Cyan | Kawaii rave |
+
+### Unique Previews
+- Clips are randomly sampled from 152 Magnific videos
+- Each clip uses a random start timestamp — no two videos start the same way
+- YouTube thumbnail frames are always different
 
 ## TikTok Posting
 
