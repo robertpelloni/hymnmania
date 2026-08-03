@@ -78,7 +78,7 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 🎵 Stream/Download [Song Title]: Coming Soon
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
+#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
 ```
 
 ---
@@ -112,7 +112,7 @@ Watch the full 4K visual journey on YouTube!
 {{YOUTUBE_LINK}}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
+#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
 ```
 
 ### Spacing Rules
@@ -143,7 +143,9 @@ Same template as Facebook, but:
 | YouTube Descriptions | `youtube_update_descriptions.py` | Artist: Resurrecting Beats ft. author |
 | YouTube Title Rename | `rename_youtube_titles.py` | Standard format |
 | Facebook Poster | `daily_scheduler.py` | Bare URL → preview → selectAll → full text |
-| Beat Video Composer | `quick_composer.py` | ffmpeg crossfade + Magnific clips + intro/outro |
+| Beat Video Composer | `quick_composer.py` | ffmpeg crossfade + Magnific clips + intro/outro + thumbnails |
+| YouTube Shorts | `shorts_composer.py` | 9:16 vertical 60s clips from beat videos |
+| AI Metadata | Embedded JSON-LD | Schema.org MusicRecording for AI crawler indexing |
 
 ## Beat Video Branding
 
@@ -185,11 +187,47 @@ Every video is beat-synced to the music with tempo-scaled phrase lengths:
 
 ## TikTok Posting
 
-- **Channel**: @resurrecting.beat
+### Channel
+- **Handle**: @resurrecting.beat
 - **URL**: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
-- **Video format**: Vertical 9:16 (1080x1920) for TikTok/Reels
-- **Posting**: To be automated via CDP browser (tikok.com/upload)
-- **Template**: (awaiting verbiage — to be documented)
+
+### Post Template
+```
+🌀 RESURRECTING BEATS: '{TRACK_TITLE}' [{SUB_GENRE}] ⚡
+
+Resurrected from the vault! {VIBE} energy at {BPM} BPM in {KEY}. Built for festivals, vocalists, and live sets.
+
+🎧 Free Download / License link in bio!
+💬 Comment '{TRACK_TITLE_UPPER}' for the untagged high-quality link.
+
+#ResurrectingBeats #EDM #Psytrance #SpiritualEDM #ElectronicMusic #Dance #DanceSafe #HymnMania
+
+#producertok #edmmusic #trancefamily #festivalbeats #unreleasedmusic #[Genre] #[Hook/TrackTitle]
+```
+
+### Example
+```
+🌀 RESURRECTING BEATS: 'Samsara' [Psytrance / Spiritual EDM] ⚡
+
+Resurrected from the vault! High-energy 138 BPM Psytrance beat packed with spiritual vocals & driving bass. Perfect for festivals, vocalists, and content creators.
+
+🎧 Free Download / License link in bio!
+💬 Comment 'SAMSARA' to get the untagged high-quality link sent to your inbox.
+
+#ResurrectingBeats #EDM #Psytrance #SpiritualEDM #ElectronicMusic #Dance #DanceSafe #HymnMania #producertok #trancefamily #festivalmusic #unreleasedmusic #producertok #edmbeats
+```
+
+### Posting Method
+- **Upload**: TikTok web uploader at `tiktok.com/upload` via CDP browser
+- **Format**: 9:16 vertical (1080x1920) MP4 — converted from existing beat videos
+- **Privacy**: PUBLIC_TO_EVERYONE
+- **AI flag**: Set `is_aigc=true` for Suno-generated audio
+
+### What's Needed to Post
+1. CDP browser session with TikTok logged in (@resurrecting.beat)
+2. 9:16 vertical video files (converted via ffmpeg crop/scale from beat videos)
+3. BPM + Key metadata (extracted via librosa)
+4. TikTok web uploader automation script (same pattern as Facebook poster)
 
 ## Credentials
 
