@@ -1,5 +1,55 @@
 # Changelog
 
+## v5.97.7 — Executive Protocol: Repository Sync & Intelligent Merge (2026-08-03)
+
+### Branch Reconciliation
+
+- **Ableton submodule**: `feat/vertical-video-generation` — already merged upstream. `jules-*` branches — AI auto-generated, stagnant, excluded by protocol. `jules-1235` merged into `origin/main` upstream.
+- **Parent repo**: Only `main` + `backup/pre-sync-*`. No feature branches. `master` mirrors `main`.
+- **Forward merges**: 0 needed.
+- **Reverse merges**: 0 needed.
+
+### Submodule Chain
+
+- **L3 circular reference** (`hymnmania_src/submodules/ableton_...`): Mitigated via `fetchRecurseSubmodules=false`. Remains uninitialized.
+- **L1 unpushed commits**: 3 local commits on ableton (nested submodule pointer updates). Push blocked by credential mismatch (`candlestixxx` vs `robertpelloni`).
+- **Recursive update**: All layers pulled to latest; gitlink cascade committed and pushed.
+
+### Changed
+
+- **Version**: Bumped VERSION from 5.97.6 → 5.97.7
+- **AGENTS.md**: Version tag updated to 5.97.7
+- **HANDOFF.md**: Full session summary generated
+- **CHANGELOG.md**: v5.97.6 entries added from upstream pull
+- **Documentation**: All .md files verified present and current
+
+## v5.97.6 — TikTok + Shorts + Crossfade Pipeline (2026-08-03)
+
+### New
+
+- **Crossfade transitions**: 0.4s ffmpeg xfade between all clips in `quick_composer.py`
+- **Custom thumbnails**: Genre + hymn + RESURRECTING BEATS overlay
+- **YouTube Shorts**: 9:16 vertical converter + uploader
+- **TikTok poster**: 9:16 convert + CDP upload script (`tiktok_poster.py`)
+- **Weekly scheduler bot**: Mon-Fri auto-posting to TikTok + Facebook (`scheduler_bot.py`)
+- **Post all platforms**: Unified script (`post_all_platforms.py`)
+- **Full hymn pipeline**: 15 hymns × 11 genres × 5 speeds with NNT subtitles (`full_hymn_pipeline.py`)
+- **SpiritualEDM hashtag**: Replaced #ChristianPsytrance across all platforms
+- **AI Metadata**: JSON-LD Schema.org hidden in descriptions for AI crawler indexing
+- **Tempo-scaled beats**: 4/8/12/16 beat phrases based on BPM
+- **INTRO/OUTRO**: RESURRECTING BEATS intro/outro with genre-matched text styles
+
+### Pipeline Stats
+
+- 700+ YouTube videos
+- 50+ Facebook posts
+- Ready: TikTok (@resurrecting.beat), YouTube Shorts
+
+### Known Blockers
+
+- TikTok logged into @hypernexusllc, not @resurrecting.beat
+- YouTube Community tab: 500 subscriber minimum
+
 ## v5.97.5 — Repository Synchronization & Intelligent Merge (2026-07-29)
 
 ### New
