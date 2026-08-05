@@ -1,5 +1,31 @@
 # Changelog
 
+## v5.97.8 — Comprehensive Repository Refresh & Submodule Cascade (2026-08-05)
+
+### Branch Reconciliation
+
+- All 3 L1 feature branches (`feat/vertical-video`, `jules-1235`, `jules-6626`) verified as ancestors of `origin/main` — fully merged, no action needed.
+- Parent repo: `main`, `master`, `backup/pre-sync-*` — no feature branches.
+
+### Submodule Cascade
+
+- L2 pulled: `9ec99de` → `acd0fa1` (1 commit)
+- L1 gitlink amended: nested hymnmania_src pointer refreshed
+- Parent gitlink updated: ableton submodule pointer cascaded
+- L3 circular reference: remains uninitialized, `fetchRecurseSubmodules=false` mitigation active
+
+### Verification
+
+- `.gitignore` audit: databases, session files, AI memory, documentation all confirmed tracked
+- TypeScript `tsc --noEmit`: 0 errors
+- Python syntax: all root + scripts/ compile clean
+
+### Changed
+
+- **Version**: Bumped VERSION from 5.97.7 → 5.97.8
+- **AGENTS.md**: Version tag updated
+- **HANDOFF.md**: Refreshed session summary
+
 ## v5.97.7 — Executive Protocol: Repository Sync & Intelligent Merge (2026-08-03)
 
 ### Branch Reconciliation

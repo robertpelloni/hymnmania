@@ -1,111 +1,92 @@
 # HANDOFF — Session Summary
 
-## Session: 2026-08-03 — Executive Protocol: Repository Sync & Intelligent Merge (v5.97.7)
+## Session: 2026-08-05 — Comprehensive Repository Refresh (v5.97.8)
 
 ### What Was Accomplished
 
-#### 1. Full Repository Sweep
+#### 1. Recursive Submodule Cascade
+- **L2** (`hymnmania_src`): Pulled `9ec99de` → `acd0fa1` to match parent
+- **L1** (`ableton`): Amended nested submodule pointer; 3 commits ahead of remote (push blocked)
+- **Parent**: Gitlink updated to `6668ee0`
 
-- **Fetch all**: `git fetch --all --tags --prune` across all 3 layers (parent, L1 ableton, L2 hymnmania_src)
-- **Upstream sync**: Parent pulled 15 new commits (v5.97.6 TikTok/Shorts/Crossfade pipeline); L1 pulled jules-1235 merge
-- **Recursive submodule update**: All layers updated bottom-up; gitlink cascade committed and pushed
+#### 2. Branch Reconciliation — All Clear
 
-#### 2. Branch Reconciliation
+| Repository | Feature Branches | Status |
+|-----------|-----------------|--------|
+| Parent | `backup/pre-sync-*` (safety only) | 📦 Preserved |
+| L1 Ableton | `feat/vertical-video-generation` | 🔵 Ancestor of main |
+| L1 Ableton | `jules-1235...` | 🔵 Ancestor of main |
+| L1 Ableton | `jules-6626...` | 🔵 Ancestor of main |
 
-| Repo | Branch | Verdict |
-|------|--------|---------|
-| Parent | `main` / `master` | ✅ Canonical, synced |
-| Parent | `backup/pre-sync-*` | 📦 Preserved |
-| L1 Ableton | `feat/vertical-video-generation` | 🔵 Already merged into main |
-| L1 Ableton | `jules-1235...` | 🔵 Merged upstream into `origin/main` |
-| L1 Ableton | `jules-6626...` | 🔵 Already merged into main |
+**0 forward merges, 0 reverse merges** — all branches fully consumed.
 
-**0 forward merges, 0 reverse merges** — all feature branches already consumed or AI auto-generated.
+#### 3. .gitignore Audit
+- Databases (`*.db`): ✅ All 4 tracked (classical_midis, classicalmania, tormentnexus, borg)
+- Session files (`*-session.json`): ✅ Tracked
+- AI memory (`.pi/`, `.tormentnexus/`): ✅ Tracked
+- Documentation (`*.md`, `VERSION`): ✅ Tracked
+- `.jules/`, `.memory/`: ⚠️ Match pattern but directories don't exist on disk
 
-#### 3. Submodule Chain
+#### 4. Build Verification
 
-```
-hymnmania (PARENT)                 [9ec99de] ✅ clean, pushed
-  │                                remote: github.com/robertpelloni/hymnmania.git
-  │
-  └─ submodules/ableton_         [664946c] ⚠️ 3 commits ahead (push blocked)
-       psytrance_hymn_creator     remote: github.com/robertpelloni/ableton_psytrance_hymn_creator
-       │                          .gitmodules → hymnmania_src @ hymnmania.git (branch: main)
-       │
-       └─ hymnmania_src/          [9ec99de] ✅ clean, tracking origin/main
-            │                      remote: github.com/robertpelloni/hymnmania.git
-            │
-            └─ submodules/        [UNINITIALIZED] 🔴 CIRCULAR
-                 ableton_...       fetchRecurseSubmodules = false (mitigation)
-```
-
-#### 4. Documentation Updated
-
-| File | Change |
-|------|--------|
-| `VERSION` | 5.97.6 → 5.97.7 |
-| `AGENTS.md` | Version 5.97.5 → 5.97.7, date updated |
-| `CHANGELOG.md` | v5.97.6 + v5.97.7 entries added |
-| `ROADMAP.md` | Phase 4 marked complete (TikTok, Shorts, crossfade, scheduler, full pipeline) |
-| `TODO.md` | Updated with current tasks |
-| `HANDOFF.md` | This file — regenerated |
-
-#### 5. New Features Discovered (from upstream v5.97.6)
-
-| Feature | Script |
-|---------|--------|
-| Crossfade transitions (0.4s) | `quick_composer.py` |
-| Custom thumbnails | `quick_composer.py` |
-| YouTube Shorts (9:16) | `post_all_platforms.py` |
-| TikTok CDP uploader | `tiktok_poster.py` |
-| Weekly scheduler bot | `scheduler_bot.py` |
-| Cross-platform poster | `post_all_platforms.py` |
-| Full hymn pipeline (15 hymns) | `full_hymn_pipeline.py` |
-| AI JSON-LD metadata | YouTube descriptions |
-| Tempo-scaled beat phrases | `quick_composer.py` |
-| INTRO/OUTRO + genre text | `quick_composer.py` |
+| Check | Result |
+|-------|--------|
+| TypeScript `tsc --noEmit` | ✅ 0 errors |
+| Python `scripts/` (6 files) | ✅ All compile clean |
+| Python root (10 files) | ✅ All compile clean |
 
 ### Current State
 
-- **700+ YouTube videos**, 50+ Facebook posts
-- **TikTok**: Script ready, needs @resurrecting.beat login (currently @hypernexusllc)
-- **YouTube Community**: Blocked (500 subscriber minimum)
-- **Ableton submodule**: 3 local commits stranded (credential mismatch: `candlestixxx` vs `robertpelloni`)
-- **L3 circular submodule**: Mitigated, uninitialized
-
-### Pipeline Quick Reference
-
-```bash
-# Beat video with crossfade + thumbnails + intro/outro
-python quick_composer.py --audio input.mp3 --video output.mp4
-
-# Post to all platforms
-python post_all_platforms.py --video output.mp4 --title "..."
-
-# TikTok upload
-python tiktok_poster.py --video output_vertical.mp4 --caption "..."
-
-# Weekly scheduler
-python scheduler_bot.py
-
-# Facebook post
-python daily_scheduler.py
-
-# Full hymn pipeline
-python full_hymn_pipeline.py
-
-# YouTube descriptions
-python youtube_update_descriptions.py
-
-# Rename YouTube titles
-python rename_youtube_titles.py
 ```
+hymnmania (PARENT)          [v5.97.8] ✅ clean, pushed
+  │                         remote: github.com/robertpelloni/hymnmania.git
+  │
+  └─ ableton_psytrance...   [6668ee0] ⚠️ 3 ahead (push blocked - creds)
+       │                    remote: github.com/robertpelloni/ableton_psytrance_hymn_creator
+       │
+       └─ hymnmania_src     [acd0fa1] ✅ tracking origin/main
+            │                remote: github.com/robertpelloni/hymnmania.git
+            │
+            └─ ableton_...  [CIRCULAR] 🔴 Uninitialized (fetchRecurseSubmodules=false)
+```
+
+### Active Pipeline Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `quick_composer.py` | Beat videos: crossfade + thumbnails + intro/outro |
+| `full_hymn_pipeline.py` | 15 hymns × 11 genres × 5 speeds |
+| `tiktok_poster.py` | TikTok 9:16 vertical + CDP upload |
+| `scheduler_bot.py` | Weekly Mon-Fri auto-poster |
+| `post_all_platforms.py` | Unified YT + Shorts + TikTok |
+| `daily_scheduler.py` | Facebook poster |
+| `youtube_update_descriptions.py` | YT description template |
+| `rename_youtube_titles.py` | Standard title format |
+
+### Platform Status
+
+| Platform | Count/Status | Notes |
+|----------|-------------|-------|
+| YouTube | 700+ videos | API uploads ✅ |
+| YouTube Shorts | 1 test | Batch converter needed |
+| YouTube Community | Blocked | 500 sub minimum |
+| Facebook | 50+ posts | CDP ✅ |
+| TikTok | Ready | Needs @resurrecting.beat login |
+| Instagram | Creds saved | No automator yet |
+
+### Outstanding Issues
+
+| Issue | Severity | Detail |
+|-------|----------|--------|
+| L1 push blocked | Medium | `candlestixxx` can't push to `robertpelloni/ableton_psytrance_hymn_creator` |
+| TikTok login | Medium | Edge CDP logged into @hypernexusllc, not @resurrecting.beat |
+| L3 circular | Low | Mitigated, uninitialized |
 
 ### Next Steps
 
-1. **Fix TikTok login**: Switch Edge CDP profile from @hypernexusllc to @resurrecting.beat
-2. **Batch Shorts**: Convert existing 700+ videos to 9:16 vertical
-3. **Run full hymn pipeline**: 15 hymns × 11 genres × 5 speeds
-4. **Fix ableton push**: Resolve credential mismatch for `robertpelloni/ableton_psytrance_hymn_creator`
-5. **Grow subscribers**: Reach 500 for YouTube Community tab
-6. **Check Magnific credits**: Verify API credits remaining in `~/.env`
+1. Fix TikTok CDP login to @resurrecting.beat
+2. Batch convert existing videos to YouTube Shorts (9:16)
+3. Run `full_hymn_pipeline.py` for batch generation
+4. Fix ableton submodule push credentials
+5. Reach 500 YouTube subscribers for Community tab
+6. Check Magnific credits in `~/.env`

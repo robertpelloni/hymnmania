@@ -1,7 +1,7 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.7**
-> **Last updated: 2026-08-03**
+> **Version: 5.97.8**
+> **Last updated: 2026-08-05**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: FULLY WORKING end-to-end**
 
