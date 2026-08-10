@@ -7,16 +7,38 @@ from playwright.sync_api import sync_playwright
 OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pipeline_output", "stories")
 os.makedirs(OUT_DIR, exist_ok=True)
 
-def create_story_clip(beat_video_path, duration=20, start_offset=5):
-    """Extract a compressed 9:16 clip from beat video for Stories/Reels."""
+def create_story_clip(beat_video_path, duration=20, start_offset=5, track_title="", genre=""):
+    """Extract a compressed 9:16 clip with text overlay."""
     base = os.path.splitext(os.path.basename(beat_video_path))[0]
-    out = os.path.join(OUT_DIR, f"{base}_story.mp4")
+    tag = f"{track_title}_{genre}" if track_title else base
+    out = os.path.join(OUT_DIR, f"{tag[:60]}_story.mp4")
     if os.path.exists(out): return out
+    
+    # Build text overlay filter
+    vf_parts = ["crop=ih*9/16:ih,scale=720:1280"]
+    
+    if track_title:
+        # Use ffmpeg drawtext with fontfile to avoid crashes
+        vf_parts.append(
+            "drawtext=text='" + track_title.replace("'","") + "':fontcolor=white:fontsize=32:"
+            "x=(w-text_w)/2:y=h-text_h-80:borderw=3:bordercolor=black@0.6:fontfile=/Windows/Fonts/impact.ttf"
+        )
+        vf_parts.append(
+            "drawtext=text='resurrectingbeats':fontcolor=magenta:fontsize=20:"
+            "x=(w-text_w)/2:y=h-text_h-45:borderw=2:bordercolor=black@0.5:fontfile=/Windows/Fonts/tahoma.ttf"
+        )
+        if genre:
+            vf_parts.append(
+                "drawtext=text='" + genre.replace("'","") + " Electronic Worship':fontcolor=white@0.8:fontsize=16:"
+                "x=(w-text_w)/2:y=h-text_h-20:borderw=1:bordercolor=black@0.4:fontfile=/Windows/Fonts/tahoma.ttf"
+            )
+    
+    vf = ",".join(vf_parts)
     
     cmd = [
         "ffmpeg", "-y", "-loglevel", "error",
         "-ss", str(start_offset), "-i", beat_video_path, "-t", str(duration),
-        "-vf", "crop=ih*9/16:ih,scale=720:1280",
+        "-vf", vf,
         "-c:v", "libx264", "-preset", "fast", "-crf", "30",
         "-c:a", "aac", "-b:a", "64k", out
     ]
@@ -95,7 +117,7 @@ def post_to_facebook_story(video_path, headline="", youtube_link=""):
 
 def post_beat_to_story(beat_path, track_title, genre, yt_link):
     """Full story pipeline: clip + upload."""
-    clip = create_story_clip(beat_path)
+    clip = create_story_clip(beat_path, track_title=track_title, genre=genre)
     if not clip:
         print("  Clip creation failed")
         return False
