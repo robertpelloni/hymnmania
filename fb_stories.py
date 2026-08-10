@@ -1,5 +1,5 @@
 """Facebook Stories & Reels poster for Resurrecting Beats.
-Creates compressed 9:16 vertical clips and uploads to Facebook Stories/Reels.
+Creates compressed 9:16 vertical clips and uploads to Facebook Stories and Reels.
 """
 import subprocess, os, json, time, random
 from playwright.sync_api import sync_playwright
@@ -124,6 +124,95 @@ def post_beat_to_story(beat_path, track_title, genre, yt_link):
     
     headline = f"{track_title} - {genre} / Electronic Worship - Full 4K on YouTube: {yt_link}"
     return post_to_facebook_story(clip, headline, yt_link)
+
+def post_to_facebook_reel(video_path, track_title, genre, yt_link, headline=""):
+    """Upload a video to Facebook Reels with headline, YT link, and hashtags."""
+    hashtags = f"#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness #{genre.replace(' ', '')}"
+    
+    if not headline:
+        headline = f"{track_title} - {genre} / Electronic Worship"
+    
+    caption = f"""{headline}
+
+Track: {track_title}
+Genre: {genre} / Electronic Worship
+
+Watch the full 4K visual journey on YouTube:
+{yt_link}
+
+{hashtags}"""
+    
+    with sync_playwright() as pw:
+        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9222")
+        fb = b.contexts[0].new_page()
+        
+        # Try Meta Business Suite reels
+        fb.goto("https://business.facebook.com/latest/video_reels/create?asset_id=61588784931149")
+        fb.wait_for_timeout(8000)
+        
+        # Check if reel page loaded
+        has_upload = fb.evaluate('!!document.querySelector("input[type=file]")')
+        
+        if not has_upload:
+            # Fallback: try facebook.com/reels/create
+            fb.goto("https://www.facebook.com/reels/create")
+            fb.wait_for_timeout(6000)
+        
+        # Upload video
+        abs_path = os.path.abspath(video_path)
+        try:
+            file_input = fb.query_selector("input[type=file]")
+            if file_input:
+                file_input.set_input_files(abs_path)
+            else:
+                with fb.expect_file_chooser(timeout=15000) as fc:
+                    fb.evaluate("document.querySelector('input[type=file]')?.click()")
+                fc.value.set_files(abs_path)
+        except Exception as e:
+            print(f"  Reel upload error: {str(e)[:50]}")
+            b.close()
+            return False
+        
+        fb.wait_for_timeout(15000)
+        
+        # Type caption
+        try:
+            fb.evaluate(f"""(function(){{
+                var editors = document.querySelectorAll('[contenteditable=true], textarea, [role=textbox]');
+                for(var e of editors){{
+                    if(e.offsetParent && e.tagName !== 'BODY'){{
+                        e.focus();
+                        document.execCommand('insertText', false, {json.dumps(caption)});
+                        break;
+                    }}
+                }}
+            }})()""")
+            fb.wait_for_timeout(3000)
+        except: pass
+        
+        # Click Publish/Post
+        fb.evaluate("""(function(){
+            var btns = document.querySelectorAll('div[role=button],span,button');
+            for(var b of btns){
+                var t = (b.innerText||'').trim().toLowerCase();
+                if(t==='publish' || t==='post' || t==='share reel' || t==='share'){
+                    b.click(); return;
+                }
+            }
+        })()""")
+        fb.wait_for_timeout(8000)
+        print(f"  Reel posted: {headline[:50]}...")
+        b.close()
+        return True
+
+def post_beat_to_reel(beat_path, track_title, genre, yt_link):
+    """Full reel pipeline: clip + upload with hashtags."""
+    clip = create_story_clip(beat_path, track_title=track_title, genre=genre)
+    if not clip:
+        print("  Clip creation failed")
+        return False
+    
+    return post_to_facebook_reel(clip, track_title, genre, yt_link)
 
 if __name__ == "__main__":
     import sys

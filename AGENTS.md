@@ -292,3 +292,31 @@ Community tab blocked until 500 subscribers. Script ready.
 - **Format**: 9:16 vertical (720x1280), under 50MB, 15-30 second clips
 - **Headline**: Track title + genre + YouTube link
 - **Link**: Full YouTube URL included in the story text
+
+## Facebook — All Post Types
+
+### 1. Feed Posts (`daily_scheduler.py`)
+- Text + YouTube link in body (generates video preview card)
+- Full template: hook, track, vibe, visual summary, Hymnmania production, YT link
+- Method: bare URL → preview → selectAll + replace → Post
+- Hashtags: #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
+
+### 2. Stories (`fb_stories.py`)
+- 20-second 9:16 vertical clip from beat video
+- Compressed to ~5MB (under CDP 50MB limit)
+- Text overlay: track name + resurrectingbeats + genre (via ffmpeg drawtext with fontfile)
+- Upload via CDB `facebook.com/stories/create`
+- Stays live 24 hours
+
+### 3. Reels (`fb_stories.py` — same script with reel mode)
+- 15-30 second 9:16 vertical clip from beat video  
+- Full text overlay: headline, track name, resurrectingbeats, YT link
+- Hashtags: #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance + [#GENRE]
+- Posted via Meta Business Suite or CDP browser Reels upload
+- Format: 720x1280, under 50MB
+
+### Hashtag Block (ALL Facebook Posts)
+```
+#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
+```
+Plus genre-specific: #Dubstep #DeepHouse #DrumAndBass #Chiptune #Gabba #DetroitTechno #DetroitHouse #Hardstyle #Synthwave #JapaneseHardcore
