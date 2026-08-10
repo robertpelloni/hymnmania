@@ -1,0 +1,117 @@
+"""Facebook Stories & Reels poster for Resurrecting Beats.
+Creates compressed 9:16 vertical clips and uploads to Facebook Stories/Reels.
+"""
+import subprocess, os, json, time, random
+from playwright.sync_api import sync_playwright
+
+OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pipeline_output", "stories")
+os.makedirs(OUT_DIR, exist_ok=True)
+
+def create_story_clip(beat_video_path, duration=20, start_offset=5):
+    """Extract a compressed 9:16 clip from beat video for Stories/Reels."""
+    base = os.path.splitext(os.path.basename(beat_video_path))[0]
+    out = os.path.join(OUT_DIR, f"{base}_story.mp4")
+    if os.path.exists(out): return out
+    
+    cmd = [
+        "ffmpeg", "-y", "-loglevel", "error",
+        "-ss", str(start_offset), "-i", beat_video_path, "-t", str(duration),
+        "-vf", "crop=ih*9/16:ih,scale=720:1280",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "30",
+        "-c:a", "aac", "-b:a", "64k", out
+    ]
+    try:
+        subprocess.run(cmd, check=True)
+        if os.path.exists(out) and os.path.getsize(out) > 10000:
+            return out
+    except: pass
+    return None
+
+def post_to_facebook_story(video_path, headline="", youtube_link=""):
+    """Upload a video to Facebook Stories with headline and YT link."""
+    with sync_playwright() as pw:
+        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9222")
+        fb = b.contexts[0].new_page()
+        fb.goto("https://www.facebook.com/stories/create")
+        fb.wait_for_timeout(6000)
+        
+        # Click "Create a photo or video story"
+        fb.evaluate("""(function(){
+            var els = document.querySelectorAll('div[role=button],span');
+            for(var e of els){
+                if((e.innerText||'').toLowerCase().includes('photo') || (e.innerText||'').toLowerCase().includes('video')){
+                    e.click(); return;
+                }
+            }
+        })()""")
+        fb.wait_for_timeout(4000)
+        
+        # Upload video
+        abs_path = os.path.abspath(video_path)
+        try:
+            file_input = fb.query_selector("input[type=file]")
+            if file_input:
+                file_input.set_input_files(abs_path)
+            else:
+                with fb.expect_file_chooser(timeout=15000) as fc:
+                    fb.evaluate("document.querySelector('input[type=file]')?.click()")
+                fc.value.set_files(abs_path)
+        except Exception as e:
+            print(f"  Story upload error: {str(e)[:50]}")
+            b.close()
+            return False
+        
+        fb.wait_for_timeout(12000)
+        
+        # If headline provided, try to add text overlay
+        if headline:
+            try:
+                fb.evaluate(f"""(function(){{
+                    var els = document.querySelectorAll('[contenteditable=true], textarea, [role=textbox]');
+                    for(var e of els){{
+                        if(e.offsetParent){{
+                            e.focus();
+                            document.execCommand('insertText', false, {json.dumps(headline)});
+                            break;
+                        }}
+                    }}
+                }})()""")
+            except: pass
+        
+        # Click Share to Story
+        fb.evaluate("""(function(){
+            var btns = document.querySelectorAll('div[role=button],span,button');
+            for(var b of btns){
+                var t = (b.innerText||'').trim().toLowerCase();
+                if(t==='share to story' || t==='share now' || t==='share'){
+                    b.click(); return;
+                }
+            }
+        })()""")
+        fb.wait_for_timeout(8000)
+        print(f"  Story posted: {headline[:50]}...")
+        b.close()
+        return True
+
+def post_beat_to_story(beat_path, track_title, genre, yt_link):
+    """Full story pipeline: clip + upload."""
+    clip = create_story_clip(beat_path)
+    if not clip:
+        print("  Clip creation failed")
+        return False
+    
+    headline = f"{track_title} - {genre} / Electronic Worship - Full 4K on YouTube: {yt_link}"
+    return post_to_facebook_story(clip, headline, yt_link)
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Usage: python fb_stories.py <beat_video.mp4> [Track Title] [Genre] [YT Link]")
+        sys.exit(1)
+    
+    video = sys.argv[1]
+    title = sys.argv[2] if len(sys.argv) > 2 else "Hymn Remix"
+    genre = sys.argv[3] if len(sys.argv) > 3 else "Electronic Worship"
+    link = sys.argv[4] if len(sys.argv) > 4 else ""
+    
+    post_beat_to_story(video, title, genre, link)

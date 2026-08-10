@@ -143,6 +143,7 @@ Same template as Facebook, but:
 | YouTube Descriptions | `youtube_update_descriptions.py` | Artist: Resurrecting Beats ft. author |
 | YouTube Title Rename | `rename_youtube_titles.py` | Standard format |
 | Facebook Poster | `daily_scheduler.py` | Bare URL → preview → selectAll → full text |
+| Facebook Stories | `fb_stories.py` | Compressed 9:16 clip → Stories upload with YT link |
 | Beat Video Composer | `quick_composer.py` | ffmpeg crossfade + Magnific clips + intro/outro + thumbnails |
 | YouTube Shorts | `shorts_composer.py` | 9:16 vertical 60s clips from beat videos |
 | YouTube Community | CDP browser | Static SEO posts on Community tab (requires 500+ subscribers) |
@@ -284,3 +285,10 @@ Auto-run: leave running and it posts on schedule hourly check
 | Community (Static) | Text + link | CDP browser Community tab | 500 |
 
 Community tab blocked until 500 subscribers. Script ready.
+
+### Facebook Stories & Reels
+- **Script**: `fb_stories.py` — creates 20s compressed 9:16 clips from beat videos
+- **Upload**: CDP browser → `facebook.com/stories/create`
+- **Format**: 9:16 vertical (720x1280), under 50MB, 15-30 second clips
+- **Headline**: Track title + genre + YouTube link
+- **Link**: Full YouTube URL included in the story text
