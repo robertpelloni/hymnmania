@@ -312,8 +312,8 @@ Community tab blocked until 500 subscribers. Script ready.
 - 15-30 second 9:16 vertical clip from beat video  
 - Full text overlay: headline, track name, resurrectingbeats, YT link
 - Hashtags: #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance + [#GENRE]
-- Posted via Meta Business Suite or CDP browser Reels upload
-- Format: 720x1280, under 50MB
+- **BLOCKED**: Requires page access via Business Suite (profile-based page restriction)
+- Script built and ready — activates when page renders in Business Suite
 
 ### Hashtag Block (ALL Facebook Posts)
 ```
