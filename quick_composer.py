@@ -124,7 +124,8 @@ def compose(audio_fp, hymn, genre_tag, add_branding=True):
             genre = g
             break
     
-    chosen = random.sample(CLIPS, min(n_cuts, len(CLIPS)))
+    # Sample extra clips (clips can be shorter than cut_dur, so sample more to ensure full-length)
+    chosen = random.sample(CLIPS, min(n_cuts + 8, len(CLIPS)))
     
     segments = []
     for i, clip in enumerate(chosen):
@@ -143,65 +144,30 @@ def compose(audio_fp, hymn, genre_tag, add_branding=True):
     
     if len(segments) < 2: return None
     
-    # Build concat with crossfade transitions
-    xfade_dur = 0.4
-    seg_list = os.path.join(OUT_DIR, f"_list_{os.getpid()}.txt")
-    
-    # Build filter complex for crossfade
+    # === SIMPLE CONCAT (reliable full-length) ===
     inputs_list = []
     if add_branding:
         intro = make_intro(2.5, genre)
         outro = make_outro(3.0, genre)
         if intro: inputs_list.append(intro)
     inputs_list.extend(segments)
-    if add_branding and 'outro' in dir() and outro: inputs_list.append(outro)
+    if add_branding and outro: inputs_list.append(outro)
     
-    # Write concat file
+    seg_list = os.path.join(OUT_DIR, f"_list_{os.getpid()}.txt")
     with open(seg_list, "w") as f:
         for s in inputs_list:
             f.write(f"file '{os.path.abspath(s)}'\n")
     
-    # Build xfade filter
-    n_inputs = len(inputs_list)
-    if n_inputs > 2:
-        # ffmpeg xfade: [v0][v1]xfade=duration=0.4:offset=dur1-0.4[x1]; [x1][v2]xfade...[xN]
-        xfade_filters = []
-        last = "0:v"
-        for i in range(1, n_inputs):
-            seg_dur = get_duration(inputs_list[i-1])
-            offset = seg_dur - xfade_dur
-            out_label = f"x{i}"
-            xfade_filters.append(f"[{last}][{i}:v]xfade=duration={xfade_dur}:offset={offset}[{out_label}]")
-            last = out_label
-        
-        xfade_chain = ";".join(xfade_filters)
-        
-        # Build input args
-        input_args = []
-        for s in inputs_list:
-            input_args.extend(["-i", s])
-        
-        # Build audio with delay for intro
-        audio_out = os.path.join(OUT_DIR, f"_audio_{os.getpid()}.aac")
-        audio_delay = 2500 if add_branding else 0
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", audio_fp,
-            "-af", f"adelay={audio_delay}|{audio_delay}", "-c:a", "aac", "-b:a", "192k", audio_out], check=True)
-        
-        cmd = ["ffmpeg", "-y", "-loglevel", "error"] + input_args + [
-            "-i", audio_out,
-            "-filter_complex", xfade_chain + f";[{last}]format=yuv420p[vout]",
-            "-map", "[vout]", "-map", f"{n_inputs}:a",
-            "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "192k", "-shortest", out_fp
-        ]
-    else:
-        # Simple concat for short videos
-        audio_out = os.path.join(OUT_DIR, f"_audio_{os.getpid()}.aac")
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", audio_fp,
-            "-c:a", "aac", "-b:a", "192k", audio_out], check=True)
-        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", seg_list,
-            "-i", audio_out, "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "192k", "-shortest", "-map", "0:v", "-map", "1:a", out_fp]
+    # Delay audio to account for intro branding
+    audio_out = os.path.join(OUT_DIR, f"_audio_{os.getpid()}.aac")
+    audio_delay = 2500 if add_branding else 0
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", audio_fp,
+        "-af", f"adelay={audio_delay}|{audio_delay}", "-c:a", "aac", "-b:a", "192k", audio_out], check=True)
+    
+    # Concat video + full audio (NO -shortest so full song plays)
+    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", seg_list,
+        "-i", audio_out, "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "192k", "-map", "0:v", "-map", "1:a", "-shortest", out_fp]
     
     subprocess.run(cmd, check=True)
     
