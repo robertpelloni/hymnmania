@@ -124,8 +124,9 @@ def compose(audio_fp, hymn, genre_tag, add_branding=True):
             genre = g
             break
     
-    # Sample extra clips (clips can be shorter than cut_dur, so sample more to ensure full-length)
-    chosen = random.sample(CLIPS, min(n_cuts + 8, len(CLIPS)))
+    # Sample clips with replacement to ensure enough video for full song length
+    # (loops clips when song is longer than available clip material)
+    chosen = random.choices(CLIPS, k=n_cuts + 8)
     
     segments = []
     for i, clip in enumerate(chosen):
@@ -133,8 +134,10 @@ def compose(audio_fp, hymn, genre_tag, add_branding=True):
         seg = os.path.join(OUT_DIR, f"_seg_{i}_{os.getpid()}.mp4")
         try:
             cdur = get_duration(cp)
-            start = random.uniform(0, max(0.1, cdur - cut_dur))
-            # Scale all clips to uniform 1280x720 for xfade compatibility
+            # Clamp start so it's always valid (clip may be shorter than cut_dur)
+            max_start = max(0.0, cdur - cut_dur)
+            start = random.uniform(0, max_start) if max_start > 0.5 else 0.0
+            # Scale all clips to uniform 1280x720 for consistent output
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error",
                 "-ss", str(start), "-i", cp, "-t", str(cut_dur),
                 "-vf", "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720",
