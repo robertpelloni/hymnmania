@@ -144,7 +144,7 @@ Same template as Facebook, but:
 | YouTube Title Rename | `rename_youtube_titles.py` | Standard format |
 | Facebook Poster | `daily_scheduler.py` | Bare URL → preview → selectAll → full text |
 | Facebook Stories | `fb_stories.py` | Compressed 9:16 clip → Stories upload with YT link |
-| Beat Video Composer | `quick_composer.py` | ffmpeg crossfade + Magnific clips + intro/outro + thumbnails |
+| Beat Video Composer | `quick_composer.py` | ffmpeg concat + Magnific clips + intro/outro + thumbnails (full-length) |
 | YouTube Shorts | `shorts_composer.py` | 9:16 vertical 60s clips from beat videos |
 | YouTube Community | CDP browser | Static SEO posts on Community tab (requires 500+ subscribers) |
 | TikTok Poster | `tiktok_poster.py` | Convert to vertical + upload via CDP browser |
@@ -320,3 +320,10 @@ Community tab blocked until 500 subscribers. Script ready.
 #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
 ```
 Plus genre-specific: #Dubstep #DeepHouse #DrumAndBass #Chiptune #Gabba #DetroitTechno #DetroitHouse #Hardstyle #Synthwave #JapaneseHardcore
+
+## Instagram Posting
+- **Script**: `instagram_poster.py` — 30s 9:16 clip → Reels upload via CDP
+- **Upload**: CDP browser → `instagram.com/create`
+- **Credentials**: resurrectingbeats@gmail.com / Temppass0! (in .secrets.json)
+- **Caption**: Same brand template with 🌀 hook, Hymnmania credit, bio link CTA
+- **Status**: Script built — needs @ResurrectingBeats account active in CDP browser
