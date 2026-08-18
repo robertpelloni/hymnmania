@@ -98,14 +98,17 @@ def compose(audio_fp, hymn, genre_tag, add_branding=True):
     out_fp = os.path.join(OUT_DIR, f"{base}_beatsynced.mp4")
     if os.path.exists(out_fp): return out_fp
     
+    # Use ffprobe/ffmpeg duration (librosa mis-reads VBR MP3s from Suno)
     audio_dur = get_duration(audio_fp)
     
     try:
         import librosa
+        import numpy as np
         y, sr = librosa.load(audio_fp, sr=22050)
         tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
         if isinstance(tempo, (list,)): tempo = tempo[0]
-        tempo = max(60, min(200, float(tempo)))
+        tempo = float(np.asarray(tempo).ravel()[0])
+        tempo = max(60, min(200, tempo))
     except:
         tempo = 130
     
@@ -134,12 +137,13 @@ def compose(audio_fp, hymn, genre_tag, add_branding=True):
         seg = os.path.join(OUT_DIR, f"_seg_{i}_{os.getpid()}.mp4")
         try:
             cdur = get_duration(cp)
-            # Clamp start so it's always valid (clip may be shorter than cut_dur)
+            # Clamp start so it's always valid
             max_start = max(0.0, cdur - cut_dur)
             start = random.uniform(0, max_start) if max_start > 0.5 else 0.0
-            # Scale all clips to uniform 1280x720 for consistent output
+            # Loop the clip so each segment is EXACTLY cut_dur (guarantees full-length)
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error",
-                "-ss", str(start), "-i", cp, "-t", str(cut_dur),
+                "-stream_loop", "-1", "-ss", str(start), "-i", cp,
+                "-t", str(cut_dur),
                 "-vf", "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720",
                 "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", seg], check=True)
             segments.append(seg)
@@ -167,7 +171,7 @@ def compose(audio_fp, hymn, genre_tag, add_branding=True):
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", audio_fp,
         "-af", f"adelay={audio_delay}|{audio_delay}", "-c:a", "aac", "-b:a", "192k", audio_out], check=True)
     
-    # Concat video + full audio (NO -shortest so full song plays)
+    # Concat video + full audio — segments now sum to >= audio, so -shortest = full song
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", seg_list,
         "-i", audio_out, "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k", "-map", "0:v", "-map", "1:a", "-shortest", out_fp]
