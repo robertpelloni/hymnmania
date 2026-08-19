@@ -71,21 +71,21 @@ def generate_cover(page, hdr, upload_cid, hymn_name, speed, genre):
     page.goto(f"https://suno.com/song/{upload_cid}")
     page.wait_for_timeout(6000)
     
-    # More menu
+    # More menu (three dots)
     page.evaluate(
-        'Array.from(document.querySelectorAll("button")).find(x=>(x.getAttribute("aria-label")||"").includes("More"))?.click()'
+        'Array.from(document.querySelectorAll("button,[role=button],[aria-label]")).find(x=>(x.getAttribute("aria-label")||x.innerText||"").toLowerCase().includes("more")&&x.offsetParent)?.click()'
     )
-    page.wait_for_timeout(2000)
+    page.wait_for_timeout(2500)
     
-    # Remix
+    # Remix (opens dropdown with Cover option)
     page.evaluate(
-        'Array.from(document.querySelectorAll("[role=menuitem],li,button")).find(x=>x.offsetParent&&(x.innerText||"").trim().toLowerCase()==="remix")?.click()'
+        'Array.from(document.querySelectorAll("[role=menuitem],li,button,[role=button]")).find(x=>x.offsetParent&&(x.innerText||x.textContent||"").trim().toLowerCase()==="remix")?.click()'
     )
-    page.wait_for_timeout(2000)
+    page.wait_for_timeout(2500)
     
-    # Cover
+    # Cover (in Remix dropdown)
     page.evaluate(
-        'Array.from(document.querySelectorAll("[role=menuitem],li,button")).find(x=>x.offsetParent&&(x.innerText||"").trim().toLowerCase()==="cover")?.click()'
+        'Array.from(document.querySelectorAll("[role=menuitem],li,button,[role=button],span,div")).find(x=>x.offsetParent&&(x.innerText||x.textContent||"").trim().toLowerCase()==="cover")?.click()'
     )
     page.wait_for_timeout(4000)
     
