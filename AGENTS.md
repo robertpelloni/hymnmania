@@ -145,6 +145,7 @@ Same template as Facebook, but:
 | Facebook Poster | `daily_scheduler.py` | Bare URL → preview → selectAll → full text |
 | Facebook Stories | `fb_stories.py` | Compressed 9:16 clip → Stories upload with YT link |
 | Beat Video Composer | `quick_composer.py` | ffmpeg concat + Magnific clips + intro/outro + thumbnails (full-length) |
+| Cover Generator | `batch_cover_gen.py` | Suno v4.5 More→Remix→Cover flow |
 | YouTube Shorts | `shorts_composer.py` | 9:16 vertical 60s clips from beat videos |
 | YouTube Community | CDP browser | Static SEO posts on Community tab (requires 500+ subscribers) |
 | TikTok Poster | `tiktok_poster.py` | Convert to vertical + upload via CDP browser |
@@ -327,3 +328,20 @@ Plus genre-specific: #Dubstep #DeepHouse #DrumAndBass #Chiptune #Gabba #DetroitT
 - **Credentials**: resurrectingbeats@gmail.com / Temppass0! (in .secrets.json)
 - **Caption**: Same brand template with 🌀 hook, Hymnmania credit, bio link CTA
 - **Status**: Script built — needs @ResurrectingBeats account active in CDP browser
+
+## Suno v4.5 Cover Flow (Updated 2026-08-19)
+
+Suno UI changed from v5.5 → v4.5. The Cover flow is now:
+- **Old**: More menu → Remix → Cover (nested)
+- **New**: More menu (three dots) → Remix (opens dropdown) → **Cover**
+
+Cover still opens at `suno.com/create` with the song as reference and v4.5-all model. Same genre/style injection as before.
+
+### Full-Length Video Guarantee (CRITICAL)
+The beat composer uses **ffprobe** duration (NOT librosa — librosa misreads Suno VBR MP3s by ~40%):
+1. ffprobe reads true audio duration
+2. `random.choices` loops Magnific clips for long songs
+3. Each clip looped (`-stream_loop`) to exact cut_dur
+4. Simple concat + `-shortest` cuts at full song end
+
+Verification: 135 beat videos, 0 truncated, 0 empty, all match source audio.
