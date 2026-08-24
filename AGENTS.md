@@ -345,3 +345,25 @@ The beat composer uses **ffprobe** duration (NOT librosa — librosa misreads Su
 4. Simple concat + `-shortest` cuts at full song end
 
 Verification: 135 beat videos, 0 truncated, 0 empty, all match source audio.
+
+## How To Relaunch The Edge CDP Browser
+
+When the browser closes, run one of these methods:
+
+### Method 1: Script (easiest)
+```bash
+python _try_edge.py
+```
+
+### Method 2: Command line (manual)
+```cmd
+"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir=C:\Users\jakeg\edge-cdp-profile --no-first-run --no-default-browser-check
+```
+
+### Method 3: Batch file
+Create `_open_edge.bat` with:
+```bat
+start "" "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir=C:\Users\jakeg\edge-cdp-profile --no-first-run --no-default-browser-check
+```
+
+**IMPORTANT**: The `--user-data-dir=C:\Users\jakeg\edge-cdp-profile` is what preserves all your logins (Facebook, Instagram, Suno, Magnific). ALWAYS include it or you'll lose sessions.
