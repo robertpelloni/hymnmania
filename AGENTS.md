@@ -368,3 +368,35 @@ start "" "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote
 ```
 
 **IMPORTANT**: The `--user-data-dir=C:\Users\jakeg\edge-cdp-profile` is what preserves all your logins (Facebook, Instagram, Suno, Magnific). ALWAYS include it or you'll lose sessions.
+
+## CRITICAL: Beat Video & Thumbnail Rules (Learned 2026-08-24)
+
+### 1. Full-Length Videos (NOT clips)
+- Use **ffprobe** for duration — NOT librosa (librosa misreads Suno VBR MP3s by ~40%)
+- `random.choices` (with replacement) to loop Magnific clips for long songs
+- Each segment looped (`-stream_loop -1`) to exact `cut_dur`
+- Simple concat + `-shortest` cuts at full song end
+- NEVER use xfade chains — the offset math collapsed videos to 11s
+
+### 2. Intro/Outro Text (drawtext)
+- drawtext MUST include `fontfile=/Windows/Fonts/impact.ttf` 
+- WITHOUT fontfile, ffmpeg segfaults and text silently fails (no error, no text)
+- Intro (2.5s): "RESURRECTING BEATS" + genre name
+- Outro (3s): "RESURRECTING BEATS" + "Subscribe for more!"
+
+### 3. Unique Thumbnails (NO duplicates)
+- YouTube auto-thumbnails from first frame = all look identical (similar Magnific clips)
+- Fix: `youtube_thumbnails.py` generates custom thumbnails
+- Each thumbnail = UNIQUE random Magnific clip + genre + hymn text overlay
+- Run daily: `python youtube_thumbnails.py 100` (quota ~200/day)
+
+### 4. Quota Management
+- YouTube Data API = 10,000 units/day (SHARED pool)
+- Title rename = 50 units, Upload = 1,600 units, Thumbnail = 50 units, Search = 100 units
+- Plan order: uploads first → titles → thumbnails last
+- Never exceed ~200 renames/day (10,000 units / 50)
+
+### 5. Beat Sync (librosa for BPM only)
+- librosa is GOOD for BPM detection (tempo)
+- librosa is BAD for duration (VBR misread)
+- tempo-scaled beats: >160 BPM=16 beats, 130-160=12, 100-130=8, <100=4
