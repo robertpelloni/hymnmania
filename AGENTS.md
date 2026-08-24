@@ -166,9 +166,10 @@ Every video is beat-synced to the music with tempo-scaled phrase lengths:
 | 100-130 BPM | 8 beats | ~3.7-4.8s | Deep House, Detroit, Dubstep |
 | <100 BPM | 4 beats | ~2.4-4s | Half-speed, ambient |
 
-### Intro/Outro
+### Intro/Outro (Text on Video — REQUIRES fontfile)
 - **Intro (2.5s)**: "RESURRECTING BEATS" + genre name over random Magnific clip with genre-matched colors
 - **Outro (3s)**: "RESURRECTING BEATS" + "Subscribe for more!" with fade-out
+- **CRITICAL**: drawtext MUST include `fontfile=/Windows/Fonts/impact.ttf` — without it, ffmpeg segfaults and the text silently fails to render
 
 ### Genre Style Map
 | Genre | Text Color | Effect |
