@@ -41,7 +41,7 @@ def make_intro(duration=2.5, genre="Psytrance"):
     cmd = [
         "ffmpeg", "-y", "-loglevel", "error",
         "-ss", str(bg_start), "-i", bg_path, "-t", str(duration),
-        "-vf", f"scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,drawtext=text='RESURRECTING':fontcolor={style['color']}:fontsize=48:x=(w-text_w)/2:y=(h/2-text_h-10):bordercolor={style['border']}:borderw=3,drawtext=text='BEATS':fontcolor={style['color']}:fontsize=56:x=(w-text_w)/2:y=(h/2+10):bordercolor={style['border']}:borderw=3,drawtext=text='{genre}':fontcolor=white@0.6:fontsize=24:x=(w-text_w)/2:y=(h/2+70)",
+        "-vf", f"scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,drawtext=text='RESURRECTING':fontcolor={style['color']}:fontsize=48:fontfile=/Windows/Fonts/impact.ttf:x=(w-text_w)/2:y=(h/2-text_h-10):bordercolor={style['border']}:borderw=3,drawtext=text='BEATS':fontcolor={style['color']}:fontsize=56:fontfile=/Windows/Fonts/impact.ttf:x=(w-text_w)/2:y=(h/2+10):bordercolor={style['border']}:borderw=3,drawtext=text='{genre}':fontcolor=white@0.6:fontsize=24:fontfile=/Windows/Fonts/tahoma.ttf:x=(w-text_w)/2:y=(h/2+70)",
         "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-an", out
     ]
     try:
@@ -60,7 +60,7 @@ def make_outro(duration=3.0, genre="Psytrance"):
     cmd = [
         "ffmpeg", "-y", "-loglevel", "error",
         "-ss", str(bg_start), "-i", bg_path, "-t", str(duration),
-        "-vf", f"scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,drawtext=text='RESURRECTING':fontcolor={style['color']}:fontsize=42:x=(w-text_w)/2:y=(h/2-text_h-15):bordercolor={style['border']}:borderw=3,drawtext=text='BEATS':fontcolor={style['color']}:fontsize=48:x=(w-text_w)/2:y=(h/2+10):bordercolor={style['border']}:borderw=3,drawtext=text='Subscribe for more!':fontcolor=white@0.7:fontsize=20:x=(w-text_w)/2:y=(h/2+65),fade=t=out:st=2.5:d=0.5",
+        "-vf", f"scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,drawtext=text='RESURRECTING':fontcolor={style['color']}:fontsize=42:fontfile=/Windows/Fonts/impact.ttf:x=(w-text_w)/2:y=(h/2-text_h-15):bordercolor={style['border']}:borderw=3,drawtext=text='BEATS':fontcolor={style['color']}:fontsize=48:fontfile=/Windows/Fonts/impact.ttf:x=(w-text_w)/2:y=(h/2+10):bordercolor={style['border']}:borderw=3,drawtext=text='Subscribe for more!':fontcolor=white@0.7:fontsize=20:fontfile=/Windows/Fonts/tahoma.ttf:x=(w-text_w)/2:y=(h/2+65),fade=t=out:st=2.5:d=0.5",
         "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-an", out
     ]
     try:
@@ -84,7 +84,7 @@ def generate_thumbnail(video_path, hymn, genre, out_name):
         "ffmpeg", "-y", "-loglevel", "error",
         "-ss", str(thumb_time), "-i", video_path,
         "-vframes", "1",
-        "-vf", f"drawtext=text='{genre}':fontcolor={style['color']}:fontsize=36:x=20:y=20:bordercolor={style['border']}:borderw=3,drawtext=text='{hymn}':fontcolor=white@0.9:fontsize=28:x=20:y=65:bordercolor=black@0.7:borderw=2,drawtext=text='RESURRECTING BEATS':fontcolor={style['color']}:fontsize=24:x=w-text_w-20:y=20:bordercolor={style['border']}:borderw=2",
+        "-vf", f"drawtext=text='{genre}':fontcolor={style['color']}:fontsize=36:fontfile=/Windows/Fonts/impact.ttf:x=20:y=20:bordercolor={style['border']}:borderw=3,drawtext=text='{hymn}':fontcolor=white@0.9:fontsize=28:fontfile=/Windows/Fonts/impact.ttf:x=20:y=65:bordercolor=black@0.7:borderw=2,drawtext=text='RESURRECTING BEATS':fontcolor={style['color']}:fontsize=24:fontfile=/Windows/Fonts/impact.ttf:x=w-text_w-20:y=20:bordercolor={style['border']}:borderw=2",
         out
     ]
     try:
