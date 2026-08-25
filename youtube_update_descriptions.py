@@ -88,6 +88,38 @@ def get_variant(title_lower):
         return "Triple Speed (3.0x)"
     return "Original Mix"
 
+# Hashtag bank (draw from these, NEVER exceed 15 combined per post)
+CORE_TAGS = ["#EDM", "#ResurrectingBeats", "#Hymnmania", "#SpiritualEDM", "#Art", "#Dance", "#LOVE", "#ElectronicMusic2026"]
+PSYTRANCE_TAGS = ["#Psytrance", "#PsychedelicTrance", "#PsytranceFamily"]
+SECONDARY_TAGS = ["#WorshipMusic", "#MentalHealthAwareness", "#UNITY"]
+HASHTAG_BANK = [
+    "#StudyMusic", "#GamingMusic", "#WorkoutMusic", "#TrippyVisuals", "#PsychedelicVisuals",
+    "#BassMusic", "#EDMProducer", "#PsytranceProducer", "#MusicProduction", "#FLStudioEDM",
+    "#AbletonLive", "#DJSet", "#TrackPreview", "#Ajja", "#PsychedelicMusic",
+    "#PsytranceWorld", "#PsytranceCulture", "#PsytranceArt", "#PsytranceCommunity",
+    "#Zenonesque", "#HiTechPsytrance", "#MelodicEDM", "#ProgressiveTrance", "#DanceLiveLoveArtLife",
+    "#Trance", "#House", "#BPM", "#Creativity", "#SpiritualEnlightenment", "#Spirituality",
+]
+
+
+def build_hashtags(genre_name):
+    """Build <=15 hashtags. Always includes Psytrance (1-3) + dedicated genre."""
+    tags = list(CORE_TAGS)  # 8 core tags
+    tags.extend(PSYTRANCE_TAGS[:2])  # always 2 psytrance tags
+    # Dedicated genre tag (if not already psytrance)
+    genre_tag = f"#{genre_name.replace(' ', '')}"
+    if genre_tag not in tags:
+        tags.append(genre_tag)
+    tags.extend(SECONDARY_TAGS)  # 3 secondary
+    # Fill remaining with bank tags to reach 15
+    for bank_tag in HASHTAG_BANK:
+        if len(tags) >= 15:
+            break
+        if bank_tag not in tags:
+            tags.append(bank_tag)
+    return " ".join(tags[:15])
+
+
 def build_description(title):
     tl = title.lower()
     hymn_name, author, year = get_hymn(tl)
@@ -146,9 +178,7 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 🎵 Stream/Download {song_title}: Coming Soon
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#EDM #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
-
-#{genre_name.replace(' ', '')} #Trance #House #{genre_name} #BPM #Dance #Creativity #SpiritualEnlightenment #Spirituality #PsytranceFamily #PsychedelicTrance #FullOnPsytrance #ProgressivePsytrance #GoaTrance #DarkPsy #PsytranceMix #DJMix #NewEDM #ElectronicMusic2026 #HyperNexus"""
+{build_hashtags(genre_name)}"""
     
     return desc
 

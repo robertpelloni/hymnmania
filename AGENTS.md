@@ -80,9 +80,7 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 🎵 Stream/Download [Song Title]: Coming Soon
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#EDM #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
-
-#Trance #House #{Genre} #BPM #Dance #Creativity #SpiritualEnlightenment #Spirituality #PsytranceFamily #PsychedelicTrance #FullOnPsytrance #ProgressivePsytrance #GoaTrance #DarkPsy #PsytranceMix #DJMix #NewEDM #ElectronicMusic2026 #HyperNexus
+#EDM #ResurrectingBeats #Hymnmania #SpiritualEDM #Art #Dance #LOVE #ElectronicMusic2026 #Psytrance #PsychedelicTrance #[Genre] #WorshipMusic #MentalHealthAwareness #UNITY + 1-2 bank tags (MAX 15 TOTAL)
 ```
 
 ---
@@ -404,3 +402,33 @@ start "" "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote
 - librosa is GOOD for BPM detection (tempo)
 - librosa is BAD for duration (VBR misread)
 - tempo-scaled beats: >160 BPM=16 beats, 130-160=12, 100-130=8, <100=4
+
+## Hashtag Rules (CRITICAL — YouTube ignores ALL hashtags if >15)
+
+### Max 15 Combined Hashtags Per Post
+YouTube discards ALL hashtags if a description contains more than 15. NEVER exceed 15.
+
+### Structure (always in this order)
+1. **Core (8)**: #EDM #ResurrectingBeats #Hymnmania #SpiritualEDM #Art #Dance #LOVE #ElectronicMusic2026
+2. **Psytrance (2, always)**: #Psytrance #PsychedelicTrance (channel identity)
+3. **Dedicated genre (1)**: #[Genre] (e.g. #Dubstep, #DeepHouse, #Synthwave)
+4. **Secondary (3)**: #WorshipMusic #MentalHealthAwareness #UNITY
+5. **Bank (1-2, rotate for SEO)**: draw from the bank below
+
+### Hashtag Bank (rotate these for keyword/SEO coverage)
+```
+#StudyMusic #GamingMusic #WorkoutMusic #TrippyVisuals #PsychedelicVisuals
+#BassMusic #EDMProducer #PsytranceProducer #MusicProduction #FLStudioEDM
+#AbletonLive #DJSet #TrackPreview #Ajja #PsychedelicMusic
+#PsytranceWorld #PsytranceCulture #PsytranceArt #PsytranceCommunity
+#Zenonesque #HiTechPsytrance #MelodicEDM #ProgressiveTrance #DanceLiveLoveArtLife
+#Trance #House #BPM #Creativity #SpiritualEnlightenment #Spirituality
+#PsytranceFamily #FullOnPsytrance #ProgressivePsytrance #GoaTrance #DarkPsy
+#PsytranceMix #DJMix #NewEDM #HyperNexus
+```
+
+### Rules
+- Always include #Psytrance in 1-3 hashtags per post
+- Always include the dedicated genre hashtag
+- All content is EDM with a specific genre style — hashtag both
+- `build_hashtags()` in `youtube_update_descriptions.py` auto-generates this
