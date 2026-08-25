@@ -32,6 +32,8 @@ Examples:
 - `Psytrance Hymn 2026 Remix: Thy Word (Amy Grant & Michael W. Smith, 1984) | 1.0x Speed [A]`
 - `Dubstep Classical Remix - Canon in D (Johann Pachelbel, 1680) | Triple Speed (3.0x)`
 
+**CRITICAL**: NEVER put "cover" in the title. Only acceptable suffixes are "Original" or "Remix". Strip "cover" from filenames when generating titles.
+
 **Genre Detection**: When the title doesn't contain the genre keyword, the rename script extracts it from the YouTube description (`Genre: {genre} / Electronic Worship`). If still unknown, use the placeholder `[EDM LSDance]` (case-sensitive, exact format). Never use "Electronic" alone as a genre in titles.
 
 ---
@@ -78,7 +80,9 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 🎵 Stream/Download [Song Title]: Coming Soon
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
+#EDM #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
+
+#Trance #House #{Genre} #BPM #Dance #Creativity #SpiritualEnlightenment #Spirituality #PsytranceFamily #PsychedelicTrance #FullOnPsytrance #ProgressivePsytrance #GoaTrance #DarkPsy #PsytranceMix #DJMix #NewEDM #ElectronicMusic2026 #HyperNexus
 ```
 
 ---

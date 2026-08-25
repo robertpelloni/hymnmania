@@ -26,6 +26,12 @@ HYMNS = {
     "praise him": ("Praise Him! Praise Him!", "Fanny J. Crosby", "1869"),
     "oh for a thousand": ("Oh, For a Thousand Tongues to Sing", "Charles Wesley", "1739"),
     "he leadeth me": ("He Leadeth Me", "Joseph H. Gilmore", "1862"),
+    "amazing grace": ("Amazing Grace", "John Newton", "1779"),
+    "how great thou art": ("How Great Thou Art", "Carl Boberg", "1885"),
+    "how great": ("How Great Thou Art", "Carl Boberg", "1885"),
+    "howgreat": ("How Great Thou Art", "Carl Boberg", "1885"),
+    "amazinggrace": ("Amazing Grace", "John Newton", "1779"),
+    "amazing": ("Amazing Grace", "John Newton", "1779"),
 }
 
 CLASSICAL = {
@@ -35,15 +41,15 @@ CLASSICAL = {
     "toccata": ("Toccata and Fugue in D minor", "Johann Sebastian Bach", "1704"),
     "nocturne": ("Nocturne Op. 9 No. 2", "Frédéric Chopin", "1832"),
     "clair": ("Clair de Lune", "Claude Debussy", "1905"),
-    "amazing": ("Amazing Grace", "John Newton", "1779"),
-    "how great": ("How Great Thou Art", "Carl Boberg", "1885"),
     "dyens": ("Valse en Skaï", "Roland Dyens", "1985"),
 }
 
 GENRE_MAP = {
     "psytrance": "Psytrance", "gabba": "Gabba", "dubstep": "Dubstep",
-    "deep house": "Deep House", "detroit house": "Detroit House",
-    "detroit techno": "Detroit Techno", "drum and bass": "Drum and Bass",
+    "deep house": "Deep House", "deephouse": "Deep House",
+    "detroit house": "Detroit House", "detroithouse": "Detroit House",
+    "detroit techno": "Detroit Techno", "detroittechno": "Detroit Techno",
+    "drum and bass": "Drum and Bass", "drumandbass": "Drum and Bass",
     "chip": "Chiptune", "hardstyle": "Hardstyle Trance",
     "synthwave": "Synthwave", "detroit": "Detroit Techno",
     "hardcore": "Gabba", "japanese": "Japanese Hardcore Techno",

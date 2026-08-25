@@ -146,7 +146,9 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 🎵 Stream/Download {song_title}: Coming Soon
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness"""
+#EDM #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness
+
+#{genre_name.replace(' ', '')} #Trance #House #{genre_name} #BPM #Dance #Creativity #SpiritualEnlightenment #Spirituality #PsytranceFamily #PsychedelicTrance #FullOnPsytrance #ProgressivePsytrance #GoaTrance #DarkPsy #PsytranceMix #DJMix #NewEDM #ElectronicMusic2026 #HyperNexus"""
     
     return desc
 
