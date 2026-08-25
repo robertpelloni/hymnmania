@@ -171,10 +171,17 @@ def compose(audio_fp, hymn, genre_tag, add_branding=True):
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", audio_fp,
         "-af", f"adelay={audio_delay}|{audio_delay}", "-c:a", "aac", "-b:a", "192k", audio_out], check=True)
     
-    # Concat video + full audio — segments now sum to >= audio, so -shortest = full song
+    # Concat video + full audio with audio-reactive waveform overlay
+    style = GENRE_STYLES.get(genre, GENRE_STYLES["Psytrance"])
+    wave_color = style.get("hex", "#9933FF")
+    
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", seg_list,
-        "-i", audio_out, "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "192k", "-map", "0:v", "-map", "1:a", "-shortest", out_fp]
+        "-i", audio_out,
+        "-filter_complex",
+        f"[0:v]scale=1280:720,format=yuv420p[v];[1:a]showwaves=s=1280x120:mode=cline:colors={wave_color}@0.55:rate=30[wave];[v][wave]overlay=x=0:y=H-120[vout]",
+        "-map", "[vout]", "-map", "1:a",
+        "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "192k", "-shortest", out_fp]
     
     subprocess.run(cmd, check=True)
     
