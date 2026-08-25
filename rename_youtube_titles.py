@@ -92,7 +92,10 @@ def build_correct_title(title, description=""):
         if "genre:" in desc_lower:
             genre_line = desc_lower.split("genre:")[1].split(chr(10))[0].strip()
             # Parse "Psytrance / Electronic Worship" -> "Psytrance"
-            genre = genre_line.split(" / ")[0].strip().title()
+            extracted = genre_line.split(" / ")[0].strip()
+            # Only use if it's a known genre, not "Electronic Worship" or empty
+            if extracted and "electronic worship" not in extracted and extracted != "electronic":
+                genre = extracted.title()
     
     # Fallback placeholder if genre still unknown
     if not genre:
