@@ -165,7 +165,18 @@ Watch the full 4K visual journey on YouTube!
             b.close()
             return False
         
-        fb.wait_for_timeout(15000)
+        fb.wait_for_timeout(20000)  # wait for copyright check
+        
+        # Click Next (after copyright check completes)
+        for _ in range(3):
+            fb.evaluate("""(function(){
+                var btns = document.querySelectorAll('div[role=button], button');
+                for(var b of btns){
+                    var t = (b.innerText||b.textContent||'').trim().toLowerCase();
+                    if(t === 'next' && b.offsetParent){ b.click(); return; }
+                }
+            })()""")
+            fb.wait_for_timeout(5000)
         
         # Type caption
         try:
@@ -182,12 +193,12 @@ Watch the full 4K visual journey on YouTube!
             fb.wait_for_timeout(3000)
         except: pass
         
-        # Click Publish/Share
+        # Click Post (the actual publish button is 'Post')
         fb.evaluate("""(function(){
             var btns = document.querySelectorAll('div[role=button],span,button');
             for(var b of btns){
                 var t = (b.innerText||b.textContent||'').trim().toLowerCase();
-                if(t==='publish' || t==='post' || t==='share reel' || t==='share'){
+                if(t==='post' && b.offsetParent){
                     b.click(); return;
                 }
             }

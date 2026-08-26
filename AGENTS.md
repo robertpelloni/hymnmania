@@ -317,11 +317,11 @@ Community tab blocked until 500 subscribers. Script ready.
 - Stays live 24 hours
 
 ### 3. Reels (`fb_stories.py` — `post_to_facebook_reel`)
-- **WORKS NOW**: Upload 9:16 clip via `facebook.com/reels/create` (file input)
-- 15-30 second 9:16 vertical clip from beat video
-- Full caption: headline, track name, genre, YT link, hashtags
-- Hashtags: #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance + [#GENRE]
-- Method: upload video → type caption → click Publish
+- Flow DISCOVERED: facebook.com/reels/create → upload → Next → Next → caption → Post
+- Caption field: placeholder "Describe your reel..." (use keyboard.type, NOT execCommand)
+- Final button: "Post" (not Publish/Share)
+- **STATUS**: Draft created but final publish not confirmed (reel shows "No reels yet")
+- Instagram Reels WORK (verified 4 posts). Facebook Reels still need the final publish step resolved.
 
 ### Hashtag Block (ALL Facebook Posts)
 ```
