@@ -7,6 +7,10 @@
 
 ---
 
+## CRITICAL: 15-Hashtag Limit (ALL PLATFORMS)
+
+YouTube, Facebook, Instagram, and TikTok all DISREGARD every hashtag if a single post exceeds 15. NEVER exceed 15 combined hashtags on ANY platform.
+
 ## CRITICAL: Spacing Rules
 
 **Always** use proper spacing between categories in YouTube descriptions and Facebook posts:
@@ -312,12 +316,12 @@ Community tab blocked until 500 subscribers. Script ready.
 - Upload via CDB `facebook.com/stories/create`
 - Stays live 24 hours
 
-### 3. Reels (`fb_stories.py` — same script with reel mode)
-- 15-30 second 9:16 vertical clip from beat video  
-- Full text overlay: headline, track name, resurrectingbeats, YT link
+### 3. Reels (`fb_stories.py` — `post_to_facebook_reel`)
+- **WORKS NOW**: Upload 9:16 clip via `facebook.com/reels/create` (file input)
+- 15-30 second 9:16 vertical clip from beat video
+- Full caption: headline, track name, genre, YT link, hashtags
 - Hashtags: #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance + [#GENRE]
-- **BLOCKED**: Requires page access via Business Suite (profile-based page restriction)
-- Script built and ready — activates when page renders in Business Suite
+- Method: upload video → type caption → click Publish
 
 ### Hashtag Block (ALL Facebook Posts)
 ```

@@ -126,19 +126,19 @@ def post_beat_to_story(beat_path, track_title, genre, yt_link):
     return post_to_facebook_story(clip, headline, yt_link)
 
 def post_to_facebook_reel(video_path, track_title, genre, yt_link, headline=""):
-    """Upload a video to Facebook Reels with headline, YT link, and hashtags."""
-    hashtags = f"#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness #{genre.replace(' ', '')}"
+    """Upload a video to Facebook Reels (WORKS via reels/create)."""
+    # <=15 hashtags (YouTube/Facebook ignore all if >15)
+    hashtags = f"#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #EDM #ElectronicMusic #{genre.replace(' ', '')} #PsychedelicTrance"
     
     if not headline:
-        headline = f"{track_title} - {genre} / Electronic Worship"
+        headline = f"Resurrected from the vault! {track_title} - {genre} electronic worship"
     
     caption = f"""{headline}
 
 Track: {track_title}
 Genre: {genre} / Electronic Worship
 
-Watch the full 4K visual journey on YouTube:
-{yt_link}
+Watch the full 4K visual journey on YouTube!
 
 {hashtags}"""
     
@@ -146,17 +146,9 @@ Watch the full 4K visual journey on YouTube:
         b = pw.chromium.connect_over_cdp("http://127.0.0.1:9222")
         fb = b.contexts[0].new_page()
         
-        # Try Meta Business Suite reels
-        fb.goto("https://business.facebook.com/latest/video_reels/create?asset_id=61588784931149")
+        # Direct Reels create flow (works now)
+        fb.goto("https://www.facebook.com/reels/create")
         fb.wait_for_timeout(8000)
-        
-        # Check if reel page loaded
-        has_upload = fb.evaluate('!!document.querySelector("input[type=file]")')
-        
-        if not has_upload:
-            # Fallback: try facebook.com/reels/create
-            fb.goto("https://www.facebook.com/reels/create")
-            fb.wait_for_timeout(6000)
         
         # Upload video
         abs_path = os.path.abspath(video_path)
@@ -190,11 +182,11 @@ Watch the full 4K visual journey on YouTube:
             fb.wait_for_timeout(3000)
         except: pass
         
-        # Click Publish/Post
+        # Click Publish/Share
         fb.evaluate("""(function(){
             var btns = document.querySelectorAll('div[role=button],span,button');
             for(var b of btns){
-                var t = (b.innerText||'').trim().toLowerCase();
+                var t = (b.innerText||b.textContent||'').trim().toLowerCase();
                 if(t==='publish' || t==='post' || t==='share reel' || t==='share'){
                     b.click(); return;
                 }
