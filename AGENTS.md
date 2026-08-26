@@ -436,3 +436,39 @@ YouTube discards ALL hashtags if a description contains more than 15. NEVER exce
 - Always include the dedicated genre hashtag
 - All content is EDM with a specific genre style — hashtag both
 - `build_hashtags()` in `youtube_update_descriptions.py` auto-generates this
+
+## Content Originality System (2026-08-24)
+
+### Varied Mission Verbiage (NEVER repeat the same text)
+`daily_scheduler.py` has `MISSION_VARIATIONS` — 8 different phrasings of the Bob & Lum / Hymnmania story. `build_post()` randomly picks one per post.
+
+### Inquisitive Reel CTAs (5 rotations)
+`fb_stories.py` `post_to_facebook_reel()` rotates 5 short question CTAs:
+- "Can this [genre] frequency elevate your spirit? 👇"
+- "Which hymn should we resurrect next? 👇"
+- "Does electronic worship hit different for you too? 👇"
+- "Feel that beat sync with your soul? 👇"
+- "Would you dance to this in a cathedral of light? 👇"
+
+### Link Spacing (CRITICAL)
+YouTube links MUST have a blank line BEFORE and AFTER (else preview card doesn't populate):
+```
+Watch the full 4K visual journey on YouTube!
+
+https://youtube.com/watch?v=XXX
+
+#hashtags
+```
+
+### Facebook Reels Caption Field
+Use `keyboard.type()` (NOT `execCommand`) — the field placeholder is "Describe your reel...". React ignores execCommand.
+
+### Facebook Reels — Current Status
+Flow: reels/create → upload → Next → Next → caption → Post
+STATUS: Draft created but final "Post" publish NOT confirmed (shows "No reels yet"). Stories WORK; Reels still need final publish resolved.
+
+### Facebook Stories — WORKING
+`stories/create` → upload 20s 9:16 clip → "Share to story". Confirmed live.
+
+### YouTube Shorts — WORKING
+9:16 vertical <60s, `#Shorts` in title, full description with ≤15 hashtags SEO + #EDM + #Psytrance + genre.
