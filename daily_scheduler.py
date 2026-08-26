@@ -10,6 +10,18 @@ POSTED_LOG = os.path.join(ROOT, ".social_posted.json")
 FIXED_HASHTAGS = """
 #ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness"""
 
+# Varied phrasings of the Bob & Lum / Hymnmania origin story (rotated per post for originality)
+MISSION_VARIATIONS = [
+    "Every track is meticulously produced using Hymnmania, a custom software automation tool engineered by Bob & Lum to fuse faith, code, and electronic music.",
+    "Born from a vision to honor God through futuristic sound, Bob & Lum built Hymnmania to resurrect the hymns we grew up with as electronic worship.",
+    "Hymnmania is Bob & Lum's labor of love — a custom orchestration platform where code meets faith to transform timeless hymns into modern electronic worship.",
+    "Engineered by Bob & Lum, Hymnmania fuses faith, code, and electronic music into a powerful tool for spiritual elevation and creative expression.",
+    "We're Bob & Lum — two creators who built Hymnmania to take every hymn we love and reimagine it through futuristic electronic soundscapes.",
+    "To honor God with every hymn — that's why Bob & Lum created Hymnmania, a custom automation platform fusing faith, code, and music.",
+    "A creative fusion of faith and technology: Hymnmania, engineered by Bob & Lum, transforms the hymns of yesterday into the electronic worship of tomorrow.",
+    "Hymnmania is more than software — it's Bob & Lum's mission to fuse faith, code, and electronic music, honoring God through every reimagined hymn.",
+]
+
 HOOKS = {
     "Psytrance": "Prepare your mind and spirit for a high-frequency journey through sacred geometry and neon cathedrals!",
     "Deep House": "Smooth, soulful, and deeply spiritual — warm golden-hour energy meets classic worship.",
@@ -122,8 +134,10 @@ def pick_videos(posted, count=3):
     return selected
 
 def build_post(vid, hymn, genre):
+    import random
     hook = HOOKS.get(genre, f"New {hymn} electronic remix just dropped!")
     visual = VISUALS.get(genre, "Our visuals are crafted to deliver the ultimate psychedelic experience.")
+    mission = random.choice(MISSION_VARIATIONS)
     
     body = f"""{hook} 🚀
 
@@ -132,7 +146,7 @@ def build_post(vid, hymn, genre):
 
 {visual} Our visuals are crafted by our creators using multiple digital media tools to deliver the ultimate psychedelic experience.
 
-Every track is meticulously produced using Hymnmania, a custom software automation tool engineered by Bob & Lum to fuse faith, code, and electronic music. We believe psytrance is more than music — its fast, repetitive tempos stimulate the brain's reward pathways and induce a state of deep meditation and stress relief. 🙏🧠
+{mission} We believe psytrance is more than music — its fast, repetitive tempos stimulate the brain's reward pathways and induce a state of deep meditation and stress relief. 🙏🧠
 
 Watch the full 4K visual journey on YouTube!"""
     return body, f"https://www.youtube.com/watch?v={vid}"
@@ -157,8 +171,12 @@ def post_to_facebook(page, post_text, yt_link):
         time.sleep(2)
         if page.evaluate('!!document.querySelector("[role=dialog] img[src*=ytimg]")'): break
     
-    # Step 2: Select all and replace with text + link on own line + hashtags (proper spacing around link)
+    # Step 2: Replace with full text + link (use keyboard Ctrl+A for reliable select-all)
     full = post_text + chr(10) + chr(10) + yt_link + chr(10) + chr(10) + FIXED_HASHTAGS
+    
+    # Try multiple selection methods to avoid the duplicate-URL bug
+    page.keyboard.press("Control+a")
+    page.wait_for_timeout(500)
     page.evaluate(
         f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();document.execCommand('selectAll',false,null);document.execCommand('insertText',false,{json.dumps(full)});}}}})()"""
     )

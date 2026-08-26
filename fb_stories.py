@@ -126,19 +126,29 @@ def post_beat_to_story(beat_path, track_title, genre, yt_link):
     return post_to_facebook_story(clip, headline, yt_link)
 
 def post_to_facebook_reel(video_path, track_title, genre, yt_link, headline=""):
-    """Upload a video to Facebook Reels (WORKS via reels/create)."""
-    # <=15 hashtags (YouTube/Facebook ignore all if >15)
+    """Upload a video to Facebook Reels with short inquisitive CTA + YouTube link."""
+    import random
+    # <=15 hashtags
     hashtags = f"#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #EDM #ElectronicMusic #{genre.replace(' ', '')} #PsychedelicTrance"
     
+    # Short inquisitive CTA (rotated for originality)
+    ctas = [
+        f"Can this {genre} frequency elevate your spirit? 👇 Drop a like and tell us below!",
+        f"Which hymn should we resurrect next? 👇 Comment your pick!",
+        f"Does electronic worship hit different for you too? 👇 Like + share if it does!",
+        f"Feel that beat sync with your soul? 👇 Let us know in the comments!",
+        f"Would you dance to this in a cathedral of light? 👇 Tell us what you think!",
+    ]
+    cta = random.choice(ctas)
+    
     if not headline:
-        headline = f"Resurrected from the vault! {track_title} - {genre} electronic worship"
+        headline = f"{track_title} — {genre} electronic worship"
+    
+    link_line = f"\n\n▶️ Full 4K journey: {yt_link}" if yt_link else ""
     
     caption = f"""{headline}
 
-Track: {track_title}
-Genre: {genre} / Electronic Worship
-
-Watch the full 4K visual journey on YouTube!
+{cta}{link_line}
 
 {hashtags}"""
     
@@ -178,18 +188,15 @@ Watch the full 4K visual journey on YouTube!
             })()""")
             fb.wait_for_timeout(5000)
         
-        # Type caption
+        # Type caption (keyboard.type for the React caption field)
         try:
-            fb.evaluate(f"""(function(){{
-                var editors = document.querySelectorAll('[contenteditable=true], textarea, [role=textbox]');
-                for(var e of editors){{
-                    if(e.offsetParent && e.tagName !== 'BODY'){{
-                        e.focus();
-                        document.execCommand('insertText', false, {json.dumps(caption)});
-                        break;
-                    }}
-                }}
-            }})()""")
+            fb.evaluate("""(function(){
+                var e = Array.from(document.querySelectorAll('textarea, [contenteditable=true], [role=textbox], [aria-label*=Describe], [aria-label*=caption]'))
+                    .find(x => x.offsetParent);
+                if(e){ e.focus(); e.click(); }
+            })()""")
+            fb.wait_for_timeout(1500)
+            fb.keyboard.type(caption, delay=10)
             fb.wait_for_timeout(3000)
         except: pass
         
