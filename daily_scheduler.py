@@ -125,7 +125,7 @@ def build_post(vid, hymn, genre):
     hook = HOOKS.get(genre, f"New {hymn} electronic remix just dropped!")
     visual = VISUALS.get(genre, "Our visuals are crafted to deliver the ultimate psychedelic experience.")
     
-    post = f"""{hook} 🚀
+    body = f"""{hook} 🚀
 
 🎵 Track: {hymn}
 🎹 Vibe: {genre} / Electronic Worship
@@ -134,10 +134,8 @@ def build_post(vid, hymn, genre):
 
 Every track is meticulously produced using Hymnmania, a custom software automation tool engineered by Bob & Lum to fuse faith, code, and electronic music. We believe psytrance is more than music — its fast, repetitive tempos stimulate the brain's reward pathways and induce a state of deep meditation and stress relief. 🙏🧠
 
-Watch the full 4K visual journey on YouTube!
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{FIXED_HASHTAGS}"""
-    return post, f"https://www.youtube.com/watch?v={vid}"
+Watch the full 4K visual journey on YouTube!"""
+    return body, f"https://www.youtube.com/watch?v={vid}"
 
 def post_to_facebook(page, post_text, yt_link):
     """Post with video preview: paste bare URL first, then replace with full text+link."""
@@ -159,8 +157,8 @@ def post_to_facebook(page, post_text, yt_link):
         time.sleep(2)
         if page.evaluate('!!document.querySelector("[role=dialog] img[src*=ytimg]")'): break
     
-    # Step 2: Select all and replace with full text + link at bottom
-    full = post_text + chr(10) + chr(10) + yt_link
+    # Step 2: Select all and replace with text + link on own line + hashtags (proper spacing around link)
+    full = post_text + chr(10) + chr(10) + yt_link + chr(10) + chr(10) + FIXED_HASHTAGS
     page.evaluate(
         f"""(function(){{var t=document.querySelector('[role=dialog] [role=textbox], [role=dialog] div[contenteditable=true]');if(t){{t.focus();document.execCommand('selectAll',false,null);document.execCommand('insertText',false,{json.dumps(full)});}}}})()"""
     )
