@@ -334,6 +334,7 @@ Plus genre-specific: #Dubstep #DeepHouse #DrumAndBass #Chiptune #Gabba #DetroitT
 - **Video**: Beat videos (have AUDIO + RESURRECTING BEATS intro), converted to 9:16 30s Reel
 - **Flow**: instagram.com → Create ("New post") → "Post" → upload → Next → Next → caption → Share
 - **Caption**: Sound description (genre + BPM) + like/subscribe CTA + YouTube link + <=15 hashtags
+- **Cross-post to Facebook**: At final Share step, the "Share to" section shows the Instagram account + a "Facebook" toggle. Click the Facebook toggle to ALSO post to Facebook. This appears AT the moment of posting (not before).
 - **Credentials**: resurrectingbeats@gmail.com / Temppass0! (in .secrets.json)
 - **CRITICAL**: Use beat videos (have audio+intro), NOT raw Magnific clips (silent, no intro)
 
