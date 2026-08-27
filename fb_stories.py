@@ -200,17 +200,32 @@ def post_to_facebook_reel(video_path, track_title, genre, yt_link, headline=""):
             fb.wait_for_timeout(3000)
         except: pass
         
-        # Click Post (the actual publish button is 'Post')
-        fb.evaluate("""(function(){
-            var btns = document.querySelectorAll('div[role=button],span,button');
-            for(var b of btns){
-                var t = (b.innerText||b.textContent||'').trim().toLowerCase();
-                if(t==='post' && b.offsetParent){
-                    b.click(); return;
-                }
-            }
+        # Scroll down to reveal the Post button (it's below the fold)
+        fb.mouse.wheel(0, 3000)
+        fb.wait_for_timeout(3000)
+        
+        # Click the SECOND Post button by exact coordinates (scroll into view + mouse click)
+        posted = fb.evaluate("""(function(){
+            var btns = Array.from(document.querySelectorAll('div[role=button], button')).filter(e => e.offsetParent && (e.innerText||e.textContent||'').trim() === 'Post');
+            if(btns.length >= 2){ btns[1].scrollIntoView({block:'center'}); return 'found '+btns.length; }
+            if(btns.length === 1){ btns[0].scrollIntoView({block:'center'}); return 'found 1'; }
+            return 'none';
         })()""")
-        fb.wait_for_timeout(8000)
+        fb.wait_for_timeout(2000)
+        
+        # Get the Post button coordinates and click it
+        rect = fb.evaluate("""(function(){
+            var btns = Array.from(document.querySelectorAll('div[role=button], button')).filter(e => e.offsetParent && (e.innerText||e.textContent||'').trim() === 'Post');
+            var target = btns[btns.length-1];
+            target.scrollIntoView({block:'center'});
+            var r = target.getBoundingClientRect();
+            return JSON.stringify({x: r.x + r.width/2, y: r.y + r.height/2});
+        })()""")
+        import json as _json
+        coords = _json.loads(rect)
+        fb.wait_for_timeout(1000)
+        fb.mouse.click(coords['x'], coords['y'])
+        fb.wait_for_timeout(10000)
         print(f"  Reel posted: {headline[:50]}...")
         b.close()
         return True
