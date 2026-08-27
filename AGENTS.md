@@ -329,12 +329,13 @@ Community tab blocked until 500 subscribers. Script ready.
 ```
 Plus genre-specific: #Dubstep #DeepHouse #DrumAndBass #Chiptune #Gabba #DetroitTechno #DetroitHouse #Hardstyle #Synthwave #JapaneseHardcore
 
-## Instagram Posting
-- **Script**: `instagram_poster.py` — 30s 9:16 clip → Reels upload via CDP
-- **Upload**: CDP browser → `instagram.com/create`
+## Instagram Posting (UPDATED 2026-08-24)
+- **Script**: `instagram_poster.py` — use `post_beat_to_instagram()` (NOT `post_magnific_clip`)
+- **Video**: Beat videos (have AUDIO + RESURRECTING BEATS intro), converted to 9:16 30s Reel
+- **Flow**: instagram.com → Create ("New post") → "Post" → upload → Next → Next → caption → Share
+- **Caption**: Sound description (genre + BPM) + like/subscribe CTA + YouTube link + <=15 hashtags
 - **Credentials**: resurrectingbeats@gmail.com / Temppass0! (in .secrets.json)
-- **Caption**: Same brand template with 🌀 hook, Hymnmania credit, bio link CTA
-- **Status**: Script built — needs @ResurrectingBeats account active in CDP browser
+- **CRITICAL**: Use beat videos (have audio+intro), NOT raw Magnific clips (silent, no intro)
 
 ## Suno v4.5 Cover Flow (Updated 2026-08-19)
 

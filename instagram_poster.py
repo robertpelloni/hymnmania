@@ -35,21 +35,71 @@ def convert_to_reel(input_path, output_name):
     except: pass
     return None
 
-def build_instagram_caption(track_title, genre, yt_link=""):
-    """SEO-optimized Instagram caption with keywords + hashtags + YouTube funnel."""
-    keywords = (
+def build_instagram_caption(track_title, genre, yt_link="", bpm=140):
+    """SEO caption with sound description + like/subscribe CTA + YouTube funnel + <=15 hashtags."""
+    import random
+    ctas = [
+        "👍 Like this if it moves you! SUBSCRIBE for more electronic worship — full 4K journey on YouTube (link in bio).",
+        "👊 Like + Subscribe for daily spiritual EDM! Watch the full journey on YouTube — link in bio.",
+        "🙏 Like if your soul needed this. Subscribe to Resurrecting Beats on YouTube for more — link in bio!",
+        "✨ Like, share, and subscribe! The full 4K visual journey is on YouTube — link in bio.",
+    ]
+    cta = random.choice(ctas)
+    
+    genre_tag = genre.replace(' ', '')
+    hashtags = ["#ResurrectingBeats", "#Hymnmania", "#SpiritualEDM", "#Psytrance", "#EDM", "#ElectronicMusic"]
+    if genre_tag not in ["Psytrance"]:
+        hashtags.append(f"#{genre_tag}")
+    hashtags += ["#PsychedelicTrance", "#PsytranceFamily", "#MusicVideo", "#ElectronicWorship", "#EDMMusic", "#DanceMusic", "#TrippyVisuals"]
+    hashtag_str = " ".join(hashtags[:15])
+    
+    caption = (
         f"🌀 RESURRECTING BEATS: '{track_title}' [{genre}]\n\n"
-        f"High-energy {genre} electronic worship music. "
-        f"Psychedelic AI visuals synchronized to the beat — a spiritual EDM journey.\n\n"
+        f"🎵 Sound: {genre} electronic worship at {bpm} BPM — driving bass, hypnotic arpeggios, "
+        f"and psychedelic textures synced to a spiritual EDM journey.\n\n"
+        f"{cta}\n\n"
+        f"{hashtag_str}"
     )
-    cta = "▶️ Full 4K visual journey on YouTube — link in bio!\n\n" if yt_link else "▶️ Follow for more electronic worship!\n\n"
-    hashtags = (
-        "#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #EDM "
-        "#ElectronicMusic #PsychedelicArt #TrippyVisuals #AIArt #MusicVideo "
-        "#ElectronicWorship #PsychedelicTrance #PsytranceFamily "
-        f"#{genre.replace(' ', '')} #EDMMusic #PsychedelicMusic #DanceMusic"
-    )
-    return keywords + cta + hashtags
+    return caption
+
+def create_beat_reel(beat_path, output_name):
+    """Convert a beat video (has audio + RESURRECTING BEATS intro) to 9:16 Reel, keeping audio."""
+    base = output_name or os.path.splitext(os.path.basename(beat_path))[0]
+    out = os.path.join(IG_DIR, f"{base}_beat_reel.mp4")
+    if os.path.exists(out):
+        return out
+    cmd = [
+        "ffmpeg", "-y", "-loglevel", "error", "-i", beat_path,
+        "-vf", "crop=ih*9/16:ih,scale=1080:1920",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "26",
+        "-c:a", "aac", "-b:a", "128k", "-t", "30", out
+    ]
+    try:
+        subprocess.run(cmd, check=True, capture_output=True)
+        if os.path.exists(out) and os.path.getsize(out) > 50000:
+            return out
+    except: pass
+    return None
+
+def post_beat_to_instagram(beat_path, track_title, genre, yt_link="", bpm=0):
+    """Convert beat video (has audio + intro) to 9:16 and post with SEO caption."""
+    base = os.path.splitext(os.path.basename(beat_path))[0]
+    reel = create_beat_reel(beat_path, base)
+    if not reel:
+        print("  Convert failed")
+        return False
+    # Detect BPM if not provided
+    if not bpm:
+        try:
+            import librosa
+            import numpy as np
+            y, sr = librosa.load(beat_path, sr=22050)
+            tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+            bpm = int(float(np.asarray(tempo).ravel()[0]))
+        except:
+            bpm = 140
+    caption = build_instagram_caption(track_title, genre, yt_link, bpm)
+    return post_to_instagram(reel, caption)
 
 def post_to_instagram(video_path, caption):
     """Post a Reel using the correct Create → Post flow."""
