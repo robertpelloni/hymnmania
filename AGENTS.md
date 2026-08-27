@@ -463,9 +463,19 @@ https://youtube.com/watch?v=XXX
 ### Facebook Reels Caption Field
 Use `keyboard.type()` (NOT `execCommand`) — the field placeholder is "Describe your reel...". React ignores execCommand.
 
-### Facebook Reels — Current Status
-Flow: reels/create → upload → Next → Next → caption → Post
-STATUS: Draft created but final "Post" publish NOT confirmed (shows "No reels yet"). Stories WORK; Reels still need final publish resolved.
+### Facebook Reels — WORKING (FIXED 2026-08-24)
+Complete working flow:
+1. facebook.com/reels/create
+2. Upload 9:16 video (input[type=file])
+3. Wait for "Your reel is safe to publish!" (copyright check)
+4. Click "Next" (edit options)
+5. Click "Next" (caption step)
+6. Type caption via keyboard.type (NOT execCommand — React ignores it). Field placeholder = "Describe your reel..."
+7. SCROLL DOWN (mouse.wheel 3000) to reveal the Post button
+8. Click "Post" by mouse COORDINATES (not JS .click() — the button is below the fold and JS click hits wrong element)
+   - Get rect: Array.from(buttons).filter(text==='Post'), scrollIntoView, getBoundingClientRect, mouse.click(cx, cy)
+
+CRITICAL: The Post button is BELOW the fold. MUST scroll + click by coordinates. JS .click() on the hidden button does nothing.
 
 ### Facebook Stories — WORKING
 `stories/create` → upload 20s 9:16 clip → "Share to story". Confirmed live.
