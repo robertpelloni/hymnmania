@@ -5,7 +5,7 @@
 - **Suno Cover Limitations**: Generating a cover of an uploaded track on Suno can trigger a copyright moderation failure if words like "Joy to the World" or "hymn" are placed in the description prompt or lyrics box. To bypass this, we use generic style tags ("full-on psytrance, energetic beat...") and set `"make_instrumental": True`.
 - **Unique Sessions**: Navigation includes `session_id` query parameters to prevent multiple background tabs from colliding in CDP.
 
-## Pipeline (VERIFIED 2026-09-01 — full order)
+## Pipeline (VERIFIED 2026-09-01 — PRODUCTION CONFIRMED, full order)
 ```
 MIDI → sine MP3 → SUNO COVER → beat video → post
 ```
@@ -13,6 +13,8 @@ MIDI → sine MP3 → SUNO COVER → beat video → post
 - Cover flow (v4.5): song page → More menu (three dots) → Remix → Cover → /create
 - Song Description textarea (index 2, maxLength 3000) sets gpt_description_prompt
 - Instrumental toggle ON; model v4.5-all; new clips have model `chirp-auk`
+- **PRODUCTION POST (2026-09-01)**: Jesus Comes With Power psytrance cover → beat video →
+  FULL https://youtu.be/lbcCWoDw2fE + SHORT https://youtu.be/dfLNlGlksX8 (both public/live)
 
 ## Suno DRM Download (2026-09-01) — CRITICAL
 - `audio_url` returns `/api/forbidden` — obsolete
