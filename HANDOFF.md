@@ -100,3 +100,8 @@ The sine MP3 is the *input* reference; Suno generates the actual genre cover.
 ## Download helper (DONE 2026-09-01)
 `scripts/suno_download_via_mediarecorder.py <clip_id> [output.mp3]`
 Plays blob audio → MediaRecorder → webm → mp3. Reloads page per capture automatically.
+
+## VERIFIED PRODUCTION RUN (2026-09-01)
+- Jesus Comes With Power → v4.5 psytrance cover (4:19) → beat video → posted FULL + SHORT
+- Full: https://youtu.be/lbcCWoDw2fE | Short: https://youtu.be/dfLNlGlksX8
+- All fixes active: DRM MediaRecorder download, restored config module, correct titles

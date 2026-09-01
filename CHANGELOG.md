@@ -23,6 +23,7 @@
 - `regen_beat_videos.py` — regenerate beat videos locally (zero quota)
 - 5 new YouTube uploads (2 full + 1 short batch, then 2 full + 1 short new hymns)
 - 8 "Unknown" videos renamed correctly
+- VERIFIED PRODUCTION POST: Jesus Comes With Power → v4.5 psytrance cover (4:19) → beat video → FULL + SHORT posted live (https://youtu.be/lbcCWoDw2fE, https://youtu.be/dfLNlGlksX8)
 
 ### Pipeline Stats
 

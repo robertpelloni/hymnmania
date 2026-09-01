@@ -384,6 +384,13 @@ Cover still opens at `suno.com/create` with the song as reference and v4.5-all m
   v2_youtube_oauth_uploader, generate_sine_cover.py)
 - NEVER delete scripts/ modules — verify with `python -c "import pipeline_config_central_definitions_genres_speeds"`
 
+### VERIFIED COMPLETE RUN (2026-09-01 — with all fixes)
+- Uploaded sine MP3 → v4.5 Cover (More→Remix→Cover) → genre desc → Instrumental → Create
+- Downloaded full cover via MediaRecorder capture (scripts/suno_download_via_mediarecorder.py)
+- Composed beat video + posted FULL + SHORT to YouTube:
+  - Full: https://youtu.be/lbcCWoDw2fE (Psytrance Hymn 2026 Remix: Jesus Comes With Power)
+  - Short: https://youtu.be/dfLNlGlksX8 (#Shorts)
+
 ### Full-Length Video Guarantee (CRITICAL)
 The beat composer uses **ffprobe** duration (NOT librosa — librosa misreads Suno VBR MP3s by ~40%):
 1. ffprobe reads true audio duration
