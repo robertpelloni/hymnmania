@@ -227,3 +227,28 @@
 ## v5.70.0 — Previous (2026-06-20)
 
 (Consolidated from prior HANDOFF entries)
+
+## v5.97.10 — Full Genre Batch: Jesus Comes With Power × 11 Genres (2026-09-01)
+
+### Added
+
+- **All 11 genre covers generated** for Jesus Comes With Power (Suno v4.5, cover of upload d2246d83):
+  psytrance, deep_house, drum_and_bass, gabba, dubstep, chiptune, synthwave, hardstyle,
+  detroit_techno, detroit_house, japanese_hardcore_techno
+- **10 full beat videos composed + posted to YouTube** (full-length 4:04 each):
+  Chiptune d9T0-qPBYs8, Deep House aWAT3wdZRDY, Detroit House MpRp4eSFgac,
+  Detroit Techno b32m6rdgaZM, Drum and Bass 0WiWQ5hLdCY, Dubstep K0pMiRoq2SA,
+  Gabba JN_V27HHnCY, Hardstyle ql4BBqwFVPc, Japanese Hardcore DG-fGbdcscc,
+  Synthwave _cB808FTMhI
+- Channel: 1,163 → 1,170 videos
+- **scripts/batch_gen_covers.py**: batch v4.5 cover generation with strict cover_clip_id
+  filtering (safe from other-bot confusion on shared Suno account)
+- **scripts/download_covers.py**: full-song MediaRecorder download for specific clips
+- **scripts/suno_upload_sine.py**: upload sine MP3s to Suno with feed verification
+- post_to_youtube.py: fixed japanese_hardcore_techno genre detection (was matching Gabba)
+
+### Verified
+
+- Multi-bot safety: all covers filtered by cover_clip_id == upload ID, so the other
+  bot's chirp-v3 clips on the shared account were never touched
+- 10/11 genres full-length (4:04), 1 (detroit_techno) 3:39

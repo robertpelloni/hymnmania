@@ -79,10 +79,16 @@ def detect(fn):
             break
     genre = None
     fl2 = "".join(ch for ch in fl if ch not in " _-()")
-    for key, g in GENRES:
-        if key in fl2:
-            genre = g
-            break
+    # Japanese Hardcore Techno must be checked BEFORE hardcore/gabba
+    if "japanesehardcoretechno" in fl2 or "japanesehardcore" in fl2 or "jcore" in fl2 or "japanesehardcore" in fl2:
+        genre = "Japanese Hardcore Techno"
+    elif "hardcoretechno" in fl2:
+        genre = "Japanese Hardcore Techno"
+    else:
+        for key, g in GENRES:
+            if key in fl2:
+                genre = g
+                break
     if not genre:
         for key, g in GENRE_OVERRIDES.items():
             if key.replace(" ", "") in fl2:

@@ -105,3 +105,14 @@ Plays blob audio → MediaRecorder → webm → mp3. Reloads page per capture au
 - Jesus Comes With Power → v4.5 psytrance cover (4:19) → beat video → posted FULL + SHORT
 - Full: https://youtu.be/lbcCWoDw2fE | Short: https://youtu.be/dfLNlGlksX8
 - All fixes active: DRM MediaRecorder download, restored config module, correct titles
+
+## v5.97.10 — FULL GENRE BATCH (2026-09-01 evening)
+- Jesus Comes With Power × ALL 11 genres generated (Suno v4.5 covers of upload d2246d83)
+- 10 full beat videos composed + posted to YouTube (channel 1,163 → 1,170)
+- MULTI-BOT SAFETY: other bot (chirp-v3, psy_darkpsy/hitech clips) is active on the
+  SHARED Suno account. ALWAYS filter covers by cover_clip_id == your upload ID.
+  Download ONLY chirp-auk (v4.5) clips with your cover_clip_id. Never touch chirp-v3.
+- Upload note: sine MP3 uploads to Suno intermittently hang ("Uploading Clip" forever).
+  Retry with fresh page + file_chooser. Jesus upload succeeded; others may need retries.
+- Scripts: batch_gen_covers.py (generate+filter+download), download_covers.py (full capture),
+  suno_upload_sine.py (upload+verify). All in scripts/.
