@@ -36,6 +36,13 @@ HYMNS = {
     "clair": ("Clair de Lune", "Claude Debussy", "1905"),
     "amazing grace": ("Amazing Grace", "John Newton", "1779"),
     "how great": ("How Great Thou Art", "Carl Boberg", "1885"),
+    # New hymns (2026 batch)
+    "jesus comes with power": ("Jesus Comes With Power", "Traditional", "2026"),
+    "just over the mountains": ("Just Over The Mountains", "Traditional", "2026"),
+    "o happy day": ("O Happy Day", "Philip Doddridge", "1755"),
+    "when love shines in": ("When Love Shines In", "Traditional", "2026"),
+    "god is so good": ("God Is So Good", "Traditional", "2026"),
+    "oh god our help": ("Oh God Our Help", "Isaac Watts", "1719"),
 }
 
 GENRE_KEYWORDS = {

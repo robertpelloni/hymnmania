@@ -105,3 +105,28 @@ token_gemini.json
 !HANDOFF.md
 !AGENTS.md
 !VERSION
+
+# Media outputs (large, regenerable)
+generated/
+mp3_input/
+pipeline_output/
+demo_output/
+demo_input/
+*.mp3
+*.mp4
+*.wav
+*.m4a
+*.webm
+*.raw
+*.mid
+
+# Session artifacts
+.yt_uploads.json
+.feed_covers.json
+.short_vids.json
+.regen_list.json
+.unposted_covers.json
+regen_log.txt
+regen_progress.txt
+suno_*.png
+test_beat.mp4

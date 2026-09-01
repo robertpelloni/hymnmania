@@ -1,5 +1,34 @@
 # Changelog
 
+## v5.97.9 — Suno DRM Download Fix + Pipeline Restoration + Full Pipeline Verified (2026-09-01)
+
+### Fixed (CRITICAL)
+
+- **Suno DRM download**: `audio_url` now returns `/api/forbidden`; `media_urls` m4a is an encrypted blob. Added working capture method: play song in browser → audio element blob src → `AudioContext.createMediaElementSource` + `MediaRecorder` → webm → ffmpeg → mp3. Reload page between captures.
+- **Missing module restored**: `scripts/pipeline_config_central_definitions_genres_speeds.py` (GENRES/SPEEDS/SPEED_LABEL_MAP/PITCH_SHIFT_FACTORS) was deleted — restored from git `c780ddf`. Cover scripts crashed with ModuleNotFoundError otherwise.
+- **6 other deleted pipeline scripts restored** from git `c780ddf`: suno_browser_setup_connect_debugging_port, audio_speed_variants_exporter_for_multi_tempo_runs, suno_modal_dismissal_identify_describe_overwrite_resolver, suno_feed_polling_status_monitor_downloader, visuals_video_ffmpeg_pipe_muxer, visuals_milkdrop_preset_energy_analysis_transition_renderer, v2_youtube_oauth_uploader_with_hymn_metadata, generate_sine_cover.py
+- **rename_youtube_titles.py**: fixed "Unknown" prefix handling, #Shorts preservation, genre priority (DnB Re**chip** → Drum and Bass, "unknown <genre>" parsing)
+- **youtube_update_descriptions.py**: added 6 new hymns to metadata
+
+### Verified (full pipeline run)
+
+- Suno v4.5 cover flow: More menu → Remix → Cover → /create → genre desc → Instrumental → Create → 2 variants
+- Generated + downloaded full psytrance cover of "Jesus Comes With Power" (4:19) via MediaRecorder capture
+- Upload flow: Add audio → file chooser → "Describe your audio" modal → Full Song → Continue
+
+### Added
+
+- **New hymns** (never posted before): Jesus Comes With Power, Just Over The Mountains, O Happy Day (Philip Doddridge, 1755), When Love Shines In, God Is So Good, Oh God Our Help (Isaac Watts, 1719)
+- `post_to_youtube.py` — YouTube uploader with correct titles/descriptions (no "cover", correct hymn/genre/author/year, 15 hashtags)
+- `regen_beat_videos.py` — regenerate beat videos locally (zero quota)
+- 5 new YouTube uploads (2 full + 1 short batch, then 2 full + 1 short new hymns)
+- 8 "Unknown" videos renamed correctly
+
+### Pipeline Stats
+
+- 54 July-era beat videos regenerated with waveform visualizer
+- Channel: 1,234+ videos
+
 ## v5.97.8 — Comprehensive Repository Refresh & Submodule Cascade (2026-08-05)
 
 ### Branch Reconciliation

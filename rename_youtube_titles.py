@@ -58,6 +58,9 @@ GENRE_MAP = {
 }
 
 def detect_genre(title_lower):
+    # "DnB Rechip" must be Drum and Bass — the "chip" inside "Rechip" is a false positive
+    if "dnb" in title_lower or "drum and bass" in title_lower or "drumandbass" in title_lower:
+        return "Drum and Bass"
     for key, name in sorted(GENRE_MAP.items(), key=lambda x: -len(x[0])):
         if key in title_lower:
             return name
@@ -83,14 +86,40 @@ def detect_variant(title_lower):
 
 def build_correct_title(title, description=""):
     orig = title.lower()
+    is_shorts = "#shorts" in orig
+    # Process without the #Shorts suffix (re-appended at the end if needed)
+    clean = orig.replace("#shorts", "").strip()
+    # Fix "Unknown Hymn 2026 Remix: ..." — strip the misleading prefix
+    was_unknown = clean.startswith("unknown hymn") or clean.startswith("unknown ")
+    if was_unknown:
+        if clean.startswith("unknown "):
+            clean = clean[len("unknown "):].strip()
+        if clean.startswith("hymn 2026 remix: ") or clean.startswith("classical remix "):
+            pass  # leave the Remix part intact
     
-    # Already correct
-    if "hymn 2026 remix:" in orig and " | " in orig and not orig.startswith("electronic "):
-        return None
-    if "classical remix" in orig and " | " in orig and not orig.startswith("electronic "):
+    # Already correct (skip) — but NOT if it had an Unknown prefix
+    already = (("hymn 2026 remix:" in clean or "classical remix" in clean)
+               and " | " in clean and not clean.startswith("electronic "))
+    if already and not was_unknown:
         return None
     
-    genre = detect_genre(orig)
+    genre = detect_genre(clean)
+    if not genre and is_shorts:
+        genre = detect_genre(orig)
+    
+    # For "unknown <genre>" filenames, the REAL genre is the keyword after "unknown"
+    # (e.g. "Brostep Breaker Mix unknown gabba A" -> Gabba, not Dubstep)
+    unknown_genre = None
+    import re as _re
+    m = _re.search(r"unknown\s+([a-z0-9 _&]+?)\s*([ab]|cover)?\s*$", clean)
+    if m and "unknown" in clean:
+        cand = m.group(1).strip()
+        if cand:
+            detected = detect_genre(cand)
+            if detected:
+                unknown_genre = detected
+    if unknown_genre:
+        genre = unknown_genre
     
     # If title has no genre, try extracting from description
     if not genre and description:
@@ -100,34 +129,35 @@ def build_correct_title(title, description=""):
             # Parse "Psytrance / Electronic Worship" -> "Psytrance"
             extracted = genre_line.split(" / ")[0].strip()
             # Only use if it's a known genre, not "Electronic Worship" or empty
-            if extracted and "electronic worship" not in extracted and extracted != "electronic":
+            if extracted and "electronic worship" not in extracted and extracted != "electronic" \
+               and "unknown" not in extracted.lower():
                 genre = extracted.title()
     
     # Fallback placeholder if genre still unknown
     if not genre:
         genre = "[EDM LSDance]"
     
-    speed = detect_speed(orig)
-    variant = detect_variant(orig)
+    speed = detect_speed(clean)
+    variant = detect_variant(clean)
     
     # Find which piece
     for key, (name, author, year) in CLASSICAL.items():
-        if key in orig:
+        if key in clean:
             if not genre:
                 genre = "[EDM LSDance]"
-            return f"{genre} Classical Remix - {name} ({author}, {year}) | {speed}{variant}"
+            return f"{genre} Classical Remix - {name} ({author}, {year}) | {speed}{variant}" + (" #Shorts" if is_shorts else "")
     
     for key, (name, author, year) in HYMNS.items():
-        if key in orig:
+        if key in clean:
             if not genre:
                 genre = "[EDM LSDance]"
-            return f"{genre} Hymn 2026 Remix: {name} ({author}, {year}) | {speed}{variant}"
+            return f"{genre} Hymn 2026 Remix: {name} ({author}, {year}) | {speed}{variant}" + (" #Shorts" if is_shorts else "")
     
     # Neon Valse
-    if "neon valse" in orig:
+    if "neon valse" in clean:
         if not genre:
             genre = "[EDM LSDance]"
-        return f"{genre} Electronic Remix - Neon Valse (Original, 2026) | {speed}{variant}"
+        return f"{genre} Electronic Remix - Neon Valse (Original, 2026) | {speed}{variant}" + (" #Shorts" if is_shorts else "")
     
     return None
 
