@@ -252,3 +252,39 @@
 - Multi-bot safety: all covers filtered by cover_clip_id == upload ID, so the other
   bot's chirp-v3 clips on the shared account were never touched
 - 10/11 genres full-length (4:04), 1 (detroit_techno) 3:39
+
+## v5.97.11 — CRITICAL Suno Capture Fix + Full Genre Repost (2026-09-02)
+
+### Fixed (CRITICAL)
+
+- **Suno capture was producing DEGRADED audio**: MediaRecorder captures from Suno song
+  pages in batch runs returned ~300Hz lowpassed sine-like audio (spectral centroid ~330)
+  instead of the real genre cover (~2800-5000). Root cause: clicking ALL play buttons
+  queued the wrong track, and clips degrade over time after creation.
+- **WORKING capture method** (verified):
+  1. Generate cover fresh (description injection verified before Create)
+  2. Capture IMMEDIATELY (within ~30 min of clip creation)
+  3. Get metadata duration from API first
+  4. Play via the SINGLE main-track Play button (aria-label="Play", y<500)
+  5. MediaRecorder for exactly (metadata_duration + 3) seconds
+  6. ffmpeg webm → mp3
+  7. Verify quality: spectral centroid > 2000 = real, ~330 = degraded
+- Helpers: `gen_capture_genre.py` (generate+capture one genre), `cap_final.py` (capture clip),
+  `scan_clips.py` (check clip quality), `check2.py` (spectrum verify)
+
+### Verified
+
+- **All 11 genre covers re-captured with REAL audio** (centroids 2800-5000):
+  psytrance 3775, deep_house 2902, drum_and_bass 4456, gabba 3558, dubstep 4494,
+  chiptune 4255, synthwave 2828, hardstyle 3878, detroit_techno 2655, detroit_house 2873,
+  japanese_hardcore 5010
+- 10 beat videos rebuilt + re-posted to YouTube (8 full + 2 shorts), all public/live:
+  Chiptune vwQv7t9tK0k, Deep House 3Gott4XdqHk, Detroit House mrbJLzwRIHg,
+  Detroit Techno hab94PLA8J8, DnB BtQnvhrCm8s, Dubstep U6oftZT4kFk, Gabba XSAXZ9TeH0o,
+  Hardstyle S9Qhrn5dPnM, JapHardcore short s43HurTMIgw, Synthwave short KrMdmryZoUc
+- Channel at 1,172 videos. Extended quota confirmed (10+ uploads/day, no quota errors)
+
+### Note
+
+- End screens (custom recommended-video thumbnails) CANNOT be set via YouTube Data API
+  — only manually in YouTube Studio UI. Auto-suggestions of channel videos work by default.
