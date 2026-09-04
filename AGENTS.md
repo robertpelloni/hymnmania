@@ -364,6 +364,15 @@ Cover still opens at `suno.com/create` with the song as reference and v4.5-all m
 9. post                   post_to_youtube.py (+ rename/descriptions)
 ```
 
+
+### CRITICAL: Capture degradation fix (2026-09-02)
+- MediaRecorder batch captures from Suno song pages can return DEGRADED ~300Hz audio
+  (spectral centroid ~330) instead of the real genre cover (~2800-5000).
+- Correct method: generate cover fresh, capture within ~30 min of clip creation,
+  get metadata duration first, play via the SINGLE main-track Play button
+  (aria-label=="Play", y<500 — NEVER click all play buttons), MediaRecorder for
+  exactly metadata_duration+3s, ffmpeg webm->mp3. Verify centroid >2000.
+- Helpers: gen_capture_genre.py, cap_final.py, scan_clips.py
 ### CRITICAL: Suno DRM download (2026-09-01)
 - `audio_url` now returns `https://studio-api.prod.suno.com/api/forbidden` — DO NOT use it
 - `media_urls` has m4a-opus (CloudFront, ENCRYPTED blob — no ftyp/mdat) and mp3 (cdn1.suno.ai → 403)

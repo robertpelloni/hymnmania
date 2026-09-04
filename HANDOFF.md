@@ -116,3 +116,38 @@ Plays blob audio → MediaRecorder → webm → mp3. Reloads page per capture au
   Retry with fresh page + file_chooser. Jesus upload succeeded; others may need retries.
 - Scripts: batch_gen_covers.py (generate+filter+download), download_covers.py (full capture),
   suno_upload_sine.py (upload+verify). All in scripts/.
+
+## v5.97.11 — SUNO CAPTURE FIX (CRITICAL, 2026-09-02)
+### The bug: batch captures produced SINE audio
+- MediaRecorder captures from Suno song pages in batch/automated runs returned
+  DEGRADED ~300Hz audio (spectral centroid ~330) instead of the real genre cover.
+- User confirmed posted videos "still outputting sine wave sheet music."
+
+### The fix (VERIFIED working):
+1. Generate cover fresh with VERIFIED description injection (check textarea value before Create)
+2. Capture immediately (within ~30 min of clip creation — clips degrade over time)
+3. Get metadata duration from API
+4. Play via the SINGLE main-track Play button: aria-label=="Play" AND y<500
+   (NEVER click all play buttons — that queues the wrong track = sine!)
+5. MediaRecorder for exactly (metadata_duration + 3) seconds
+6. ffmpeg webm → mp3
+7. VERIFY: spectral centroid >2000 = real cover, ~330 = degraded/sine
+
+### Quality check command
+python -c "...spectral centroid analysis..." — real covers are 2000-5000, sine is ~330
+
+### Scripts
+- gen_capture_genre.py — generate + capture one genre (verified injection)
+- cap_final.py <clip_id> <genre> — capture specific clip correctly
+- scan_clips.py — check which clips are still full-quality
+- check2.py <clip_id> — playback spectrum check
+
+### Results
+- All 11 Jesus genre covers REAL (centroid 2800-5000), 10 reposted to YouTube (channel 1172)
+- Extended YouTube quota CONFIRMED: 10+ uploads/day works, no quota errors
+- End screens NOT settable via YouTube API (Studio UI only)
+
+## TikTok (for @resurrecting.beat)
+- Login: resurrectingbeats@gmail.com / Temppass0!
+- Post the 9:16 short vids (like the 60s shorts made for YouTube)
+- Can use TikTok in-app effects/remix to make them trendy
