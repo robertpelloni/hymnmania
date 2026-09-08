@@ -310,3 +310,29 @@
   in a separate co-located browser session for uploads.
 - Video >50MB can't transfer via CDP to non-co-located browser — compress first
   (crf 28, -b:v 3M gets ~25MB from ~50MB).
+
+## v5.97.13 — Cross-Post Full Run + IG Fix (2026-09-03)
+
+### Fixed
+
+- **Instagram upload via CDP WORKS** with the coordinate-click method:
+  click New post svg by COORDINATES (not DOM — DOM click hit notifications),
+  then Post → file input → set_input_files (works via CDP when <50MB) → Next → Next → Share.
+  Script: `ig_cdp_post.py <video> <caption_file>`
+- **Co-located IG poster** (`ig_poster_local.py`) also created for non-CDP use
+  (logs in via .secrets.json, needs its own Edge profile `ig-local-profile`).
+  Note: separate profile didn't persist IG login across runs — CDP method preferred.
+
+### Posted this run
+
+- **Instagram**: 2 reels live (Synthwave + Japanese Hardcore), profile now 9 posts
+- **TikTok**: +3 posts (Amazing Grace, Chiptune, Dubstep) on top of earlier J-Core + Synthwave
+- **Facebook**: 2 reels live (Synthwave + Japanese Hardcore, earlier confirmed);
+  chiptune/dubstep FB reels blocked by reels/create redirecting to random reel page (needs fresh session)
+- **YouTube**: 10 corrected (earlier this session)
+
+### Notes
+
+- FB reels/create intermittently redirects to facebook.com/reel/<random> — retry or
+  use the creator studio directly. Works when it lands on the create page.
+- Compressed shorts (~32MB) work for CDP transfer on all platforms.
