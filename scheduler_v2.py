@@ -28,8 +28,36 @@ def log_post(platform, file, url=""):
     json.dump(log[-500:], open(LOG_FILE, "w"))
     print(f"  [log] {platform}: {os.path.basename(file)} {url}")
 
+def spectral_centroid(f, seconds=20):
+    """Return spectral centroid of a media file. Real music ~2000-8000; sine ~300."""
+    try:
+        import subprocess, tempfile
+        import numpy as np
+        FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
+        tmp = tempfile.mktemp(suffix=".f32")
+        subprocess.run([FFM, "-y", "-loglevel", "error", "-i", f, "-t", str(seconds),
+                        "-ac", "1", "-ar", "48000", "-f", "f32le", tmp], capture_output=True)
+        d = np.frombuffer(open(tmp, "rb").read(), dtype=np.float32)
+        os.remove(tmp)
+        cents = []
+        for i in range(0, len(d) - 2048, 2048):
+            spec = np.abs(np.fft.rfft(d[i:i+2048] * np.hanning(2048)))
+            fr = np.fft.rfftfreq(2048, 1/48000)
+            if spec.sum() > 0:
+                cents.append((spec * fr).sum() / spec.sum())
+        return round(float(np.mean(cents)), 1) if cents else 0
+    except Exception:
+        return 0
+
+QUALITY_THRESHOLD = 1000  # below this = sine/sheet-music
+
+def is_real_cover(beat_file):
+    """True if the beat video audio is a real genre cover (not sine/sheet-music)."""
+    c = spectral_centroid(os.path.join(BEAT_DIR, beat_file))
+    return c >= QUALITY_THRESHOLD, c
+
 def get_queue():
-    """List beat videos never posted to YouTube (checks channel titles)."""
+    """List beat videos never posted to YouTube (checks channel titles) AND with real audio."""
     # Query actual channel titles once
     channel_titles = []
     try:
@@ -69,8 +97,14 @@ def get_queue():
         # skip if a channel title closely matches (same hymn + genre + speed)
         if any(tl.split(" Remix")[0][:30] in ct for ct in channel_titles):
             continue
+        # QUALITY GATE: skip sheet-music (sine) beat videos
+        real, c = is_real_cover(b)
+        if not real:
+            print(f"  [SKIP sheet-music] {b[:55]} (centroid {c})", flush=True)
+            continue
         pending.append(b)
     return pending
+
 
 def compress_short(src):
     """Compress to <50MB for CDP transfer. Returns path."""
