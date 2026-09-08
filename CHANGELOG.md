@@ -288,3 +288,25 @@
 
 - End screens (custom recommended-video thumbnails) CANNOT be set via YouTube Data API
   — only manually in YouTube Studio UI. Auto-suggestions of channel videos work by default.
+
+## v5.97.12 — Cross-Platform Posting (2026-09-03)
+
+### Posted
+
+- **YouTube**: 10 corrected videos (8 full + 2 shorts), channel 1,172
+- **TikTok** (@resurrecting.beat): FIRST posts ever — 2 shorts live
+  (J-Core + Synthwave, full captions via tiktok.com/upload CDP flow)
+- **Facebook** (Page): 2 Reels posted via fb_stories.py post_to_facebook_reel
+  (Synthwave + Japanese Hardcore, 25MB compressed files work)
+- TikTok login confirmed: resurrectingbeats@gmail.com / Temppass0!
+
+### Blockers (confirmed)
+
+- **Instagram upload via CDP fails**: IG uses native file dialog that doesn't
+  surface through remote CDP. `set_input_files`/`file_chooser` both time out.
+  IG worked before only when browser launched locally (co-located playwright).
+  NOTE: all our other platforms (TikTok/FB/YouTube) use CDP fine — IG is unique.
+  FIX: run instagram_poster.py with LOCAL playwright (not CDP), OR log into IG
+  in a separate co-located browser session for uploads.
+- Video >50MB can't transfer via CDP to non-co-located browser — compress first
+  (crf 28, -b:v 3M gets ~25MB from ~50MB).
