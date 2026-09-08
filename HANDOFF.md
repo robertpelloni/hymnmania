@@ -151,3 +151,32 @@ python -c "...spectral centroid analysis..." — real covers are 2000-5000, sine
 - Login: resurrectingbeats@gmail.com / Temppass0!
 - Post the 9:16 short vids (like the 60s shorts made for YouTube)
 - Can use TikTok in-app effects/remix to make them trendy
+
+## v5.97.14 — AUTO-POST SCHEDULER (2026-09-03)
+
+### scheduler_v2.py — cross-platform auto-poster (VERIFIED)
+Usage:
+- `python scheduler_v2.py --test`  → list pending (dedups against actual channel titles)
+- `python scheduler_v2.py N`       → post N videos across all platforms
+- `python scheduler_v2.py`         → post 1 video
+Per-video cycle: YouTube full (API) → TikTok (CDP) → FB (reel best-effort + feed fallback) → IG (CDP)
+
+### Verified posting methods (all use compressed <50MB 9:16 shorts)
+1. **YouTube full**: post_to_youtube.py build_title + upload (API)
+2. **TikTok**: tiktok.com/upload → select_video_button → set_input_files → contenteditable caption → post_video_button
+3. **Facebook**: fb_reel_post.py (reels/create → Create reel btn → Add video → set file → Next) BEST-EFFORT
+   (FB intermittently redirects reels/create to a reel viewer → falls back to FB FEED POST which is reliable)
+4. **Instagram**: ig_cdp_post.py — click New post svg by COORDINATES (x~36,y~554, NOT by DOM),
+   Post → set_input_files on mounted input → Next ×2 → Share
+
+### Key scripts
+- scheduler_v2.py — main cross-platform auto-poster
+- ig_cdp_post.py — Instagram via CDP (coordinate-click New post)
+- ig_poster_local.py — co-located IG (separate profile, logs in via .secrets.json)
+- fb_reel_post.py — Facebook reel (Create reel → Add video flow)
+- tt_batch.py — TikTok batch poster
+- cap_final.py / gen_capture_genre.py — Suno DRM-safe cover capture
+
+### CRITICAL: dedup
+get_queue() queries actual YouTube channel titles and skips already-posted hymns.
+Currently 7 genuinely-pending videos. Run --test first to see what will post.

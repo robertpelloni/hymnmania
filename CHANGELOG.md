@@ -336,3 +336,31 @@
 - FB reels/create intermittently redirects to facebook.com/reel/<random> — retry or
   use the creator studio directly. Works when it lands on the create page.
 - Compressed shorts (~32MB) work for CDP transfer on all platforms.
+
+## v5.97.14 — Auto-Post Scheduler v2 (2026-09-03)
+
+### Added
+
+- **scheduler_v2.py**: cross-platform auto-poster (YouTube + TikTok + Facebook + Instagram)
+  - Dedups against actual channel titles (7 genuinely-pending videos currently)
+  - Compresses beat videos to <50MB 9:16 shorts for CDP transfer
+  - Per-video cycle posts to all 4 platforms
+- **ig_cdp_post.py**: Instagram via CDP — New post svg clicked by COORDINATES
+  (DOM click hit notifications; coordinate click opens create menu). Then set file → Next ×2 → Share.
+- **fb_reel_post.py**: Facebook reel via reels/create → Create reel → Add video → set file
+  (best-effort; FB redirects to viewer intermittently → feed-post fallback in scheduler)
+
+### Verified (Just Over The Mountains test cycle)
+
+- YouTube full: https://youtu.be/Q-7chqXrzb8 (Deep House Hymn Remix)
+- TikTok: posted
+- Facebook: feed post OK
+- Instagram: posted (Next→Next→Share flow)
+- IG profile: 9 posts; all 4 platforms posting via scheduler
+
+### Notes
+
+- Instagram needed compressed <50MB video (rejects >50MB via CDP)
+- FB reels/create intermittently redirects to facebook.com/reel/<random> — retry or feed-post fallback
+- All platforms logged in in the CDP Edge (port 9222): YouTube token, TikTok @resurrecting.beat,
+  Facebook page, Instagram @resurrectingbeats
