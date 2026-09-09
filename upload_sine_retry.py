@@ -13,7 +13,7 @@ def main():
     stem = fname.split(".")[0].lower()
     max_attempts = int(sys.argv[2]) if len(sys.argv) > 2 else 5
     with sync_playwright() as pw:
-        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9222")
+        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9333")
         # fresh page
         for p in list(b.contexts[0].pages):
             if "suno.com" in p.url:
@@ -49,6 +49,14 @@ def main():
             if not set_ok:
                 print("  file set failed", flush=True)
                 continue
+            # Agree to Upload Terms if the dialog requires it (new Suno step)
+            try:
+                agreed = page.evaluate("(()=>{var els=Array.from(document.querySelectorAll('button,span,div')).filter(e=>e.offsetParent&&/agree to terms|i agree|accept terms/i.test((e.innerText||'').replace(/\\s+/g,' ')));if(els.length){els[0].click();return 'ok'}return 'nf'})()")
+                if agreed == 'ok':
+                    print("  agreed to upload terms", flush=True)
+                    page.wait_for_timeout(2000)
+            except Exception:
+                pass
             # Wait patiently for the modal (upload can take 30-90s)
             modal_seen = False
             for i in range(25):

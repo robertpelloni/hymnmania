@@ -130,3 +130,8 @@ regen_log.txt
 regen_progress.txt
 suno_*.png
 test_beat.mp4
+
+# Edge CDP profiles (secrets — browser sessions)
+.edge-cdp-data/
+.dedicated-edge-profile/
+.suno-iso-profile/

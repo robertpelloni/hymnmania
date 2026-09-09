@@ -31,7 +31,7 @@ def check_uploaded(sine_mp3):
     """Find the upload clip id for a sine mp3 (chirp-chirp in feed), or None."""
     stem = os.path.basename(sine_mp3).split(".")[0].lower()
     with sync_playwright() as pw:
-        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9222")
+        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9333")
         page = next((p for p in b.contexts[0].pages if "suno.com" in p.url), None)
         if not page:
             b.close()

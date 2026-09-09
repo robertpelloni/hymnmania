@@ -54,3 +54,23 @@ MIDI → sine MP3 → SUNO COVER → beat video → post
 
 ## Repository Sanitization
 - **Windows Reserved File Names**: Dummy files named `nul` created inside recursively imported subdirectories must be deleted. Windows prevents reading or indexing files named `nul` because it is a reserved system device name. This blocks Git commands. Deletion requires using the UNC namespace prefix (`\\?\`) to bypass system reserved name checks.
+
+## Clean Full-Length Capture — v5.97.16 (2026-09-09)
+- Segmented 12s captures on separate pages = GAPS → stitched/cut-off audio (the "sounds cut off" bug).
+- **cap_cycle.py is canonical**: page does 4x12s rounds on ONE page (survives ~60s), then fresh page seeks forward.
+- Verified: 215s full capture, 0 silent gaps, centroid 3300-4000 throughout.
+- Single page drops after ~60-72s of MediaRecorder rounds — cycle pages to be safe.
+- Use ffprobe duration (NOT librosa — VBR misread ~40%).
+
+## Suno CDN direct download = NOT possible for unpublished (tested 2026-09-09)
+- cdn1.suno.ai/{uuid}.mp3 → 403; suno.ai/{uuid}.mp3 → 404; api/clip/{uuid} → 400
+- CloudFront m4a returns 200 but encrypted blob (client-side DRM, browser decrypts to blob: URL)
+- Research scripts claiming raw CDN download for unpublished tracks are OUTDATED
+- MediaRecorder blob capture is the only working download path
+
+## YouTube library reality (2026-09-09)
+- Channel: 1247 total videos, only 295 UNIQUE titles (heavily duplicated from older pipeline era)
+- Full-length REAL covers all posted now. Remaining unposted = only degraded (Just Over, O Happy Day
+  copyright-blocked, sine-only) or duplicates under old naming.
+- Amazing Grace / Canon / Clair de Lune / Toccata / Thy Word families are SATURATED (50-436 each).
+- Posting quota: upload=1600 units; ~10/day verified fine (11 incl. delete).

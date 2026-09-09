@@ -9,7 +9,7 @@ def main():
     fname = os.path.basename(abs_path)
     stem = fname.split(".")[0].lower()
     with sync_playwright() as pw:
-        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9222")
+        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9333")
         for p in list(b.contexts[0].pages):
             if "suno.com" in p.url:
                 try:

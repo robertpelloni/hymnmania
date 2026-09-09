@@ -413,3 +413,37 @@
 
 - **When Love Shines In** — Synthwave Hymn 2026 Remix, FULL clean version:
   https://youtu.be/aw-wzlSm5KE (replaced stitched ZoepKk6rAxs which was deleted)
+
+## v5.97.16 — Clean Full-Length Capture FIXED + Full Cover Library Batch-Posted (2026-09-09)
+
+### THE FIX: stitched/cut-off audio bug solved
+- Root cause: 12s MediaRecorder rounds on SEPARATE pages left silent GAPS when a round failed → stitched audio.
+- **`cap_cycle.py`**: fresh page every ~48s (4x12s rounds ON ONE page survive), seek forward, concat+re-encode.
+- Verified on When Love synthwave: full 215s, 0 silent gaps, centroid 3300-4000 across all positions.
+
+### Full-length REAL beat videos posted today (10)
+1. When Love Shines In — Synthwave full → https://youtu.be/aw-wzlSm5KE (replaced stitched ZoepKk6rAxs)
+2. Jesus Comes With Power — Synthwave full → https://youtu.be/s8s4NJUm0W4
+3. Jesus Comes With Power — Japanese Hardcore Techno full → https://youtu.be/yiY874GOvLc
+4. Amazing Grace — Drum and Bass full → https://youtu.be/e_jgGIGBonU
+5. Amazing Grace — Dubstep Triple full → https://youtu.be/ehNtNUP3qcI
+6. Amazing Grace — Gabba Triple full → https://youtu.be/QaJSjhq8Rfg
+7. Thy Word — Synthwave Half full → https://youtu.be/R0Kn8pO_4rk
+8. Toccata and Fugue — Detroit House full → https://youtu.be/CrJwcZJ2a30
+9. Toccata and Fugue — Hardstyle Triple full → https://youtu.be/0SkCp5QXOs8
+10. Neon Valse — Drum and Bass full → https://youtu.be/WaplXYwS1wI
+
+### Validation done before posting (quality gate)
+- Full-file gap analysis (longest mid-song silence must be <3s — only intro/outro fades allowed)
+- Multi-point spectral centroid at 10/33%/66%/90% positions (all must be >1200)
+- Excluded: Oh_For_A_Thousand_Tongues DnB (silent after 256s), Neon Valse gabba A (degrades end)
+- Channel dedupe: exact full-title match against live channel (295 unique titles, 1247 total videos)
+
+### CDN download research verdict (user-provided scripts tested)
+- `https://cdn1.suno.ai/{uuid}.mp3` → **403** for unpublished covers (XML error, CL=146)
+- `https://suno.ai/{uuid}.mp3` → 404; `studio-api.../api/clip/{uuid}` → 400
+- CloudFront m4a (d2lwuy8qc234o3.cloudfront.net/1/clip/{uuid}.m4a) → 200 BUT encrypted
+  (header `699977de...` no ftyp/moov/mdat); browser decrypts client-side into blob:
+- **Verdict**: user's research (raw CDN direct download for unpublished tracks) is OUTDATED for
+  current Suno DRM. MediaRecorder blob capture remains the ONLY reliable method. `cap_cycle.py`
+  is now the canonical full-length capture script.

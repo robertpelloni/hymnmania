@@ -147,9 +147,9 @@ def download_via_mediarecorder(page, clip_id, out_mp3, record_ms=9000):
     except Exception:
         pass
     print(f"    recording {record_ms/1000:.0f}s...")
-    # click play until blob
+    # click ONLY the main track play button (aria 'Play' in track area y<500)
     for _ in range(3):
-        page.evaluate('''(()=>{var btns=Array.from(document.querySelectorAll('button')).filter(b=>b.offsetParent);var cand=btns.filter(b=>(b.getAttribute('aria-label')||'').toLowerCase().includes('play'));for(var b of cand)b.click()})()''')
+        page.evaluate('''(()=>{var btns=Array.from(document.querySelectorAll('button')).filter(b=>b.offsetParent);var t=btns.find(b=>(b.getAttribute('aria-label')||'').trim()==='Play'&&b.getBoundingClientRect().y<500);if(t){t.click();return 'ok'}return 'nf'})()''')
         page.wait_for_timeout(5000)
         has_blob = page.evaluate("!!Array.from(document.querySelectorAll('audio')).find(e=>(e.currentSrc||'').startsWith('blob:'))")
         if has_blob: break
