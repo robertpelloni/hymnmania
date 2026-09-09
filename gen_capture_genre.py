@@ -13,11 +13,17 @@ HYMN = 'Jesus_Comes_With_Power'
 UPLOAD = 'd2246d83-d592-4081-89eb-218a765535a9'
 
 GENRE_DESC = {
+    'deep_house': 'deep house, warm analog chords, rolling syncopated bassline, four-on-the-floor kick at 122 BPM, hypnotic groove, soulful late-night warehouse feel',
     'drum_and_bass': 'drum and bass, fast 174 BPM breakbeats, rolling sub-bass, reese bass swells, chopped breaks, high-energy syncopated drum work',
     'gabba': 'gabba hardcore, relentlessly distorted kick drums at 190 BPM, saturated low end, aggressive rave atmosphere, industrial hardcore energy',
     'dubstep': 'brostep dubstep, massive LFO wobble bass drops, half-time 140 BPM drums, growling midrange basses, festival-ready bass music',
     'synthwave': 'synthwave, warm analog polysynths, pulsing sidechained bassline, 100-110 BPM neon-drenched retro-future groove, 1980s nostalgia',
     'japanese_hardcore_techno': 'japanese hardcore techno, 180-190 BPM distorted kicks, rave stabs, glitchy accents, intense J-core energy',
+    'psytrance': 'full-on psytrance, driving 145 BPM four-on-the-floor kick, rolling offbeat bass, hypnotic acid leads, psychedelic arpeggios, euphoric drops',
+    'chiptune': 'chiptune, 8-bit square wave leads, arpeggios, triangle bass, noise percussion, retro video game soundtrack energy',
+    'hardstyle': 'hardstyle trance, pounding distorted kicks at 150 BPM, supersaw leads, euphoric melodies, festival-ready energy',
+    'detroit_techno': 'detroit techno, analog synth stacks, hypnotic machine grooves, 132 BPM, late-night warehouse minimalism',
+    'detroit_house': 'detroit house, deep Motor City grooves, soulful chords, rolling bass, 124 BPM, warm underground sound',
 }
 
 def centroid(file):
@@ -40,16 +46,11 @@ def main():
     upload_id = sys.argv[2] if len(sys.argv) > 2 else UPLOAD
     hymn_name = sys.argv[3] if len(sys.argv) > 3 else HYMN
     with sync_playwright() as pw:
-        b = pw.chromium.connect_over_cdp('http://127.0.0.1:9222')
-        # close other suno pages, fresh one
-        for p in list(b.contexts[0].pages):
-            if 'suno.com' in p.url:
-                try:
-                    p.close()
-                except Exception:
-                    pass
-        time.sleep(1)
-        page = b.contexts[0].new_page()
+        b = pw.chromium.connect_over_cdp('http://127.0.0.1:9333')
+        # reuse existing suno page to avoid CDP churn
+        page = next((p for p in b.contexts[0].pages if 'suno.com' in p.url), None)
+        if not page:
+            page = b.contexts[0].new_page()
 
         # STEP 1: trigger cover with verified description
         page.goto(f'https://suno.com/song/{upload_id}', wait_until='domcontentloaded', timeout=30000)
@@ -60,9 +61,41 @@ def main():
         except Exception:
             page.evaluate("document.querySelector('button[aria-label=\"More menu contents\"]')?.click()")
         page.wait_for_timeout(3000)
-        page.evaluate("Array.from(document.querySelectorAll('[role=menuitem],div[class*=menu] button,button')).filter(e=>e.offsetParent&&e.innerText&&e.innerText.trim().toLowerCase()==='remix')[0]?.click()")
-        page.wait_for_timeout(3000)
-        page.evaluate("Array.from(document.querySelectorAll('[role=menuitem],button,div[class*=menu] *')).filter(e=>e.offsetParent&&e.innerText&&e.innerText.trim().toLowerCase()==='cover')[0]?.click()")
+        # HOVER over the Remix button (data-context-menu-trigger) to open the Cover submenu
+        rpos = page.evaluate("""() => {
+            var b = Array.from(document.querySelectorAll('button[data-context-menu-trigger=true]')).find(x=>{
+                var it = x.closest('.context-menu-item');
+                return it && (it.innerText||'').trim().toLowerCase()==='remix';
+            });
+            if (!b) b = Array.from(document.querySelectorAll('.context-menu-button')).find(x=>(x.innerText||'').trim().toLowerCase().startsWith('remix'));
+            if (!b) return 'nf';
+            var rr = b.getBoundingClientRect();
+            return JSON.stringify({x: Math.round(rr.x+rr.width/2), y: Math.round(rr.y+rr.height/2)});
+        }""")
+        if rpos != 'nf':
+            pd = json.loads(rpos)
+            page.mouse.move(pd['x'], pd['y'])
+            page.wait_for_timeout(3500)
+            # click Cover in the revealed submenu
+            cpos = page.evaluate("""() => {
+                var all = document.querySelectorAll('.context-menu-item, [role=menuitem], li, button, div');
+                for (var e of all) {
+                    var t = (e.innerText||'').trim();
+                    if (t === 'Cover' && e.offsetParent) {
+                        var rr = e.getBoundingClientRect();
+                        if (rr.width > 5) return JSON.stringify({x: Math.round(rr.x+rr.width/2), y: Math.round(rr.y+rr.height/2)});
+                    }
+                }
+                return 'nf';
+            }""")
+            if cpos != 'nf':
+                cd = json.loads(cpos)
+                page.mouse.click(cd['x'], cd['y'])
+        else:
+            # fallback: old method click remix then cover
+            page.evaluate("Array.from(document.querySelectorAll('[role=menuitem],div[class*=menu] button,button')).filter(e=>e.offsetParent&&e.innerText&&e.innerText.trim().toLowerCase()==='remix')[0]?.click()")
+            page.wait_for_timeout(2500)
+            page.evaluate("Array.from(document.querySelectorAll('[role=menuitem],button,div[class*=menu] *')).filter(e=>e.offsetParent&&e.innerText&&e.innerText.trim().toLowerCase()==='cover')[0]?.click()")
         try:
             page.wait_for_url('**/create**', timeout=20000)
         except Exception:
@@ -99,7 +132,8 @@ def main():
                     continue
                 cs = r.json() if isinstance(r.json(), list) else r.json().get('clips', [])
                 for c in cs:
-                    if c.get('model_name') != 'chirp-auk':
+                    mn = c.get('model_name', '')
+                    if not (mn.startswith('chirp-') and mn != 'chirp-chirp'):
                         continue
                     md = c.get('metadata', {})
                     if md.get('cover_clip_id') != upload_id:

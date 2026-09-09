@@ -364,3 +364,32 @@
 - FB reels/create intermittently redirects to facebook.com/reel/<random> — retry or feed-post fallback
 - All platforms logged in in the CDP Edge (port 9222): YouTube token, TikTok @resurrecting.beat,
   Facebook page, Instagram @resurrectingbeats
+
+## v5.97.15 — Dedicated Browser + v6 Model + When Love Synthwave Cover (2026-09-09)
+
+### Fixed
+
+- **Dedicated browser (port 9333)**: launched separate Edge with copied cookies so our
+  pipeline is isolated from the other bot's activity on port 9222. Scripts updated to 9333.
+  (Other bot was closing/navigating our suno pages → TargetClosedError.)
+- **Suno model changed**: v4.5-all → v5.5 → now **v6** (chirp-hawk model). Scripts updated
+  to accept chirp-hawk (was filtering only chirp-auk).
+- **Cover menu fix**: Remix is a `data-context-menu-trigger` submenu — must HOVER over
+  Remix to reveal Cover option, then click Cover.
+- **Segmented capture**: full-length MediaRecorder captures trigger page-closes; capture
+  in 12s segments (fresh page each) + concat. Scripts: cap_segs_simple.py.
+- **Copyright bypass insight**: hymns are PUBLIC DOMAIN (1913 hymnal) — natural-pitch
+  uploads are legal; ACRCloud match is against specific recordings not hymn copyright.
+  When Love uploaded at natural pitch → FULL quality covers. Just Over needed +3 shift
+  to pass → its covers came out degraded (shift likely causes it). O Happy Day blocked.
+
+### Verified
+
+- **When Love Shines In synthwave cover**: REAL (centroid 2932), 134s beat video rebuilt
+- Jesus covers (reference): capture at 2580 (full) on dedicated browser
+- When Love 12s sample earlier: 3583 (full)
+
+### Status
+
+- Done: When Love Shines In synthwave beat video (real cover)
+- Pending: Just Over The Mountains (shift-degraded covers), O Happy Day (copyright)

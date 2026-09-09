@@ -145,7 +145,7 @@ def post_tiktok(video_path, caption):
     """Verified TikTok upload via CDP."""
     from playwright.sync_api import sync_playwright
     with sync_playwright() as pw:
-        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9222")
+        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9333")
         page = next((p for p in b.contexts[0].pages if "tiktok.com" in p.url), None)
         if not page:
             page = b.contexts[0].new_page()
@@ -203,7 +203,7 @@ def post_fb_reel(video_path, title, genre, yt):
         from daily_scheduler import build_post, post_to_facebook
         from playwright.sync_api import sync_playwright
         with sync_playwright() as pw:
-            b = pw.chromium.connect_over_cdp("http://127.0.0.1:9222")
+            b = pw.chromium.connect_over_cdp("http://127.0.0.1:9333")
             fb = b.contexts[0].new_page()
             fb.goto("https://www.facebook.com/")
             fb.wait_for_timeout(6000)
