@@ -393,3 +393,23 @@
 
 - Done: When Love Shines In synthwave beat video (real cover)
 - Pending: Just Over The Mountains (shift-degraded covers), O Happy Day (copyright)
+
+## v5.97.16 — Clean Full-Length Capture Fix (2026-09-09)
+
+### Fixed (the "sounds cut off / stitched" bug)
+
+- Earlier segmented captures used 12s chunks on SEPARATE pages with retry — failed
+  segments left GAPS → stitched-sounding audio. 
+- **WORKING method (cap_cycle.py)**: cycle fresh pages every ~48s (4 rounds of 12s
+  ON ONE page, which survives), seek audio element forward, concat + re-encode.
+  Verified: full 215s capture, 0 silent gaps, centroid 3300-4000 across ALL positions
+  = genuine full-length synthwave, no stitching.
+- cap_cycle.py: page-cycling capture (each page does 4x12s rounds before closing).
+- Direct CDN download (cdn1.suno.ai/{uuid}.mp3) confirmed 403 for unpublished covers
+  — Suno uses client-side DRM (m4a encrypted, browser decrypts to blob). Research
+  scripts relying on raw CDN won't work for private tracks in current Suno.
+
+### Posted
+
+- **When Love Shines In** — Synthwave Hymn 2026 Remix, FULL clean version:
+  https://youtu.be/aw-wzlSm5KE (replaced stitched ZoepKk6rAxs which was deleted)
