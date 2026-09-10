@@ -119,6 +119,33 @@ def build_title(fn):
         t = f"{genre} Hymn 2026 Remix: {title} ({author}, {year}) | {speed}{variant}"
     return t
 
+def _loop_score_of_media(video_path):
+    """Extract audio from a beat video and detect the 48s-repeat capture bug."""
+    import tempfile
+    try:
+        import cap_cycle
+        tmp = tempfile.mktemp(suffix=".mp3")
+        r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", video_path,
+                            "-ac", "1", "-ar", "48000", tmp], capture_output=True)
+        if r.returncode != 0 or not os.path.exists(tmp):
+            return 0.0
+        ls = cap_cycle.loop_score(tmp)
+        os.remove(tmp)
+        return ls
+    except Exception:
+        return 0.0
+
+
+def quality_gate(video_path):
+    """Refuse to post a capture that is looped (the cap_cycle seek bug) or silent-ish."""
+    ls = _loop_score_of_media(video_path)
+    if ls > 0.9:
+        print(f"QUALITY GATE FAILED: 48s-repeat loop detected (score={ls}) in {os.path.basename(video_path)}")
+        print("  Re-capture the cover with cap_cycle.py, recompose, then post again.")
+        return False
+    return True
+
+
 def get_service():
     with open(os.path.join(ROOT, "token.json")) as f:
         data = json.load(f)
@@ -185,6 +212,9 @@ if __name__ == "__main__":
         print("could not detect hymn/genre for:", fn)
         sys.exit(1)
 
+    if mode != "short":
+        if not quality_gate(src):
+            sys.exit(3)
     service = get_service()
     if mode == "short":
         out = os.path.join(ROOT, "pipeline_output", "shorts", fn.replace(".mp4", "_short.mp4"))

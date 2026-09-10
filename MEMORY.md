@@ -74,3 +74,21 @@ MIDI → sine MP3 → SUNO COVER → beat video → post
   copyright-blocked, sine-only) or duplicates under old naming.
 - Amazing Grace / Canon / Clair de Lune / Toccata / Thy Word families are SATURATED (50-436 each).
 - Posting quota: upload=1600 units; ~10/day verified fine (11 incl. delete).
+
+## CRITICAL: cap_cycle seek bug + loop detector — v5.97.17 (2026-09-10)
+- The 2026-09-09 cap_cycle capture had a SEEK BUG: `a.currentTime=start` set before the
+  blob audio loaded → seek dropped → pages 2+ re-captured from 0 → output = first ~48s
+  REPEATED. The file was still full-length and gap-free, so centroid/duration checks
+  PASSED it — only a repetition analysis catches it.
+- FIX: `seek_and_play()` waits for blob → waits for duration>0 → seeks → polls until
+  currentTime lands at target → THEN records.
+- DETECTOR: `cap_cycle.loop_score(f)` — centroid-bin(4s) analysis; bug = 2 CONSECUTIVE
+  48s blocks near-identical (>0.9). Single high pair = legit genre repetition (not flagged).
+- GATE: `post_to_youtube.quality_gate(video)` blocks upload if loop_score>0.9 (auto for full).
+- Only When Love + God Is So Good were affected (both buggy-era cap_cycle captures).
+  All other covers (cap_final era) audited clean.
+
+## Verified E2E (2026-09-10) — God Is So Good (brand-new hymn)
+sine mp3 → upload VERIFIED → psytrance cover (chirp-hawk) → cap_cycle 168s centroid 4612 →
+beat video 170s → FULL https://youtu.be/fTfZ-QZDL1I + SHORT https://youtu.be/Js3l1JBkonk
+When Love fixed: FULL https://youtu.be/friujcW2VLY + SHORT https://youtu.be/S2hZweqSY1Q

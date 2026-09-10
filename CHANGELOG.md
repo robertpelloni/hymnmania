@@ -447,3 +447,46 @@
 - **Verdict**: user's research (raw CDN direct download for unpublished tracks) is OUTDATED for
   current Suno DRM. MediaRecorder blob capture remains the ONLY reliable method. `cap_cycle.py`
   is now the canonical full-length capture script.
+
+## v5.97.17 — E2E Proof Run + CRITICAL cap_cycle seek bug FIXED (2026-09-10)
+
+### Live end-to-end proof on a brand-new hymn (God Is So Good)
+Full chain run and verified:
+1. Sine input `mp3_input/God_Is_So_Good_prepared.mp3` → Suno upload → **VERIFIED** (no copyright block)
+2. Cover gen (psytrance, model `chirp-hawk`/v6) via hover-Remix flow → 2 clips
+3. Full capture (`cap_cycle.py`) → 168s, centroid 4612, **loop_check 0.000**
+4. Beat video compose (`quick_composer.py`) → 170s
+5. YouTube FULL → https://youtu.be/fTfZ-QZDL1I
+6. YouTube SHORT (60s 9:16) → https://youtu.be/Js3l1JBkonk
+
+### CRITICAL BUG FOUND & FIXED: cap_cycle seek did not apply
+- The live run exposed it: pages 2+ re-captured from 0s → the output was the first ~48s
+  REPEATED (a "48s loop"), even though the file was full-length and gap-free.
+- Root cause: `a.currentTime = start` was set BEFORE the blob audio element had loaded,
+  so the seek was silently dropped and playback restarted from 0.
+- FIX (`cap_cycle.py`): new `seek_and_play()` waits for the blob element, waits for
+  `duration>0`, seeks, then **polls until currentTime actually lands at the target**
+  before recording. Verified: seeks 0/48/96/144/192 all confirmed.
+- Also fixed: (a) never record past the song end (would wrap to 0) — rounds are capped
+  by remaining duration; (b) output trimmed to the true song duration; (c) `ffprobe`
+  path was built with `FFM.replace("ffmpeg","ffprobe")` which corrupts the directory
+  name `ffmpeg-9.0.1-full_build` → now `os.path.join(os.path.dirname(FFM),"ffprobe.exe")`.
+
+### Detection of the bug (added to pipeline)
+- `cap_cycle.loop_score(file)`: centroid-bin (4s) analysis. Capture-bug signature =
+  **two CONSECUTIVE 48s blocks near-identical** (score >0.9). A single high pair is just
+  legitimate genre repetition (techno/deep house) — NOT flagged.
+- `post_to_youtube.quality_gate(video)`: refuses to upload any beat video whose audio
+  scores >0.9 (verified: good=True, broken fixture=0.998→blocked). Runs automatically
+  for `full` mode.
+
+### Repaired videos
+- **When Love Shines In** re-captured correctly (196s, loop_check 0.000, centroid 4007).
+  Deleted the broken upload `aw-wzlSm5KE`; reposted FULL → https://youtu.be/friujcW2VLY
+  and SHORT → https://youtu.be/S2hZweqSY1Q
+- Audit of all 118 covers >1.5MB: only When Love + God Is So Good were affected (both
+  captured with the buggy cap_cycle); the other posted covers (cap_final era) are clean.
+
+### Note
+- One transient DNS failure ("Unable to find the server at youtube.googleapis.com") during
+  a Short upload — the network call only; retry succeeded.

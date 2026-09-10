@@ -1,7 +1,7 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.16**
-> **Last updated: 2026-09-09**
+> **Version: 5.97.17**
+> **Last updated: 2026-09-10**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: WORKING — full-length + 60s reels verified. Suno copyright-fingerprinting blocks some familiar melodies (see Limitations).**
 
@@ -25,10 +25,27 @@ MediaRecorder rounds before it drops.
 **`cap_cycle.py` is the canonical full-length capture script.**
 - Each page does **4 consecutive 12s rounds on ONE page** (survives), then a FRESH page seeks forward.
 - Concat + re-encode to mp3.
-- Verified: When Love synthwave = 215s full, **0 silent gaps**, centroid 3300-4000 at every position.
-- Validate any capture: full-file silence scan (longest mid-song silence must be <3s; only intro/outro
-  fades allowed) + multi-point spectral centroid (>1200 = real cover, ~330 = sine/sheet-music).
+- Verified E2E: God Is So Good = 168s, centroid 4612, loop_check 0.000 (2026-09-10).
 - Use **ffprobe** for duration (librosa misreads VBR/Suno MP3s by ~40%).
+
+### CRITICAL BUG (fixed 2026-09-10): the seek must be CONFIRMED
+Earlier versions set `audio.currentTime = start` before the blob element had loaded, so the
+seek was silently DROPPED and every page re-recorded from 0 → the output was the first ~48s
+**REPEATED**. The file was still full-length and gap-free, so duration/centroid checks PASSED it.
+- FIX: `seek_and_play()` waits for the blob element → waits for `duration>0` → seeks →
+  **polls until `currentTime` actually lands at the target** → only then records.
+- Also: rounds are capped by remaining duration (never record past the song end — it wraps to 0),
+  and the output is trimmed to the true song duration.
+
+### MANDATORY validation of any capture (3 checks)
+1. **loop_score** (`cap_cycle.loop_score`) must be ~0 — detects the 48s-repeat bug. Signature =
+   **two CONSECUTIVE 48s blocks near-identical** (>0.9). A single high pair is legitimate genre
+   repetition (techno/deep house) and is NOT flagged.
+2. Full-file silence scan — longest mid-song silence <3s (only intro/outro fades allowed).
+3. Multi-point spectral centroid >1200 (real cover); ~330 = sine/sheet-music.
+
+`post_to_youtube.quality_gate()` runs check #1 automatically before every `full` upload and
+refuses to post a looped video (verified: good=True, broken fixture=0.998 → blocked).
 
 ## CRITICAL: Suno CDN direct download does NOT work (tested 2026-09-09)
 
