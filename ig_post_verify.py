@@ -1,10 +1,6 @@
-"""Instagram Reel poster — WORKING flow (verified 2026-09-10).
-Order matters: Next (crop) -> Next (edit) -> THEN type caption with keyboard.type
-(execCommand is ignored by React) -> Share. Earlier versions clicked Share before
-typing the caption, which closed the composer without publishing.
-Usage: python ig_cdp_post.py <video_path> <caption_file>
+"""Robust Instagram Reel poster with caption via keyboard.type + verification.
+Usage: python ig_post_verify.py <video> <caption_file>
 """
-
 import sys, os, json, io
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 from playwright.sync_api import sync_playwright

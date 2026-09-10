@@ -1,6 +1,6 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.17**
+> **Version: 5.97.18**
 > **Last updated: 2026-09-10**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: WORKING — full-length + 60s reels verified. Suno copyright-fingerprinting blocks some familiar melodies (see Limitations).**
@@ -65,6 +65,26 @@ User research claiming unpublished tracks are downloadable from the raw CDN is *
   2. Multi-point spectral centroid at 10% / 33% / 66% / 90% (all > 1200)
   3. Exact full-title match against live channel titles (dedupe)
 - `scheduler_v2.py` enforces centroid > 1000 (`QUALITY_THRESHOLD`).
+
+## Social Reels — ALL 3 VERIFIED LIVE (2026-09-10)
+
+Social scripts run on **port 9222** with profile `C:/Users/jakeg/edge-cdp-profile`
+(the shared profile that holds the FB/IG/TikTok logins). Do NOT point them at the Suno
+browser (9333) — that profile is not logged into the socials. Port 9222 is free (the other
+bot now uses 9223).
+
+Logins (verified): FB Page "Resurrecting Beats" (61588784931149) · IG @resurrectingbeats · TikTok @resurrecting.beat
+
+| Platform | Script | Critical detail |
+|---|---|---|
+| TikTok | `tt_post.py <video> <caption>` | After Post, a dialog appears — dismiss **"Got it"** then click **"Post now"**. Success = redirect to `tiktokstudio/content`. Without this the reel stays an unposted draft. |
+| Facebook Reel | `fb_reel_post.py <video> <title> <genre> <ytlink>` | Wait for **"Checking for copyrighted content" to CLEAR** before clicking Next. Do NOT break on the word "next" (it renders before the check). |
+| Instagram | `ig_cdp_post.py <video> <caption_file>` | Order: Next (crop) → Next (edit) → **type caption with `keyboard.type`** (execCommand is ignored by React) → Share. Type the caption BEFORE clicking Share or the composer closes without publishing. |
+| Facebook Stories | `fb_stories.py` | Compresses to ~5MB; story flow |
+
+**Size**: the 60s short is ~53MB, which exceeds the ~50MB CDP upload limit → compress first
+(`-crf 28` → 32MB worked). Verified live 2026-09-10 on "God Is So Good": TikTok (Posts 10),
+FB Reel ("shared with EVERYONE"), IG (post 11, reel `DdHP5cFKSru`).
 
 ## 60-Second Reels / Shorts — VERIFIED (2026-09-09)
 

@@ -490,3 +490,40 @@ Full chain run and verified:
 ### Note
 - One transient DNS failure ("Unable to find the server at youtube.googleapis.com") during
   a Short upload — the network call only; retry succeeded.
+
+## v5.97.18 — All 3 social reel paths verified live (2026-09-10)
+
+Re-verified TikTok + Facebook Reel + Instagram Reel end-to-end by actually publishing
+the new "God Is So Good" 60s short. All three confirmed LIVE.
+
+### Browser for socials = port 9222, profile `C:\Users\jakeg\edge-cdp-profile`
+- The dedicated Suno browser (9333, `.dedicated-edge-profile`) is NOT logged into the socials.
+- The shared profile has the social logins: facebook(8) / instagram(9) / tiktok(28) cookies.
+- The other bot has moved to port 9223 (edge-cdp-foreclosure), so 9222 is free for us.
+- Login state confirmed: FB Page "Resurrecting Beats" (61588784931149), IG @resurrectingbeats,
+  TikTok @resurrecting.beat.
+
+### Verified results
+| Platform | Result | Evidence |
+|---|---|---|
+| TikTok | ✅ LIVE | tiktokstudio/content → Posts 10, newest "01:00 🌀 RESURRECTING BEATS: 'God Is So Good'" |
+| Facebook Reel | ✅ LIVE | Page shows "God Is So Good — Psytrance electronic worship · 5 minutes ago" |
+| Instagram | ✅ LIVE | profile 10→11 posts, newest reel `DdHP5cFKSru` "2 minutes ago" |
+
+### Script bugs found & fixed during verification
+1. **`tt_post.py`** — TikTok shows a confirmation dialog after clicking Post
+   ("Got it" + "Post now"/"Cancel"). The script never handled it, so the reel sat as an
+   unposted draft. FIX: dismiss "Got it", then click "Post now"; success = redirected to
+   `tiktokstudio/content`.
+2. **`fb_reel_post.py`** — the copyright-check wait loop broke out immediately because it
+   matched the word "next" before "Checking for copyrighted content" had even rendered.
+   FIX: wait a minimum, then require the indicator to be ABSENT before clicking Next.
+3. **`ig_cdp_post.py`** — clicked **Share BEFORE typing the caption**, which closed the
+   composer without publishing. FIX: order is Next (crop) → Next (edit) → wait for the
+   "Add a caption…" editor → **keyboard.type** (execCommand is ignored by React) → Share.
+   Rewired to the verified flow (was `ig_post_verify.py`).
+
+### Size note
+- The 60s short is ~53MB; CDP upload limit is ~50MB → compress first for FB/IG.
+  `ffmpeg -i in.mp4 -c:v libx264 -crf 28 -c:a aac -b:a 128k out.mp4` → 32MB (worked).
+  TikTok accepts the original (30GB web limit) but 32MB works for all three.

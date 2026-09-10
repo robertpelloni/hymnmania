@@ -43,7 +43,15 @@ def post_video(page, abs_path, caption):
     # Click Post
     r2 = page.evaluate("(()=>{var b=document.querySelector('[data-e2e=\"post_video_button\"]');if(b){b.scrollIntoView({block:'center'});b.click();return 'clicked'}return 'nf'})()")
     print('post click:', r2)
-    page.wait_for_timeout(10000)
+    page.wait_for_timeout(4000)
+    # TikTok shows a confirmation dialog after Post ("Got it" info + "Post now"/"Cancel")
+    page.evaluate("(()=>{var b=Array.from(document.querySelectorAll('button')).filter(x=>x.offsetParent).find(x=>/^got it$/i.test((x.innerText||'').trim()));if(b)b.click()})()")
+    page.wait_for_timeout(1500)
+    r3 = page.evaluate("(()=>{var btns=Array.from(document.querySelectorAll('button')).filter(x=>x.offsetParent);var pn=btns.find(x=>/^post now$/i.test((x.innerText||'').trim()));if(pn){pn.click();return 'post now'}var po=btns.find(x=>/^post$/i.test((x.innerText||'').trim()));if(po){po.click();return 'post'}return 'nf'})()")
+    print('confirm click:', r3)
+    page.wait_for_timeout(14000)
+    # success = TikTok redirects the composer to the content manager
+    return ('tiktokstudio/content' in page.url) or ('upload' not in page.url)
     return True
 
 def main():

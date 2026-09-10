@@ -102,15 +102,20 @@ def main():
             b.close()
             return False
 
-        # Wait for 'Checking for copyrighted content' to clear / Next appears
+        # Wait for 'Checking for copyrighted content' to clear.
+        # BUG (fixed): checking for the word 'next' broke out before the check even started.
+        # Correct: give it time, require the indicator to be ABSENT (and Next present).
         print("waiting for copyright check...", flush=True)
-        for i in range(20):
+        fb.wait_for_timeout(12000)
+        for i in range(24):
             fb.wait_for_timeout(5000)
             body = fb.evaluate("document.body.innerText")
-            if "checking for copyrighted" in body.lower():
-                print(f"  still checking ({i*5}s)", flush=True)
-            elif "replace video" in body.lower() or "next" in body.lower():
-                print(f"  upload ready ({i*5}s)", flush=True)
+            low = body.lower()
+            if "checking for copyrighted" in low:
+                print(f"  still checking ({12 + i * 5}s)", flush=True)
+                continue
+            if "next" in low or "replace video" in low:
+                print(f"  upload ready ({12 + i * 5}s)", flush=True)
                 break
 
         # Click Next (may appear after copyright check)

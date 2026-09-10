@@ -92,3 +92,12 @@ MIDI → sine MP3 → SUNO COVER → beat video → post
 sine mp3 → upload VERIFIED → psytrance cover (chirp-hawk) → cap_cycle 168s centroid 4612 →
 beat video 170s → FULL https://youtu.be/fTfZ-QZDL1I + SHORT https://youtu.be/Js3l1JBkonk
 When Love fixed: FULL https://youtu.be/friujcW2VLY + SHORT https://youtu.be/S2hZweqSY1Q
+
+## Social reel paths VERIFIED LIVE — v5.97.18 (2026-09-10)
+- Socials run on port 9222 / profile C:\Users\jakeg\edge-cdp-profile (has FB/IG/TikTok logins).
+  Suno browser (9333) is NOT logged into socials. Other bot moved to 9223.
+- tt_post.py: TikTok needs "Got it" dismissed + "Post now" clicked (confirmation dialog), else draft only.
+- fb_reel_post.py: must wait for "Checking for copyrighted content" to CLEAR before Next.
+- ig_cdp_post.py: Next(crop) -> Next(edit) -> keyboard.type caption -> Share. Typing after Share = lost post.
+- Shorts are ~53MB > 50MB CDP limit -> compress to ~32MB (-crf 28) for FB/IG.
+- Verified live on God Is So Good: TikTok Posts 10, FB Reel "shared with EVERYONE", IG reel DdHP5cFKSru (post 11).
