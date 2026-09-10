@@ -1,6 +1,6 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.20**
+> **Version: 5.97.21**
 > **Last updated: 2026-09-10**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: WORKING END-TO-END — full pipe verified on a new hymn; auto-posting SCHEDULED (Mon–Fri 3 PM). Suno copyright-fingerprinting still blocks some familiar melodies.**
@@ -36,9 +36,12 @@ today it prints "already posted today" and exits. Safe to run any number of time
 - **REMOVED** (Suno fingerprint rejects): O Happy Day, Kumbayah, Brighten The Corner,
   Leyenda, Praise Him! Praise Him! — and **Just Over The Mountains** (covers come out
   degraded ~400 centroid). Moved to `mp3_input/_blocked/`, filtered by `scheduler_v2.BLOCKED_HYMNS`.
-- **AVAILABLE: ~170 distinct pieces** — 148 MIDIs in
+- **AVAILABLE: ~163 distinct pieces** — 148 MIDIs in
   `submodules/ableton_psytrance_hymn_creator/hymnmania_src/hymn_remaker/input/`
-  (**105 hymns/choruses + 43 classical**) plus ~17 local MIDIs and 12 ready sine inputs.
+  (**100 hymns/choruses + 46 classical**, 2 test files excluded) plus ~17 local MIDIs and
+  12 ready sine inputs.
+  - Hymn list: **`HYMNS_POOL.md`** (100)
+  - **Classical list: `CLASSICAL_PIECES.md`** (46 files ≈ 20 distinct works — kept separate)
 - Before generating, upload the sine render and confirm the uploader prints `VERIFIED`;
   a copyright match means the melody is fingerprinted — quarantine and pick another.
 

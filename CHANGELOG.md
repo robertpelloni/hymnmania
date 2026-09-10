@@ -605,3 +605,15 @@ Moved to `mp3_input/_blocked/` and filtered via `scheduler_v2.BLOCKED_HYMNS`:
 | HymnMania Daily Post | weekdays 15:00 |
 | HymnMania Backup Post | weekdays 20:00 (catch-up, no-op if already posted) |
 | HymnMania_Catchup.bat (Startup) | at logon |
+
+## v5.97.21 — Classical pieces split into their own file (2026-09-10)
+
+- **`CLASSICAL_PIECES.md`** (new) — the classical MIDIs kept separate from the hymn pool,
+  grouped by composer (J.S. Bach 29 · Brahms 4 · C.P.E. Bach 3 · Elgar 5 · Handel 1 ·
+  Vivaldi 1 · Albéniz 2 · Austrian anthem 1). Notes that most are the same work in
+  different arrangements (~20 distinct compositions).
+- **`HYMNS_POOL.md`** (new) — the hymn/chorus list on its own, with the add-a-hymn procedure.
+- **Corrected the pool counts**: the earlier 105/43 split mis-classified a few entries.
+  Actual: **100 hymns/choruses + 46 classical + 2 test files** (`sample_hymn`, `test`) = 148.
+  (Moved: Albéniz `espana-tango`, Vivaldi `estro-armonico-no11`, Austrian anthem →
+  classical; test files excluded.)

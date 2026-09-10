@@ -42,13 +42,15 @@ These were moved to `mp3_input/_blocked/` and are filtered by
 ### MIDI library — **148 pieces** in
 `submodules/ableton_psytrance_hymn_creator/hymnmania_src/hymn_remaker/input/`
 
-| Category | Count |
-|---|---|
-| **Hymns / choruses** | **105** |
-| Classical (Bach, Brahms, Elgar, …) | 43 |
+| Category | Count | List |
+|---|---|---|
+| **Hymns / choruses** | **100** | `HYMNS_POOL.md` |
+| **Classical** | **46** | `CLASSICAL_PIECES.md` (kept separately) |
+| _Test files (excluded)_ | _2_ | `sample_hymn`, `test` |
 
 Plus **17 local MIDIs** (`demo_input/`, `hymn_remaker/input/`, …).
-**Total distinct pieces available: ~170.**
+**Total distinct pieces available: ~163** (≈20 of the 46 classical files are different
+arrangements of the same work, so ~20 distinct classical compositions).
 
 Notable hymn titles (105 total): A Child's Prayer · Adventist Youth · Are You A Christian ·
 Are You Ready For Jesus To Come · As For Me · Beautiful · Behold What Manner Of Love ·
