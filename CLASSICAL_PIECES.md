@@ -1,6 +1,12 @@
 # Classical Pieces — separate pool (46 MIDI files)
 
-_Last updated: 2026-09-10 (v5.97.20)_
+_Last updated: 2026-09-10 (v5.97.21)_
+
+> ⚠️ **THESE BELONG TO A DIFFERENT CHANNEL — NOT HymnMania / Resurrecting Beats.**
+> This file is just an inventory for reference. The HymnMania scheduler **excludes** them:
+> `scheduler_v2.EXCLUDE_CLASSICAL = True` skips any beat video whose title contains
+> `Classical Remix`. Classical tracks already composed under `pipeline_output/beat_videos/`
+> (Toccata, Canon in D, Clair de Lune, etc.) are skipped by the hymn scheduler.
 
 Kept **separate from the hymn pool** (see `HYMNS_POOL.md`).
 Source: `submodules/ableton_psytrance_hymn_creator/hymnmania_src/hymn_remaker/input/`

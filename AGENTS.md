@@ -1,6 +1,6 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.21**
+> **Version: 5.97.22**
 > **Last updated: 2026-09-10**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: WORKING END-TO-END — full pipe verified on a new hymn; auto-posting SCHEDULED (Mon–Fri 3 PM). Suno copyright-fingerprinting still blocks some familiar melodies.**
@@ -27,8 +27,10 @@ today it prints "already posted today" and exits. Safe to run any number of time
   (Git Bash rewrites the `/Create` and `/Query` switches into paths).
 
 - The scheduler auto-launches the social browser (9222) if CDP is down.
-- Queue = full-length, real-audio (centroid>1000), non-looped (loop_score<=0.9), not already
-  on the channel, and not in `BLOCKED_HYMNS`. Per-track/platform idempotency via `.scheduler_log.json`.
+- Queue = full-length, real-audio (centroid>1000), non-looped (loop_score<=0.9), no mid-song
+  silence (<3s), not already on the channel, not in `BLOCKED_HYMNS`, and **not classical**
+  (`EXCLUDE_CLASSICAL` — classical belongs to a different channel). Per-track/platform
+  idempotency via `.scheduler_log.json`.
 - Manual: `python scheduler_v2.py --test | --now [N] | --catchup | --daemon`.
 
 ## Hymn Pool — what we can still use (see `BLOCKED_HYMNS.md`)
@@ -41,7 +43,8 @@ today it prints "already posted today" and exits. Safe to run any number of time
   (**100 hymns/choruses + 46 classical**, 2 test files excluded) plus ~17 local MIDIs and
   12 ready sine inputs.
   - Hymn list: **`HYMNS_POOL.md`** (100)
-  - **Classical list: `CLASSICAL_PIECES.md`** (46 files ≈ 20 distinct works — kept separate)
+  - **Classical list: `CLASSICAL_PIECES.md`** (46 files ≈ 20 distinct works) — ⚠️ **belongs to a
+    DIFFERENT channel**; the HymnMania scheduler excludes it (`EXCLUDE_CLASSICAL`).
 - Before generating, upload the sine render and confirm the uploader prints `VERIFIED`;
   a copyright match means the melody is fingerprinted — quarantine and pick another.
 

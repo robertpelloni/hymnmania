@@ -41,6 +41,10 @@ BLOCKED_HYMNS = {
     "praisehim",
 }
 
+# Classical pieces belong to a DIFFERENT channel (see CLASSICAL_PIECES.md) --
+# never post them on the hymn channel. Their titles use the "Classical Remix" format.
+EXCLUDE_CLASSICAL = True
+
 FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
 
 
@@ -118,6 +122,31 @@ def not_looped(path):
         return True, 0.0
 
 
+def no_mid_gap(path, max_gap=3.0):
+    """False if there is a long silence in the middle of the track (stitching artifact).
+    Intro/outro fades (first/last 4s) are ignored."""
+    import numpy as np, tempfile
+    try:
+        tmp = tempfile.mktemp(suffix=".f32")
+        subprocess.run([FFM, "-y", "-loglevel", "error", "-i", path, "-ac", "1",
+                        "-ar", "4000", "-f", "f32le", tmp], capture_output=True)
+        d = np.frombuffer(open(tmp, "rb").read(), dtype=np.float32)
+        os.remove(tmp)
+        rms = [float(np.sqrt(np.mean(d[i * 4000:(i + 1) * 4000] ** 2)))
+               for i in range(len(d) // 4000)]
+        core = rms[4:-4] if len(rms) > 12 else rms
+        run = worst = 0
+        for x in core:
+            if x < 0.004:
+                run += 1
+                worst = max(worst, run)
+            else:
+                run = 0
+        return worst < max_gap, worst
+    except Exception:
+        return True, 0
+
+
 def is_short(path):
     """True if the video is <=70s (already a short, don't make another)."""
     try:
@@ -175,6 +204,11 @@ def get_queue(verbose=True):
             t = None
         if not t or t.lower() in posted:
             continue
+        # classical pieces go to a DIFFERENT channel
+        if EXCLUDE_CLASSICAL and ("classical remix" in t.lower()):
+            if verbose:
+                print(f"  skip (classical -> other channel): {b[:50]}")
+            continue
         if "youtube-full" in log.get(b, {}).get("posted", []):
             continue
         ok, c = is_real_cover(b)
@@ -186,6 +220,11 @@ def get_queue(verbose=True):
         if not good:
             if verbose:
                 print(f"  skip (48s-loop bug, score={ls}): {b[:50]}")
+            continue
+        complete, gap = no_mid_gap(path)
+        if not complete:
+            if verbose:
+                print(f"  skip (mid-song silence {gap}s - incomplete/stitched): {b[:50]}")
             continue
         queue.append(b)
     if verbose:

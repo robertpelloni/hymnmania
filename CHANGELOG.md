@@ -617,3 +617,27 @@ Moved to `mp3_input/_blocked/` and filtered via `scheduler_v2.BLOCKED_HYMNS`:
   Actual: **100 hymns/choruses + 46 classical + 2 test files** (`sample_hymn`, `test`) = 148.
   (Moved: Albéniz `espana-tango`, Vivaldi `estro-armonico-no11`, Austrian anthem →
   classical; test files excluded.)
+
+## v5.97.22 — Scheduler ran autonomously + classical excluded from hymn channel (2026-09-10)
+
+### ✅ The scheduled pipeline RAN on its own
+"HymnMania Daily Post" fired at **15:00:00** and completed a full cycle (exit 0):
+- Track: **Neon Valse (Deep House)**
+- YouTube full https://youtu.be/plQj6-XhDXM · Short https://youtu.be/YRP176ddML0
+- FB feed ✅ · TikTok ✅ · FB Reel ✅ · Instagram ✅
+Log: `logs/scheduler.log`. All 6 platforms succeeded unattended.
+
+### Classical belongs to a DIFFERENT channel — now excluded
+- `scheduler_v2.EXCLUDE_CLASSICAL = True` skips any beat video whose title contains
+  `Classical Remix` (Toccata, Canon in D, Clair de Lune, …).
+- Verified: queue went **10 → 5** after the filter (5 classical tracks removed).
+- `CLASSICAL_PIECES.md` is now clearly marked as inventory-for-reference-only, not HymnMania.
+
+### Also added: mid-song silence gate
+`no_mid_gap()` rejects any beat video with a **>3s silence in the middle** (stitching artifact) —
+intro/outro fades are ignored. Combined with the existing centroid + loop gates, the scheduler
+now only posts complete, real, non-looped tracks.
+
+### Current hymn queue (5)
+Detroit House Amazing Grace · Gabba Neon Valse ×2 · Psytrance Neon Valse ·
+Drum and Bass Oh For a Thousand Tongues.
