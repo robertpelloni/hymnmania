@@ -135,3 +135,7 @@ test_beat.mp4
 .edge-cdp-data/
 .dedicated-edge-profile/
 .suno-iso-profile/
+
+# Scheduler runtime state
+.scheduler_log.json
+logs/

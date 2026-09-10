@@ -118,15 +118,18 @@ def main():
                 print(f"  upload ready ({12 + i * 5}s)", flush=True)
                 break
 
-        # Click Next (may appear after copyright check)
-        for _ in range(5):
+        # Click Next until the caption step is actually reached (the caption editor
+        # renders a few seconds after Next; checking too early finds nothing).
+        for _ in range(6):
+            body = fb.evaluate("document.body.innerText")
+            if "describe your reel" in body.lower():
+                print("  caption step reached", flush=True)
+                break
             r = fb.evaluate("(function(){var els=Array.from(document.querySelectorAll('div[role=button],button'));for(var i=0;i<els.length;i++){var e=els[i];if((e.innerText||'').trim().toLowerCase()==='next'&&e.offsetParent){e.click();return 'next'}}return 'none'})()")
             print(f"  next click: {r}", flush=True)
-            if r == 'next':
-                break
-            fb.wait_for_timeout(4000)
+            fb.wait_for_timeout(7000 if r == 'next' else 4000)
 
-        fb.wait_for_timeout(4000)
+        fb.wait_for_timeout(2000)
         # Type caption
         typed = fb.evaluate("""(function(){
             var e = Array.from(document.querySelectorAll('textarea, [contenteditable=true], [role=textbox], [aria-label*=Describe], [aria-label*=caption], [aria-label*="Describe your"]'))

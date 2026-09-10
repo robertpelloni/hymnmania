@@ -101,3 +101,14 @@ When Love fixed: FULL https://youtu.be/friujcW2VLY + SHORT https://youtu.be/S2hZ
 - ig_cdp_post.py: Next(crop) -> Next(edit) -> keyboard.type caption -> Share. Typing after Share = lost post.
 - Shorts are ~53MB > 50MB CDP limit -> compress to ~32MB (-crf 28) for FB/IG.
 - Verified live on God Is So Good: TikTok Posts 10, FB Reel "shared with EVERYONE", IG reel DdHP5cFKSru (post 11).
+
+## FULL PIPELINE + SCHEDULE — v5.97.19 (2026-09-10)
+- Verified complete chain on new hymn "I Have Decided To Follow Jesus":
+  upload -> cover (chirp-hawk) -> cap_cycle (157s, loop 0.0) -> beat video -> YT full+short
+  -> compressed short -> TikTok + FB Reel + Instagram. All public.
+- scheduler_v2.py REWRITTEN to use verified flows only; socials on 9222 (NOT 9333).
+  ensure_browser() auto-launches 9222. Idempotency via .scheduler_log.json.
+- ig_cdp_post.py now importable: post(video, caption_file); CLI under __main__.
+- Bugs fixed: tt_post timeout 60s->240s; fb_reel waits for caption step; genre detroitcircuit/313.
+- SCHEDULE: Windows Task "HymnMania Daily Post" -> run_scheduler.bat -> scheduler_v2.py --now 1,
+  Mon-Fri 15:00, logs/scheduler.log. (Register/query schtasks via a .bat wrapper in Git Bash.)

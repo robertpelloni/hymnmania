@@ -1,9 +1,32 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.18**
+> **Version: 5.97.19**
 > **Last updated: 2026-09-10**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
-> **Status: WORKING — full-length + 60s reels verified. Suno copyright-fingerprinting blocks some familiar melodies (see Limitations).**
+> **Status: WORKING END-TO-END — full pipe verified on a new hymn; auto-posting SCHEDULED (Mon–Fri 3 PM). Suno copyright-fingerprinting still blocks some familiar melodies.**
+
+---
+
+## SCHEDULE LIVE — "HymnMania Daily Post" (2026-09-10)
+
+Windows Scheduled Task **"HymnMania Daily Post"** runs `run_scheduler.bat` →
+`scheduler_v2.py --now 1` every **weekday at 3:00 PM**. Logs to `logs/scheduler.log`.
+
+- Manage: `schtasks /Query /TN "HymnMania Daily Post"` (use a .bat wrapper from Git Bash —
+  Git Bash mangles the `/Create` and `/Query` switches into paths).
+- The scheduler auto-launches the social browser (9222) if CDP is down.
+- Queue = full-length, real-audio (centroid>1000), non-looped (loop_score<=0.9), not already
+  on the channel. Per-track/platform idempotency via `.scheduler_log.json`.
+- Manual: `python scheduler_v2.py --test | --now [N] | --daemon`.
+
+## Full Pipeline (VERIFIED end-to-end 2026-09-10)
+```
+MIDI/sine MP3 → Suno upload (VERIFIED) → cover gen (chirp-hawk) → cap_cycle.py (full, loop-checked)
+              → quick_composer.py (beat video) → post_to_youtube full + short
+              → compress 9:16 short (<50MB) → TikTok + FB Reel + Instagram
+```
+Reference run "I Have Decided To Follow Jesus": YT full youtu.be/TTsIGQDDAV0 ·
+Short youtu.be/k8W_oqD9LwI · TikTok Posts 11 · FB Reel live · IG Posts 12.
 
 ---
 

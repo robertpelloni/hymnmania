@@ -46,6 +46,7 @@ PIECES = [
     ("when love shines in", "When Love Shines In", "Traditional", "2026", False),
     ("god is so good", "God Is So Good", "Traditional", "2026", False),
     ("oh god our help", "Oh God Our Help", "Isaac Watts", "1719", False),
+    ("i have decided", "I Have Decided To Follow Jesus", "Traditional", "2026", False),
 ]
 
 GENRES = [
@@ -54,6 +55,7 @@ GENRES = [
     ("deephouse", "Deep House"), ("deep house", "Deep House"),
     ("detroithouse", "Detroit House"), ("detroit house", "Detroit House"),
     ("detroittechno", "Detroit Techno"), ("detroittechno", "Detroit Techno"),
+    ("detroitcircuit", "Detroit Techno"), ("313", "Detroit Techno"),
     ("drumandbass", "Drum and Bass"), ("drum and bass", "Drum and Bass"), ("dnb", "Drum and Bass"),
     ("chiptune", "Chiptune"), ("8bit", "Chiptune"),
     ("hardstyle", "Hardstyle Trance"), ("synthwave", "Synthwave"), ("neon", "Synthwave"),

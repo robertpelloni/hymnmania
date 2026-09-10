@@ -16,7 +16,7 @@ def post_video(page, abs_path, caption):
         page.evaluate("Array.from(document.querySelectorAll('button')).find(x=>/select video/i.test(x.innerText||''))?.click()")
     page.wait_for_timeout(2000)
     # Set file
-    page.set_input_files('[data-e2e="upload-input"],input[type=file]', abs_path, timeout=60000)
+    page.set_input_files('[data-e2e="upload-input"],input[type=file]', abs_path, timeout=240000)
     print('file set, waiting for upload...')
     # Wait for upload to finish (filename disappears / Uploaded shows)
     for i in range(30):

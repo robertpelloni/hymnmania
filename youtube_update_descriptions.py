@@ -43,6 +43,7 @@ HYMNS = {
     "when love shines in": ("When Love Shines In", "Traditional", "2026"),
     "god is so good": ("God Is So Good", "Traditional", "2026"),
     "oh god our help": ("Oh God Our Help", "Isaac Watts", "1719"),
+    "i have decided": ("I Have Decided To Follow Jesus", "Traditional", "2026"),
 }
 
 GENRE_KEYWORDS = {

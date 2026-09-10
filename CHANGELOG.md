@@ -527,3 +527,49 @@ the new "God Is So Good" 60s short. All three confirmed LIVE.
 - The 60s short is ~53MB; CDP upload limit is ~50MB → compress first for FB/IG.
   `ffmpeg -i in.mp4 -c:v libx264 -crf 28 -c:a aac -b:a 128k out.mp4` → 32MB (worked).
   TikTok accepts the original (30GB web limit) but 32MB works for all three.
+
+## v5.97.19 — FULL PIPELINE VERIFIED + SCHEDULE LIVE (2026-09-10)
+
+### Complete end-to-end run on a brand-new hymn: "I Have Decided To Follow Jesus"
+Every stage worked, all outputs public:
+| Stage | Result |
+|---|---|
+| Suno upload | VERIFIED (no copyright block) — clip 983ca655 |
+| Cover generation | chirp-hawk (v6), 2 clips |
+| Full capture (cap_cycle) | 157s, centroid 3875, loop_check 0.0, seeks confirmed |
+| Beat video | 160s |
+| YouTube FULL | https://youtu.be/TTsIGQDDAV0 |
+| YouTube SHORT | https://youtu.be/k8W_oqD9LwI |
+| TikTok | Posts 11 |
+| Facebook Reel | live ("…2 minutes ago") |
+| Instagram | Posts 12 (DdHQMxxqedO) |
+
+### scheduler_v2.py REWRITTEN to use only verified flows
+Old version was broken: socials pointed at 9333 (Suno browser — not logged into socials),
+TikTok reimplemented WITHOUT the "Post now" modal fix, no YouTube Short, no quality gate.
+New version:
+- YouTube full + Short via `post_to_youtube` (quality-gated)
+- TikTok via `tt_post.post_video` (port **9222**, modal handled)
+- Facebook Reel via `fb_reel_post.py` subprocess
+- Instagram via `ig_cdp_post.post`
+- Facebook feed via `daily_scheduler`
+- `ensure_browser()` auto-launches the social browser on 9222 if CDP is down
+- Queue = full-length, real-audio (centroid>1000), non-looped (loop_score<=0.9), not already on channel
+- Per-track idempotency via `.scheduler_log.json` (each platform posted at most once)
+
+### Bugs fixed during this run
+- `ig_cdp_post.py` ran its CLI (sys.argv) code at IMPORT time → `FileNotFoundError: '1'` when
+  imported by the scheduler. Now exposes `post(video, caption_file)` with a `__main__` guard.
+- `tt_post.py` set_input_files timeout 60s → 240s (34MB CDP transfer).
+- `fb_reel_post.py` clicked Next then immediately looked for the caption editor; now polls
+  until the "Describe your reel…" step actually renders.
+- Genre detection: added `detroitcircuit` / `313` → Detroit Techno (was falling back to the
+  `[EDM LSDance]` placeholder).
+
+### Scheduler run verified (real cycle, 1 track)
+Amazing Grace (Detroit Circuit): YouTube full https://youtu.be/dbA2ybakkn4 +
+Short https://youtu.be/9mEa10PnFas + FB feed + TikTok + FB Reel + Instagram — all OK.
+
+### SCHEDULE LIVE
+Windows Scheduled Task **"HymnMania Daily Post"** → runs `run_scheduler.bat`
+(`scheduler_v2.py --now 1`) **Mon–Fri at 3:00 PM**. Logs to `logs/scheduler.log`.

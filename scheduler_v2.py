@@ -1,283 +1,392 @@
-"""HymnMania Auto-Post Scheduler — v2 (verified methods 2026-09-03).
+"""HymnMania unified scheduler — posts ONE ready track across all platforms.
 
-Uses ONLY the proven posting methods:
-- YouTube: Data API (post_to_youtube.py) — full + shorts
-- TikTok: CDP upload (tiktok.com/upload, compressed <50MB, contenteditable caption)
-- Facebook Reels: fb_reel_post.py (reels/create → Create reel → Add video → set file → Next → caption → Post)
-- Instagram: ig_cdp_post.py (coordinate-click New post → set file → Next → Next → Share)
-- Facebook Stories: fb_stories.py story flow
+Uses ONLY the verified flows (2026-09-10):
+  YouTube full + Short : post_to_youtube.py (API, quality-gated)
+  TikTok               : tt_post.post_video   (port 9222, handles 'Post now' modal)
+  Facebook Reel        : fb_reel_post.py      (waits for copyright check to clear)
+  Instagram Reel       : ig_cdp_post.post     (keyboard.type caption BEFORE Share)
+  Facebook feed (opt)  : daily_scheduler      (link post fallback)
+
+Browser split (IMPORTANT):
+  9222 / edge-cdp-profile  -> Facebook, Instagram, TikTok (social logins)
+  9333 / .dedicated-edge-profile -> Suno only (cover generation)
 
 Usage:
-  python scheduler_v2.py --now            # run one full cycle now (test)
-  python scheduler_v2.py --daemon         # run on schedule (Mon-Fri)
-  python scheduler_v2.py --test           # dry-run check queue
+  python scheduler_v2.py --test        # dry run: show the queue
+  python scheduler_v2.py --now         # post the next ready track everywhere
+  python scheduler_v2.py --now 3       # post the next 3 tracks
+  python scheduler_v2.py --daemon      # run one cycle per day at RUN_HOUR (weekdays)
 """
-import os, sys, json, time, random, datetime, subprocess, glob, io
+import os, sys, json, io, time, random, datetime, subprocess, glob
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 BEAT_DIR = os.path.join(ROOT, "pipeline_output", "beat_videos")
 SHORT_DIR = os.path.join(ROOT, "pipeline_output", "shorts")
-LOG_FILE = os.path.join(ROOT, ".post_log.json")
+LOG_FILE = os.path.join(ROOT, ".scheduler_log.json")
+SOCIAL_PORT = 9222
+RUN_HOUR = 15          # 3 PM local
+QUALITY_THRESHOLD = 1000
 
-def log_post(platform, file, url=""):
-    log = []
+FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
+
+
+# ---------------------------------------------------------------- logging
+def load_log():
     if os.path.exists(LOG_FILE):
-        log = json.load(open(LOG_FILE))
-    log.append({"time": datetime.datetime.now().isoformat(), "platform": platform, "file": file, "url": url})
-    json.dump(log[-500:], open(LOG_FILE, "w"))
-    print(f"  [log] {platform}: {os.path.basename(file)} {url}")
+        try:
+            return json.load(open(LOG_FILE, encoding="utf-8"))
+        except Exception:
+            return {}
+    return {}
 
-def spectral_centroid(f, seconds=20):
-    """Return spectral centroid of a media file. Real music ~2000-8000; sine ~300."""
-    try:
-        import subprocess, tempfile
-        import numpy as np
-        FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
-        tmp = tempfile.mktemp(suffix=".f32")
-        subprocess.run([FFM, "-y", "-loglevel", "error", "-i", f, "-t", str(seconds),
-                        "-ac", "1", "-ar", "48000", "-f", "f32le", tmp], capture_output=True)
-        d = np.frombuffer(open(tmp, "rb").read(), dtype=np.float32)
-        os.remove(tmp)
-        cents = []
-        for i in range(0, len(d) - 2048, 2048):
-            spec = np.abs(np.fft.rfft(d[i:i+2048] * np.hanning(2048)))
-            fr = np.fft.rfftfreq(2048, 1/48000)
-            if spec.sum() > 0:
-                cents.append((spec * fr).sum() / spec.sum())
-        return round(float(np.mean(cents)), 1) if cents else 0
-    except Exception:
-        return 0
 
-QUALITY_THRESHOLD = 1000  # below this = sine/sheet-music
+def save_log(log):
+    json.dump(log, open(LOG_FILE, "w", encoding="utf-8"), indent=1)
+
+
+def mark(beat_file, platform, url=""):
+    log = load_log()
+    e = log.setdefault(beat_file, {"posted": [], "urls": {}})
+    if platform not in e["posted"]:
+        e["posted"].append(platform)
+    if url:
+        e["urls"][platform] = url
+    save_log(log)
+
+
+def already(beat_file, platform):
+    return platform in load_log().get(beat_file, {}).get("posted", [])
+
+
+# ---------------------------------------------------------------- quality
+def spectral_centroid(f, seconds=25):
+    import numpy as np, tempfile
+    tmp = tempfile.mktemp(suffix=".f32")
+    subprocess.run([FFM, "-y", "-loglevel", "error", "-i", f, "-t", str(seconds),
+                    "-ac", "1", "-ar", "48000", "-f", "f32le", tmp], capture_output=True)
+    d = np.frombuffer(open(tmp, "rb").read(), dtype=np.float32)
+    os.remove(tmp)
+    cents = []
+    for i in range(0, len(d) - 2048, 2048):
+        sp = np.abs(np.fft.rfft(d[i:i + 2048] * np.hanning(2048)))
+        fr = np.fft.rfftfreq(2048, 1 / 48000)
+        if sp.sum() > 0:
+            cents.append((sp * fr).sum() / sp.sum())
+    return round(float(np.mean(cents)), 1) if cents else 0
+
 
 def is_real_cover(beat_file):
-    """True if the beat video audio is a real genre cover (not sine/sheet-music)."""
     c = spectral_centroid(os.path.join(BEAT_DIR, beat_file))
     return c >= QUALITY_THRESHOLD, c
 
-def get_queue():
-    """List beat videos never posted to YouTube (checks channel titles) AND with real audio."""
-    # Query actual channel titles once
-    channel_titles = []
+
+def not_looped(path):
+    """False if the 48s-repeat capture bug is present."""
     try:
-        from google.oauth2.credentials import Credentials
-        from google.auth.transport.requests import Request
-        from googleapiclient.discovery import build
-        data = json.load(open(os.path.join(ROOT, "token.json")))
-        creds = Credentials.from_authorized_user_info(data, ["https://www.googleapis.com/auth/youtube"])
-        if not creds.valid:
-            creds.refresh(Request())
-        yt = build("youtube", "v3", credentials=creds)
+        import cap_cycle
+        tmp = os.path.join(SHORT_DIR, "_gatecheck.mp3")
+        subprocess.run([FFM, "-y", "-loglevel", "error", "-i", path, "-ac", "1",
+                        "-ar", "48000", tmp], capture_output=True)
+        ls = cap_cycle.loop_score(tmp)
+        os.remove(tmp)
+        return ls <= 0.9, ls
+    except Exception:
+        return True, 0.0
+
+
+def is_short(path):
+    """True if the video is <=70s (already a short, don't make another)."""
+    try:
+        FFP = os.path.join(os.path.dirname(FFM), "ffprobe.exe")
+        r = subprocess.run([FFP, "-v", "quiet", "-show_entries", "format=duration",
+                            "-of", "csv=p=0", path], capture_output=True, text=True)
+        return float(r.stdout.strip() or 0) <= 70
+    except Exception:
+        return False
+
+
+# ---------------------------------------------------------------- queue
+def channel_titles():
+    try:
+        import post_to_youtube as p
+        yt = p.get_service()
         ch = yt.channels().list(part="contentDetails", mine=True).execute()
         upl = ch["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
-        pt = None
-        for _ in range(30):
-            r = yt.playlistItems().list(part="snippet", playlistId=upl, maxResults=50, pageToken=pt).execute()
+        titles, pt = set(), None
+        for _ in range(60):
+            r = yt.playlistItems().list(part="snippet", playlistId=upl,
+                                        maxResults=50, pageToken=pt).execute()
             for it in r.get("items", []):
-                channel_titles.append(it["snippet"]["title"].lower())
+                titles.add(it["snippet"]["title"].lower().replace(" #shorts", ""))
             pt = r.get("nextPageToken")
             if not pt:
                 break
-    except Exception:
-        pass
-    print(f"  channel titles loaded: {len(channel_titles)}", flush=True)
+        return titles
+    except Exception as e:
+        print(f"  (channel lookup failed: {str(e)[:50]})")
+        return set()
 
-    beats = sorted(f for f in os.listdir(BEAT_DIR) if f.endswith(".mp4") and not f.startswith("_"))
-    pending = []
+
+def get_queue(verbose=True):
+    """Full-length, real-audio, non-looped beat videos never posted to YouTube."""
     import post_to_youtube as p
-    for b in beats:
+    posted = channel_titles()
+    log = load_log()
+    queue = []
+    for b in sorted(os.listdir(BEAT_DIR)):
+        if not b.endswith(".mp4") or b.startswith("_"):
+            continue
+        path = os.path.join(BEAT_DIR, b)
+        if is_short(path):
+            continue
         try:
             t = p.build_title(b)
         except Exception:
+            t = None
+        if not t or t.lower() in posted:
             continue
-        if not t:
+        if "youtube-full" in log.get(b, {}).get("posted", []):
             continue
-        tl = t.lower()
-        # skip if a channel title closely matches (same hymn + genre + speed)
-        if any(tl.split(" Remix")[0][:30] in ct for ct in channel_titles):
+        ok, c = is_real_cover(b)
+        if not ok:
+            if verbose:
+                print(f"  skip (sine/sheet-music, centroid={c}): {b[:50]}")
             continue
-        # QUALITY GATE: skip sheet-music (sine) beat videos
-        real, c = is_real_cover(b)
-        if not real:
-            print(f"  [SKIP sheet-music] {b[:55]} (centroid {c})", flush=True)
+        good, ls = not_looped(path)
+        if not good:
+            if verbose:
+                print(f"  skip (48s-loop bug, score={ls}): {b[:50]}")
             continue
-        pending.append(b)
-    return pending
+        queue.append(b)
+    if verbose:
+        print(f"  queue: {len(queue)} ready track(s)")
+    return queue
 
 
-def compress_short(src):
-    """Compress to <50MB for CDP transfer. Returns path."""
-    base = os.path.splitext(os.path.basename(src))[0]
-    out = os.path.join(SHORT_DIR, f"{base}_tt.mp4")
-    if os.path.exists(out) and os.path.getsize(out) < 50*1048576:
-        return out
-    FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
-    r = subprocess.run([FFM, "-y", "-loglevel", "error", "-i", src,
-        "-vf", "crop=ih*9/16:ih,scale=1080:1920",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "26", "-b:v", "4M",
-        "-c:a", "aac", "-b:a", "128k", "-t", "60", out], capture_output=True)
-    return out if os.path.exists(out) else None
-
-def make_tt_caption(title, genre):
-    return f"""🌀 RESURRECTING BEATS: '{title}' [{genre}] ⚡
-
-Resurrected from the vault! Full genre-mixed hymn cover — {genre} electronic worship. Built for festivals, vocalists, and live sets.
-
-🎧 Full 4K video on YouTube (link in bio)!
-💬 Comment '{title.upper()[:12]}' for the untagged high-quality link.
-
-#ResurrectingBeats #EDM #SpiritualEDM #ElectronicMusic #HymnMania #producertok #edmmusic #trancefamily #festivalbeats #{genre.replace(' ','')} #dance"""
-
-def post_youtube_full(beat_file, title, genre):
-    """YouTube full video via API."""
+# ---------------------------------------------------------------- platforms
+def make_and_compress_short(beat_file):
+    """9:16 60s short, compressed under the 50MB CDP limit."""
     import post_to_youtube as p
-    service = p.get_service()
     src = os.path.join(BEAT_DIR, beat_file)
-    vid = p.upload(service, src, p.build_title(beat_file))
-    log_post("youtube-full", beat_file, f"https://youtu.be/{vid}")
-    # record as uploaded
-    with open(os.path.join(ROOT, ".uploaded_videos.txt"), "a") as f:
-        f.write(f"{vid} | {os.path.basename(beat_file)}\n")
+    base = os.path.splitext(beat_file)[0]
+    raw = os.path.join(SHORT_DIR, base + "_short.mp4")
+    if not (os.path.exists(raw) and os.path.getsize(raw) > 100000):
+        raw = p.make_short(src, raw)
+    if not raw or not os.path.exists(raw):
+        return None
+    out = os.path.join(SHORT_DIR, base + "_short_compressed.mp4")
+    if os.path.exists(out) and os.path.getsize(out) < 50 * 1048576:
+        return out
+    r = subprocess.run([FFM, "-y", "-loglevel", "error", "-i", raw,
+                        "-c:v", "libx264", "-preset", "fast", "-crf", "28",
+                        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", out],
+                       capture_output=True)
+    if os.path.exists(out) and os.path.getsize(out) < 50 * 1048576:
+        return out
+    return raw
+
+
+def post_youtube(beat_file, is_short=False):
+    import post_to_youtube as p
+    src = os.path.join(BEAT_DIR, beat_file)
+    title = p.build_title(beat_file)
+    # quality gate (same check the CLI uses)
+    if not p.quality_gate(src):
+        raise RuntimeError("quality gate failed (looped capture)")
+    svc = p.get_service()
+    if is_short:
+        base = os.path.splitext(beat_file)[0]
+        out = os.path.join(SHORT_DIR, base + "_short.mp4")
+        if not (os.path.exists(out) and os.path.getsize(out) > 100000):
+            out = p.make_short(src, out)
+        vid = p.upload(svc, out, title, is_short=True)
+    else:
+        vid = p.upload(svc, src, title)
+    mark(beat_file, "youtube-short" if is_short else "youtube-full", f"https://youtu.be/{vid}")
     return vid
 
-def post_tiktok(video_path, caption):
-    """Verified TikTok upload via CDP."""
-    from playwright.sync_api import sync_playwright
-    with sync_playwright() as pw:
-        b = pw.chromium.connect_over_cdp("http://127.0.0.1:9333")
-        page = next((p for p in b.contexts[0].pages if "tiktok.com" in p.url), None)
-        if not page:
-            page = b.contexts[0].new_page()
-        page.goto("https://www.tiktok.com/upload", wait_until="domcontentloaded", timeout=30000)
-        page.wait_for_timeout(6000)
-        try:
-            page.click('[data-e2e="select_video_button"]', timeout=8000)
-        except Exception:
-            page.evaluate("Array.from(document.querySelectorAll('button')).find(x=>/select video/i.test(x.innerText||''))?.click()")
-        page.wait_for_timeout(2000)
-        abs_path = os.path.abspath(video_path)
-        page.set_input_files('[data-e2e="upload-input"],input[type=file]', abs_path, timeout=90000)
-        for _ in range(25):
-            page.wait_for_timeout(3000)
-            body = page.evaluate("document.body.innerText")
-            if "uploaded" in body.lower() and "description" in body.lower():
-                break
-        page.wait_for_timeout(2000)
-        page.evaluate("document.querySelector('[contenteditable=true]')?.focus()")
-        page.wait_for_timeout(500)
-        page.keyboard.press("Control+A")
-        page.keyboard.press("Delete")
-        page.keyboard.type(caption, delay=4)
-        page.wait_for_timeout(2500)
-        r = page.evaluate("(()=>{var b=document.querySelector('[data-e2e=post_video_button]');if(b){b.scrollIntoView({block:'center'});b.click();return 'ok'}return 'nf'})()")
-        page.wait_for_timeout(8000)
-        b.close()
-        return r == "ok"
 
-def post_instagram(beat_path, title, genre, yt):
-    """Verified IG via CDP coordinate-click."""
+def post_tiktok(short_path, beat_file, title, genre):
+    from playwright.sync_api import sync_playwright
+    import tt_post
+    cap = (f"\U0001f300 RESURRECTING BEATS: '{title}' [{genre} / Spiritual EDM] \u26a1\n\n"
+           f"Resurrected from the vault! High-energy {genre} energy. Built for festivals, "
+           f"vocalists, and live sets.\n\n"
+           f"\U0001f3a7 Free Download / License link in bio!\n"
+           f"\U0001f4ac Comment '{title.upper()[:14]}' for the untagged link.\n\n"
+           f"#ResurrectingBeats #EDM #{genre.replace(' ', '')} #SpiritualEDM #ElectronicMusic "
+           f"#Dance #HymnMania #producertok #edmmusic #trancefamily #festivalbeats #unreleasedmusic")
+    with sync_playwright() as pw:
+        b = pw.chromium.connect_over_cdp(f"http://127.0.0.1:{SOCIAL_PORT}")
+        page = b.contexts[0].new_page()
+        ok = tt_post.post_video(page, os.path.abspath(short_path), cap)
+        b.close()
+    return ok
+
+
+def post_fb_reel(short_path, title, genre, yt):
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "fb_reel_post.py"),
+                        os.path.abspath(short_path), title, genre, yt or ""],
+                       capture_output=True, timeout=420)
+    out = (r.stdout or b"").decode("utf-8", errors="replace")
+    return ("RESULT: True" in out) or ("published: True" in out) or ("shared with everyone" in out.lower())
+
+
+def post_instagram(short_path, title, genre, yt):
     import ig_cdp_post as ig
-    cap = f"🌀 RESURRECTING BEATS: '{title}' [{genre}]\n\n🎵 {genre} electronic worship remix — full genre-mixed hymn cover.\n\n👍 Like + Subscribe — full 4K journey on YouTube (link in bio): {yt}\n\n#ResurrectingBeats #Hymnmania #SpiritualEDM #{genre.replace(' ','')} #EDM #ElectronicMusic"
+    cap = (f"{title} \u2014 {genre} electronic worship\n\n"
+           f"Can this {genre} frequency elevate your spirit? \U0001f447 Drop a like and tell us below!\n\n"
+           f"(Full 4K visual journey link in our bio! \U0001f517)\n\n"
+           f"#ResurrectingBeats #Hymnmania #SpiritualEDM #{genre.replace(' ', '')} #EDM "
+           f"#ElectronicMusic #PsychedelicTrance #WorshipMusic")
     capfile = os.path.join(ROOT, ".ig_auto_cap.txt")
     io.open(capfile, "w", encoding="utf-8").write(cap)
-    return ig.post(beat_path, capfile)
+    return ig.post(os.path.abspath(short_path), capfile)
 
-def post_fb_reel(video_path, title, genre, yt):
-    """Best-effort FB reel via fb_reel_post.py subprocess; falls back to FB feed post.
-    Facebook intermittently redirects reels/create to a reel viewer, so reel may fail
-    — the feed post fallback is the reliable path."""
+
+def ensure_browser(port=SOCIAL_PORT, profile=r"C:\Users\jakeg\edge-cdp-profile"):
+    """Launch the browser for the social logins if CDP is not already up."""
+    import urllib.request
     try:
-        import subprocess as _sp
-        r = _sp.run([sys.executable, os.path.join(ROOT, "fb_reel_post.py"),
-                     os.path.abspath(video_path), title, genre, yt or ""],
-                    capture_output=True, timeout=280)
-        out = (r.stdout or b"").decode("utf-8", errors="replace")
-        if "RESULT: True" in out or "Reel posted" in out:
-            return True
-        print(f"  FB reel subprocess no-success — trying feed post", flush=True)
-    except Exception as e:
-        print(f"  FB reel error: {str(e)[:50]} — trying feed post", flush=True)
-    # Fallback: FB feed post (reliable)
-    try:
-        from daily_scheduler import build_post, post_to_facebook
-        from playwright.sync_api import sync_playwright
-        with sync_playwright() as pw:
-            b = pw.chromium.connect_over_cdp("http://127.0.0.1:9333")
-            fb = b.contexts[0].new_page()
-            fb.goto("https://www.facebook.com/")
-            fb.wait_for_timeout(6000)
-            post_text, _ = build_post(os.path.basename(video_path), title, genre)
-            post_to_facebook(fb, post_text, yt)
-            b.close()
-        print("  FB feed post OK", flush=True)
+        urllib.request.urlopen(f"http://127.0.0.1:{port}/json/version", timeout=4)
         return True
+    except Exception:
+        pass
+    print(f"  launching browser on {port}...", flush=True)
+    try:
+        subprocess.Popen([r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+                          f"--remote-debugging-port={port}", f"--user-data-dir={profile}",
+                          "--no-first-run", "--no-default-browser-check",
+                          "--disable-features=msEdgeDisableStartupBoost"])
     except Exception as e:
-        print(f"  FB feed post FAIL: {str(e)[:50]}", flush=True)
+        print(f"  browser launch failed: {str(e)[:60]}")
         return False
+    for _ in range(20):
+        time.sleep(2)
+        try:
+            urllib.request.urlopen(f"http://127.0.0.1:{port}/json/version", timeout=3)
+            print("  browser ready")
+            return True
+        except Exception:
+            pass
+    return False
+
+
+# ---------------------------------------------------------------- cycle
+def nice_title(beat_file):
+    import post_to_youtube as p
+    t, a, y, cls, g, sp, var = p.detect(beat_file)
+    return t or beat_file.replace("_", " ")
+
 
 def cycle_one(beat_file=None):
-    """Post one beat video across all platforms."""
-    queue = get_queue()
-    if not beat_file:
-        if not queue:
-            print("No pending beat videos (all posted to YouTube)")
-            return
-        beat_file = queue[0]
-    print(f"\n=== Posting: {beat_file} ===")
+    if beat_file is None:
+        q = get_queue()
+        if not q:
+            print("Nothing to post — queue empty.")
+            return False
+        beat_file = q[0]
+    title = nice_title(beat_file)
     import post_to_youtube as p
-    title_full = p.build_title(beat_file) or beat_file
-    genre = title_full.split()[0]
-    title = "Jesus Comes With Power" if "Jesus" in beat_file else beat_file.replace("_", " ").split("_cover")[0]
+    t, a, y, cls, genre, sp, var = p.detect(beat_file)
+    genre = genre or "Psytrance"
+    print(f"\n=== {title} ({genre}) ===")
 
-    # 0. Build compressed 9:16 short ONCE for TikTok/FB/IG (must be <50MB for CDP)
-    short = compress_short(os.path.join(BEAT_DIR, beat_file))
-    print(f"  compressed short: {short}", flush=True)
+    yt_url = ""
+    for name, fn in [
+        ("youtube-full", lambda: post_youtube(beat_file, False)),
+        ("youtube-short", lambda: post_youtube(beat_file, True)),
+    ]:
+        if already(beat_file, name):
+            print(f"  {name}: already done")
+            continue
+        try:
+            vid = fn()
+            print(f"  {name}: OK https://youtu.be/{vid}")
+            if name == "youtube-full":
+                yt_url = f"https://youtu.be/{vid}"
+        except Exception as e:
+            print(f"  {name}: FAIL {str(e)[:70]}")
 
-    # 1. YouTube full
-    vid = None
-    try:
-        vid = post_youtube_full(beat_file, title, genre)
-        print(f"  YouTube OK: {vid}")
-    except Exception as e:
-        print(f"  YouTube FAIL: {str(e)[:60]}")
+    short = make_and_compress_short(beat_file)
+    print(f"  short: {short}")
+    if not short:
+        print("  no short clip — skipping socials")
+        return True
 
-    # 2. TikTok (compressed short)
-    try:
-        if short:
-            cap = make_tt_caption(title, genre)
-            ok = post_tiktok(short, cap)
-            print(f"  TikTok {'OK' if ok else 'FAIL'}")
-    except Exception as e:
-        print(f"  TikTok FAIL: {str(e)[:60]}")
+    if not ensure_browser():
+        print("  social browser unavailable — YouTube only this run")
+        return True
 
-    # 3. Facebook reel (best-effort, falls back to feed)
-    try:
-        if short:
-            ok = post_fb_reel(short, title, genre, f"https://youtu.be/{vid}" if vid else "")
-            print(f"  FB {'OK' if ok else 'FAIL (intermittent)'}")
-    except Exception as e:
-        print(f"  FB FAIL: {str(e)[:60]}")
+    if yt_url and not already(beat_file, "fb-feed"):
+        try:
+            from daily_scheduler import build_post, post_to_facebook
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as pw:
+                b = pw.chromium.connect_over_cdp(f"http://127.0.0.1:{SOCIAL_PORT}")
+                fb = b.contexts[0].new_page()
+                fb.goto("https://www.facebook.com/", wait_until="domcontentloaded")
+                fb.wait_for_timeout(6000)
+                post_text, _ = build_post(os.path.basename(short), title, genre)
+                post_to_facebook(fb, post_text, yt_url)
+                b.close()
+            mark(beat_file, "fb-feed", yt_url)
+            print("  fb-feed: OK")
+        except Exception as e:
+            print(f"  fb-feed: FAIL {str(e)[:60]}")
 
-    # 4. Instagram (compressed short)
-    try:
-        if short:
-            ok = post_instagram(short, title, genre, f"https://youtu.be/{vid}" if vid else "")
-            print(f"  Instagram {'OK' if ok else 'FAIL'}")
-    except Exception as e:
-        print(f"  Instagram FAIL: {str(e)[:60]}")
+    for name, fn in [
+        ("tiktok", lambda: post_tiktok(short, beat_file, title, genre)),
+        ("fb-reel", lambda: post_fb_reel(short, title, genre, yt_url)),
+        ("instagram", lambda: post_instagram(short, title, genre, yt_url)),
+    ]:
+        if already(beat_file, name):
+            print(f"  {name}: already done")
+            continue
+        try:
+            ok = fn()
+            mark(beat_file, name, "ok" if ok else "")
+            print(f"  {name}: {'OK' if ok else 'FAIL'}")
+        except Exception as e:
+            print(f"  {name}: FAIL {str(e)[:70]}")
+    return True
+
 
 def run_cycle(count=1):
+    n = 0
     for _ in range(count):
-        cycle_one()
+        try:
+            if cycle_one():
+                n += 1
+            else:
+                break
+        except Exception as e:
+            print(f"cycle error: {str(e)[:80]}")
+    print(f"\nCompleted {n} cycle(s).")
+
 
 if __name__ == "__main__":
-    if "--test" in sys.argv:
+    args = sys.argv[1:]
+    if "--test" in args:
+        get_queue(verbose=False)
         q = get_queue()
-        print(f"Queue: {len(q)} pending beat videos")
-        for x in q[:10]:
-            print("  ", x)
-    elif len(sys.argv) > 1 and sys.argv[1].isdigit():
-        run_cycle(int(sys.argv[1]))
+        for b in q[:15]:
+            import post_to_youtube as p
+            print("  ", p.build_title(b))
+    elif "--daemon" in args:
+        print(f"daemon: posting one track/day on weekdays at {RUN_HOUR}:00")
+        done_day = None
+        while True:
+            now = datetime.datetime.now()
+            if now.weekday() < 5 and now.hour == RUN_HOUR and done_day != now.date():
+                run_cycle(1)
+                done_day = now.date()
+            time.sleep(300)
     else:
-        run_cycle(1)
+        count = 1
+        for a in args:
+            if a.isdigit():
+                count = int(a)
+        run_cycle(count)
