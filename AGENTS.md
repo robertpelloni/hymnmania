@@ -1,6 +1,6 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.22**
+> **Version: 5.97.23**
 > **Last updated: 2026-09-10**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: WORKING END-TO-END — full pipe verified on a new hymn; auto-posting SCHEDULED (Mon–Fri 3 PM). Suno copyright-fingerprinting still blocks some familiar melodies.**
@@ -108,15 +108,34 @@ User research claiming unpublished tracks are downloadable from the raw CDN is *
   (no ftyp/moov/mdat; browser decrypts client-side into a `blob:` URL)
 - **Verdict**: MediaRecorder blob capture (`cap_cycle.py`) is the ONLY reliable download path.
 
-## Posting Quota & Quality Gate (2026-09-09)
+## Posting Quota & Quality Gate (2026-09-10)
 
-- YouTube upload = **1,600 units**; 10,000 units/day → ~6 uploads/day by default, but 10 verified
-  fine on this project (plus a delete at 50 units).
-- BEFORE posting any beat video, run the quality gate:
-  1. Full-file silence scan (reject mid-song gaps / truncation)
-  2. Multi-point spectral centroid at 10% / 33% / 66% / 90% (all > 1200)
-  3. Exact full-title match against live channel titles (dedupe)
-- `scheduler_v2.py` enforces centroid > 1000 (`QUALITY_THRESHOLD`).
+### YouTube upload budget — FULL and SHORT cost the SAME
+- `videos.insert` = **1,600 units EACH**. A full video and a Short draw from **one shared
+  daily pool** — it is NOT "6 fulls + 6 shorts". Quota resets at **midnight Pacific Time**.
+- **Default Google quota**: 10,000 units/day → **6 uploads/day total**.
+- **This project's quota has been RAISED**: we have uploaded **118 videos in a single day**
+  (2026-07-23) and repeatedly 75–100/day with a single OAuth project — that is ~190,000 units
+  at the default 1,600/upload. No `quotaExceeded` error has ever been logged.
+- Today (2026-09-10) the automated run did 13 uploads (7 full + 6 shorts) = ~20,800 units.
+- **Our self-imposed cap**: `scheduler_v2.MAX_UPLOADS_PER_DAY = 100` (full + short combined).
+  Check usage with `python scheduler_v2.py --status`; counter in `.yt_uploads.json`.
+- Measure the real ceiling with `python quota_probe.py [max]` — uploads tiny **private** test
+  videos until `quotaExceeded`, reports the count, then deletes them all. Run it when you don't
+  need the rest of that day's budget.
+
+### Running the maximum
+- Each track = up to **2 YouTube uploads** (full + Short) + 4 social posts.
+- `python scheduler_v2.py --now 50` → up to 50 tracks (~100 uploads), respecting the cap.
+- Other API costs: title rename = 50, thumbnail = 50, search = 100, delete = 50, list = 1.
+  Budget these AFTER uploads; never spend the pool on renames first.
+
+### Quality gate (runs before ANY upload)
+1. Full-file silence scan — no mid-song gap >3s
+2. Multi-point spectral centroid >1200 (rejects sine/sheet-music ~330)
+3. Loop check — no 48s-repeat capture bug
+4. Not already on the channel (exact title dedupe)
+5. Not in `BLOCKED_HYMNS`, and not classical (`EXCLUDE_CLASSICAL`)
 
 ## Social Reels — ALL 3 VERIFIED LIVE (2026-09-10)
 

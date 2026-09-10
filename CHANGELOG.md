@@ -641,3 +641,25 @@ now only posts complete, real, non-looped tracks.
 ### Current hymn queue (5)
 Detroit House Amazing Grace · Gabba Neon Valse ×2 · Psytrance Neon Valse ·
 Drum and Bass Oh For a Thousand Tongues.
+
+## v5.97.23 — YouTube upload budget: how many fulls + shorts per day (2026-09-10)
+
+### The answer
+- A FULL video and a SHORT both cost **1,600 units** (`videos.insert`) — **one shared pool**,
+  not separate budgets. Quota resets midnight Pacific.
+- Default Google quota 10,000/day = **6 uploads/day total**.
+- **This project's quota is raised** (single OAuth project): best observed day = **118 uploads**
+  (2026-07-23); many 75–100/day days; no `quotaExceeded` ever logged. So the ceiling is
+  **at least 118 uploads/day** (~190k units at 1,600 each).
+- Today's automated run: 13 uploads (7 full + 6 shorts) = ~20,800 units.
+
+### Added
+- `scheduler_v2.MAX_UPLOADS_PER_DAY = 100` — self-imposed cap (full + short combined),
+  tracked in `.yt_uploads.json`; uploads stop cleanly once reached.
+- `python scheduler_v2.py --status` → uploads today, units used, remaining under cap, queue size.
+- `python quota_probe.py [max]` — measures the REAL ceiling by uploading tiny **private** test
+  videos until `quotaExceeded`, then deletes them all.
+
+### Running the max
+- Each track = 2 YouTube uploads (full + Short) + 4 social posts.
+- `python scheduler_v2.py --now 50` → up to 50 tracks (~100 uploads/day).

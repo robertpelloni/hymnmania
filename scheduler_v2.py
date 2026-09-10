@@ -29,6 +29,17 @@ SOCIAL_PORT = 9222
 RUN_HOUR = 15          # 3 PM local
 QUALITY_THRESHOLD = 1000
 
+# ---- YouTube upload budget -------------------------------------------------
+# A FULL video and a SHORT both cost the SAME: videos.insert = 1,600 units.
+# They share ONE daily pool (quota resets at midnight Pacific Time).
+# Default Google quota = 10,000 units/day -> 6 uploads/day.
+# This project has historically done 118 uploads in a day (2026-07-23) with a single
+# OAuth project, so its quota has clearly been increased. We still cap ourselves to
+# stay well clear of the limit; set to 0 for unlimited.
+MAX_UPLOADS_PER_DAY = 100     # full + shorts combined
+YT_UPLOAD_COST = 1600         # units per videos.insert
+UPLOAD_COUNTER = None         # set below
+
 # Hymns REMOVED from the pool (see BLOCKED_HYMNS.md):
 #   - blocked by Suno ACRCloud copyright fingerprint (uploads rejected)
 #   - Just Over The Mountains: passes upload but every cover generates degraded
@@ -71,6 +82,47 @@ def mark(beat_file, platform, url=""):
         e["urls"][platform] = url
     e["last"] = datetime.datetime.now().isoformat()
     save_log(log)
+    if platform in ("youtube-full", "youtube-short"):
+        bump_upload_count()
+
+
+def _counter_path():
+    return os.path.join(ROOT, ".yt_uploads.json")
+
+
+def uploads_today():
+    """Number of YouTube uploads (full + shorts) made today."""
+    try:
+        d = json.load(open(_counter_path(), encoding="utf-8"))
+    except Exception:
+        d = {}
+    return int(d.get(datetime.date.today().isoformat(), 0))
+
+
+def bump_upload_count(n=1):
+    p = _counter_path()
+    try:
+        d = json.load(open(p, encoding="utf-8"))
+    except Exception:
+        d = {}
+    k = datetime.date.today().isoformat()
+    d[k] = int(d.get(k, 0)) + n
+    # keep the file small
+    d = {k2: v for k2, v in list(d.items())[-14:]}
+    json.dump(d, open(p, "w", encoding="utf-8"), indent=1)
+
+
+def upload_budget_ok(verbose=True):
+    """True if we may still upload today."""
+    if not MAX_UPLOADS_PER_DAY:
+        return True
+    used = uploads_today()
+    if used >= MAX_UPLOADS_PER_DAY:
+        if verbose:
+            print(f"  YouTube daily cap reached ({used}/{MAX_UPLOADS_PER_DAY} uploads; "
+                  f"~{used * YT_UPLOAD_COST:,} units). Stopping.")
+        return False
+    return True
 
 
 def posted_today():
@@ -156,6 +208,16 @@ def is_short(path):
         return float(r.stdout.strip() or 0) <= 70
     except Exception:
         return False
+
+
+def uploads_planned(beat_file):
+    """How many YouTube uploads this track still needs (full and/or short)."""
+    n = 0
+    if not already(beat_file, "youtube-full"):
+        n += 1
+    if not already(beat_file, "youtube-short"):
+        n += 1
+    return n
 
 
 # ---------------------------------------------------------------- queue
@@ -352,9 +414,12 @@ def cycle_one(beat_file=None):
     if beat_file is None:
         q = get_queue()
         if not q:
-            print("Nothing to post — queue empty.")
+            print("Nothing to post -> queue empty.")
             return False
         beat_file = q[0]
+    if not upload_budget_ok():
+        return False
+    print(f"  YouTube uploads today: {uploads_today()}/{MAX_UPLOADS_PER_DAY or 'inf'}")
     title = nice_title(beat_file)
     import post_to_youtube as p
     t, a, y, cls, genre, sp, var = p.detect(beat_file)
@@ -424,6 +489,8 @@ def cycle_one(beat_file=None):
 def run_cycle(count=1):
     n = 0
     for _ in range(count):
+        if not upload_budget_ok(verbose=(n > 0)):
+            break
         try:
             if cycle_one():
                 n += 1
@@ -431,12 +498,21 @@ def run_cycle(count=1):
                 break
         except Exception as e:
             print(f"cycle error: {str(e)[:80]}")
-    print(f"\nCompleted {n} cycle(s).")
+    print(f"\nCompleted {n} cycle(s). YouTube uploads today: "
+          f"{uploads_today()}/{MAX_UPLOADS_PER_DAY or 'inf'}")
 
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    if "--test" in args:
+    if "--status" in args:
+        used = uploads_today()
+        print(f"YouTube uploads today : {used} / {MAX_UPLOADS_PER_DAY or 'unlimited'}")
+        print(f"Estimated units used  : {used * YT_UPLOAD_COST:,}  (1,600 per upload)")
+        print(f"Default Google quota  : 10,000 units/day = 6 uploads")
+        print(f"Observed historical max: 118 uploads in one day (this project has an increase)")
+        print(f"Remaining under cap   : {max(0, (MAX_UPLOADS_PER_DAY or 0) - used)}")
+        print(f"Queue                 : {len(get_queue(verbose=False))} ready track(s)")
+    elif "--test" in args:
         get_queue(verbose=False)
         q = get_queue()
         for b in q[:15]:
