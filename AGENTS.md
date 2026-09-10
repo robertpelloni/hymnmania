@@ -1,6 +1,6 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.19**
+> **Version: 5.97.20**
 > **Last updated: 2026-09-10**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: WORKING END-TO-END — full pipe verified on a new hymn; auto-posting SCHEDULED (Mon–Fri 3 PM). Suno copyright-fingerprinting still blocks some familiar melodies.**
@@ -12,12 +12,35 @@
 Windows Scheduled Task **"HymnMania Daily Post"** runs `run_scheduler.bat` →
 `scheduler_v2.py --now 1` every **weekday at 3:00 PM**. Logs to `logs/scheduler.log`.
 
-- Manage: `schtasks /Query /TN "HymnMania Daily Post"` (use a .bat wrapper from Git Bash —
-  Git Bash mangles the `/Create` and `/Query` switches into paths).
+### BACKUP / FAILOVER (in case the primary run doesn't happen)
+| Mechanism | Trigger | What it does |
+|---|---|---|
+| **HymnMania Backup Post** (scheduled task) | weekdays **8:00 PM** | `run_scheduler_backup.bat` → `scheduler_v2.py --catchup` — posts **only if nothing** was published today |
+| **HymnMania_Catchup.bat** (Startup folder) | **at logon** | same catch-up (handles a day the machine was off) |
+
+- `--catchup` is idempotent: it reads `.scheduler_log.json`, and if a post already happened
+today it prints "already posted today" and exits. Safe to run any number of times.
+- `run_scheduler_backup.bat` also ensures the social browser (CDP 9222) is running.
+- The Startup-folder shortcut is user-level; an ONLOGON *scheduled task* needs admin
+  ("Access is denied"), so the Startup folder is used instead.
+- Manage: `schtasks /Query /TN "HymnMania Daily Post"` — **use a .bat wrapper from Git Bash**
+  (Git Bash rewrites the `/Create` and `/Query` switches into paths).
+
 - The scheduler auto-launches the social browser (9222) if CDP is down.
 - Queue = full-length, real-audio (centroid>1000), non-looped (loop_score<=0.9), not already
-  on the channel. Per-track/platform idempotency via `.scheduler_log.json`.
-- Manual: `python scheduler_v2.py --test | --now [N] | --daemon`.
+  on the channel, and not in `BLOCKED_HYMNS`. Per-track/platform idempotency via `.scheduler_log.json`.
+- Manual: `python scheduler_v2.py --test | --now [N] | --catchup | --daemon`.
+
+## Hymn Pool — what we can still use (see `BLOCKED_HYMNS.md`)
+
+- **REMOVED** (Suno fingerprint rejects): O Happy Day, Kumbayah, Brighten The Corner,
+  Leyenda, Praise Him! Praise Him! — and **Just Over The Mountains** (covers come out
+  degraded ~400 centroid). Moved to `mp3_input/_blocked/`, filtered by `scheduler_v2.BLOCKED_HYMNS`.
+- **AVAILABLE: ~170 distinct pieces** — 148 MIDIs in
+  `submodules/ableton_psytrance_hymn_creator/hymnmania_src/hymn_remaker/input/`
+  (**105 hymns/choruses + 43 classical**) plus ~17 local MIDIs and 12 ready sine inputs.
+- Before generating, upload the sine render and confirm the uploader prints `VERIFIED`;
+  a copyright match means the melody is fingerprinted — quarantine and pick another.
 
 ## Full Pipeline (VERIFIED end-to-end 2026-09-10)
 ```

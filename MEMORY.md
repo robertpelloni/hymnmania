@@ -112,3 +112,13 @@ When Love fixed: FULL https://youtu.be/friujcW2VLY + SHORT https://youtu.be/S2hZ
 - Bugs fixed: tt_post timeout 60s->240s; fb_reel waits for caption step; genre detroitcircuit/313.
 - SCHEDULE: Windows Task "HymnMania Daily Post" -> run_scheduler.bat -> scheduler_v2.py --now 1,
   Mon-Fri 15:00, logs/scheduler.log. (Register/query schtasks via a .bat wrapper in Git Bash.)
+
+## Backup scheduler + blocked hymns — v5.97.20 (2026-09-10)
+- BACKUP posting: scheduler_v2.py --catchup (posts only if nothing published today, idempotent)
+  run via run_scheduler_backup.bat. Windows Task "HymnMania Backup Post" weekdays 20:00, plus
+  HymnMania_Catchup.bat in the Startup folder (ONLOGON scheduled task needs admin -> denied).
+- BLOCKED (Suno ACRCloud fingerprint): O Happy Day, Kumbayah, Brighten The Corner, Leyenda,
+  Praise Him! Praise Him!  DEGRADED: Just Over The Mountains (~400 centroid).
+  Moved to mp3_input/_blocked/, filtered by scheduler_v2.BLOCKED_HYMNS. See BLOCKED_HYMNS.md.
+- POOL: ~170 distinct pieces — 148 MIDIs in the submodule library (105 hymns/choruses + 43
+  classical) + ~17 local MIDIs + 12 ready sine inputs.

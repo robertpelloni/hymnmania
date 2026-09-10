@@ -573,3 +573,35 @@ Short https://youtu.be/9mEa10PnFas + FB feed + TikTok + FB Reel + Instagram — 
 ### SCHEDULE LIVE
 Windows Scheduled Task **"HymnMania Daily Post"** → runs `run_scheduler.bat`
 (`scheduler_v2.py --now 1`) **Mon–Fri at 3:00 PM**. Logs to `logs/scheduler.log`.
+
+## v5.97.20 — Backup scheduler + blocked-hymn cleanup (2026-09-10)
+
+### Backup / failover posting
+- `scheduler_v2.py --catchup` — posts ONLY if nothing was published today (reads
+  `.scheduler_log.json`); idempotent and safe to run repeatedly.
+- `run_scheduler_backup.bat` — ensures the social browser (9222) is up, then runs --catchup.
+- **Windows Task "HymnMania Backup Post"** — weekdays 20:00 (catches a missed 3 PM run).
+- **`HymnMania_Catchup.bat`** in the Startup folder — runs at logon (catches a day the
+  machine was off). An ONLOGON *scheduled task* needs admin ("Access is denied"), so the
+  user-level Startup folder is used instead.
+- Verified: `--catchup` → "already posted today (2026-09-10) - nothing to do" (exit 0).
+
+### Blocked hymns removed from the pool
+Moved to `mp3_input/_blocked/` and filtered via `scheduler_v2.BLOCKED_HYMNS`:
+- **Suno ACRCloud fingerprint rejects**: O Happy Day, Kumbayah, Brighten The Corner,
+  Leyenda, Praise Him! Praise Him!
+- **Degraded covers** (not blocked, but unusable): Just Over The Mountains (~400 centroid)
+- New doc `BLOCKED_HYMNS.md` explains the distinction (public-domain melody vs. Suno matching
+  specific recordings) and that pitch-shifting does not evade it.
+
+### Available pool (documented)
+- **148 MIDIs** in the submodule library — **105 hymns/choruses + 43 classical**
+- ~17 local MIDIs + 12 ready sine inputs
+- **~170 distinct pieces available.**
+
+### Schedule now (all three)
+| Task | When |
+|---|---|
+| HymnMania Daily Post | weekdays 15:00 |
+| HymnMania Backup Post | weekdays 20:00 (catch-up, no-op if already posted) |
+| HymnMania_Catchup.bat (Startup) | at logon |

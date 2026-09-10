@@ -29,6 +29,18 @@ SOCIAL_PORT = 9222
 RUN_HOUR = 15          # 3 PM local
 QUALITY_THRESHOLD = 1000
 
+# Hymns REMOVED from the pool (see BLOCKED_HYMNS.md):
+#   - blocked by Suno ACRCloud copyright fingerprint (uploads rejected)
+#   - Just Over The Mountains: passes upload but every cover generates degraded
+BLOCKED_HYMNS = {
+    "ohappyday", "happyday",
+    "kumbayah",
+    "brighten",
+    "leyenda",
+    "justoverthemountains", "jotm",
+    "praisehim",
+}
+
 FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
 
 
@@ -53,7 +65,17 @@ def mark(beat_file, platform, url=""):
         e["posted"].append(platform)
     if url:
         e["urls"][platform] = url
+    e["last"] = datetime.datetime.now().isoformat()
     save_log(log)
+
+
+def posted_today():
+    """True if any track was successfully posted today (full or short)."""
+    today = datetime.date.today().isoformat()
+    for e in load_log().values():
+        if e.get("last", "").startswith(today):
+            return True
+    return False
 
 
 def already(beat_file, platform):
@@ -140,6 +162,12 @@ def get_queue(verbose=True):
             continue
         path = os.path.join(BEAT_DIR, b)
         if is_short(path):
+            continue
+        # skip hymns removed from the pool (Suno-blocked / degraded)
+        bkey = b.lower().replace("_", "").replace("-", "").replace(" ", "")
+        if any(k in bkey for k in BLOCKED_HYMNS):
+            if verbose:
+                print(f"  skip (blocked hymn): {b[:50]}")
             continue
         try:
             t = p.build_title(b)
@@ -375,6 +403,13 @@ if __name__ == "__main__":
         for b in q[:15]:
             import post_to_youtube as p
             print("  ", p.build_title(b))
+    elif "--catchup" in args:
+        # BACKUP RUNNER: only posts if nothing was published today (missed primary run).
+        if posted_today():
+            print(f"catchup: already posted today ({datetime.date.today()}) - nothing to do")
+        else:
+            print(f"catchup: no post recorded today - running a cycle")
+            run_cycle(1)
     elif "--daemon" in args:
         print(f"daemon: posting one track/day on weekdays at {RUN_HOUR}:00")
         done_day = None
