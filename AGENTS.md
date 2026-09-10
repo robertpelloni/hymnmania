@@ -1,9 +1,73 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.9**
-> **Last updated: 2026-09-01**
+> **Version: 5.97.16**
+> **Last updated: 2026-09-09**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
-> **Status: FULLY WORKING end-to-end**
+> **Status: WORKING — full-length + 60s reels verified. Suno copyright-fingerprinting blocks some familiar melodies (see Limitations).**
+
+---
+
+## CRITICAL: Dedicated Browser on Port 9333 (2026-09-09)
+
+All HymnMania automation uses its **own** Edge CDP browser on port **9333** (NOT 9222, which is shared with another bot).
+- Profile: `.dedicated-edge-profile` (Suno logged in)
+- Launch: `python launch_dedicated_browser.py` OR
+  `msedge.exe --remote-debugging-port=9333 --user-data-dir="C:\Users\jakeg\robertpelloni\hymnmania\.dedicated-edge-profile" --disable-features=msEdgeDisableStartupBoost --disable-extensions`
+- All core scripts (gen_only, cap_cycle, cap_final, scheduler_v2, upload_robust2) point to 9333.
+- Do NOT kill Edge processes globally — it also takes down 9222's owner. Relaunch the profile after any kill.
+
+## CRITICAL: Clean Full-Length Capture — `cap_cycle.py` (2026-09-09)
+
+The stitched / cut-off-audio bug is SOLVED. Root cause: 12s MediaRecorder rounds on SEPARATE
+pages left silent GAPS when a round failed. A single page survives only ~60-72s of consecutive
+MediaRecorder rounds before it drops.
+
+**`cap_cycle.py` is the canonical full-length capture script.**
+- Each page does **4 consecutive 12s rounds on ONE page** (survives), then a FRESH page seeks forward.
+- Concat + re-encode to mp3.
+- Verified: When Love synthwave = 215s full, **0 silent gaps**, centroid 3300-4000 at every position.
+- Validate any capture: full-file silence scan (longest mid-song silence must be <3s; only intro/outro
+  fades allowed) + multi-point spectral centroid (>1200 = real cover, ~330 = sine/sheet-music).
+- Use **ffprobe** for duration (librosa misreads VBR/Suno MP3s by ~40%).
+
+## CRITICAL: Suno CDN direct download does NOT work (tested 2026-09-09)
+
+User research claiming unpublished tracks are downloadable from the raw CDN is **OUTDATED**.
+- `https://cdn1.suno.ai/{uuid}.mp3` → **403** (XML error, Content-Length 146) for unpublished
+- `https://suno.ai/{uuid}.mp3` → 404; `studio-api.prod.suno.com/api/clip/{uuid}` → 400
+- CloudFront m4a (`d2lwuy8qc234o3.cloudfront.net/1/clip/{uuid}.m4a`) → 200 but **encrypted**
+  (no ftyp/moov/mdat; browser decrypts client-side into a `blob:` URL)
+- **Verdict**: MediaRecorder blob capture (`cap_cycle.py`) is the ONLY reliable download path.
+
+## Posting Quota & Quality Gate (2026-09-09)
+
+- YouTube upload = **1,600 units**; 10,000 units/day → ~6 uploads/day by default, but 10 verified
+  fine on this project (plus a delete at 50 units).
+- BEFORE posting any beat video, run the quality gate:
+  1. Full-file silence scan (reject mid-song gaps / truncation)
+  2. Multi-point spectral centroid at 10% / 33% / 66% / 90% (all > 1200)
+  3. Exact full-title match against live channel titles (dedupe)
+- `scheduler_v2.py` enforces centroid > 1000 (`QUALITY_THRESHOLD`).
+
+## 60-Second Reels / Shorts — VERIFIED (2026-09-09)
+
+- `post_to_youtube.py short <beatfile>` → `make_short()` → 9:16 (1080x1920), first 60s, with audio,
+  `#Shorts` appended. Verified live: 60.0s / 1080x1920, ~53MB.
+- NOTE: ~53MB exceeds the 50MB CDP limit for TikTok/Facebook uploads — `fb_stories.py` compresses
+  to ~5MB for Stories; TikTok uploader needs a compressed variant.
+- Facebook Reels (`fb_stories.py post_to_facebook_reel`), Stories, Instagram Reels, TikTok all use
+  the 9:16 short clips.
+
+---
+
+## Suno Limitations (KNOWN, 2026-09-09)
+
+- **ACRCloud copyright fingerprinting** matches most familiar hymn melodies regardless of pitch shift
+  (O Happy Day, Praise Him, Kumbayah, Brighten, Leyenda all matched). Only lesser-known melodies pass
+  (Jesus Comes With Power, When Love Shines In, Amazing Grace).
+- **Just Over The Mountains**: passes upload but Suno covers come out **degraded** (~400-700 centroid)
+  from every input.
+- Workaround: pick melodies that pass, or generate from existing Suno library uploads.
 
 ---
 
@@ -156,8 +220,11 @@ Same template as Facebook, but:
 | MIDI→Sine MP3 | `scripts/audio_speed_variants_exporter_for_multi_tempo_runs.py` | Renders MIDI as speed-adjusted sine MP3 (input for Suno) |
 | Suno Upload | `scripts/suno_audio_uploader_file_chooser_injector.py` | Injects MP3 via file chooser on suno.com/create |
 | Config (CRITICAL) | `scripts/pipeline_config_central_definitions_genres_speeds.py` | GENRES/SPEEDS/PITCH_SHIFT_FACTORS — restore from git c780ddf if missing |
-| Suno Download (DRM) | MediaRecorder capture | audio_url=forbidden; capture blob playback via AudioContext+MediaRecorder → webm → mp3 |
-| YouTube Shorts | `shorts_composer.py` | 9:16 vertical 60s clips from beat videos |
+| Suno Download (DRM) | `cap_cycle.py` (CANONICAL) | Page-cycle 4x12s MediaRecorder rounds → concat → mp3. audio_url=forbidden |
+| Suno Download (alt, short) | `cap_final.py`, `cap_single_full.py` | ≤12s single captures / older helpers |
+| YouTube Shorts | `post_to_youtube.py short <file>` | 9:16 1080x1920, first 60s, `#Shorts` (verified 2026-09-09) |
+| YouTube Full Post | `post_to_youtube.py full <file>` | Data API videos().insert(), 1600 units |
+| Scheduler v2 | `scheduler_v2.py` | Quality-gated queue (centroid>1000) + multi-platform |
 | YouTube Community | CDP browser | Static SEO posts on Community tab (requires 500+ subscribers) |
 | TikTok Poster | `tiktok_poster.py` | Convert to vertical + upload via CDP browser |
 | Scheduler Bot | `scheduler_bot.py` | Weekly auto-posting Mon-Fri to TikTok + Facebook |
