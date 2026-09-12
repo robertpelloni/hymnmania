@@ -1,6 +1,6 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.24**
+> **Version: 5.97.25**
 > **Last updated: 2026-09-10**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: WORKING END-TO-END — full pipe verified on a new hymn; auto-posting SCHEDULED (Mon–Fri 3 PM). Suno copyright-fingerprinting still blocks some familiar melodies.**
@@ -124,9 +124,14 @@ That is **YouTube's own per-channel daily upload limit**, NOT the API quota.
 
 ### API quota was NOT the binding limit
 - `videos.insert` = **1,600 units EACH**. Default Google quota = 10,000 units/day → 6 uploads.
-- This project's API quota is **raised** — 99 uploads consumed ~158,400 units with no
-  `quotaExceeded`. Historically we have uploaded **118 videos in one day** (2026-07-23).
-- So the ceiling you hit in practice is YouTube's ~100/day channel limit, not the API quota.
+- This project's API quota is **raised**: 99 uploads consumed **~158,400 units** with **no**
+  `quotaExceeded`. So the API quota is **at least ~158,400 units/day** — meaning
+  **100 full videos/day (160,000 units) FITS on the API side.**
+- Historic best day: **118 uploads** (2026-07-23).
+- Conclusion: **the API is not the blocker — YouTube's ~100/day platform limit is.**
+- Measuring the exact API ceiling is impractical: `search.list` (100 units) is rate-limited
+  to ~100-125 calls before returning HTTP 429, so `api_quota_probe.py` cannot force
+  `quotaExceeded`. Kept for reference only.
 
 ### Our settings
 - `scheduler_v2.MAX_UPLOADS_PER_DAY = 96` (full + short combined) — a small safety margin

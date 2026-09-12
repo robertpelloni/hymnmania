@@ -686,3 +686,18 @@ Ran `quota_probe.py` to the limit on a Saturday (no scheduled posts, quota reset
 - `quota_probe.py` now distinguishes `uploadLimitExceeded` (platform) from `quotaExceeded` (API)
   and reports which one it hit.
 - All probe test videos were private and **deleted**.
+
+## v5.97.25 — Yes: 100 fulls/day fits the API quota; the platform limit is what caps you (2026-09-12)
+
+Follow-up to v5.97.24, answering "can we technically post 100 fulls/day even with the API?"
+
+- **API side: YES.** 99 `videos.insert` calls succeeded = **~158,400 units consumed with no
+  `quotaExceeded`**, so this project's API quota is **≥ ~158,400 units/day** (default is 10,000,
+  which would stop at 6). **100 fulls = 160,000 units → fits.**
+- **Platform side: that is the real cap.** YouTube's per-channel limit
+  (`uploadLimitExceeded`) stopped us after ~99 uploads, and **fulls + shorts share it**.
+- So: 100 fulls/day is achievable (0 shorts). 50 fulls + 50 shorts also fits.
+  The API is *not* the constraint.
+- Added `api_quota_probe.py` (reference only): it cannot force `quotaExceeded` because
+  `search.list` is rate-limited (~100-125 calls) before quota runs out — documented in the
+  script, which is why the exact API ceiling stays unknown (≥158,400 units).
