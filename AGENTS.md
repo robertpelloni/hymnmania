@@ -1,6 +1,6 @@
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.23**
+> **Version: 5.97.24**
 > **Last updated: 2026-09-10**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: WORKING END-TO-END — full pipe verified on a new hymn; auto-posting SCHEDULED (Mon–Fri 3 PM). Suno copyright-fingerprinting still blocks some familiar melodies.**
@@ -108,25 +108,36 @@ User research claiming unpublished tracks are downloadable from the raw CDN is *
   (no ftyp/moov/mdat; browser decrypts client-side into a `blob:` URL)
 - **Verdict**: MediaRecorder blob capture (`cap_cycle.py`) is the ONLY reliable download path.
 
-## Posting Quota & Quality Gate (2026-09-10)
+## Posting Quota & Quality Gate (2026-09-12 — MEASURED)
 
-### YouTube upload budget — FULL and SHORT cost the SAME
-- `videos.insert` = **1,600 units EACH**. A full video and a Short draw from **one shared
-  daily pool** — it is NOT "6 fulls + 6 shorts". Quota resets at **midnight Pacific Time**.
-- **Default Google quota**: 10,000 units/day → **6 uploads/day total**.
-- **This project's quota has been RAISED**: we have uploaded **118 videos in a single day**
-  (2026-07-23) and repeatedly 75–100/day with a single OAuth project — that is ~190,000 units
-  at the default 1,600/upload. No `quotaExceeded` error has ever been logged.
-- Today (2026-09-10) the automated run did 13 uploads (7 full + 6 shorts) = ~20,800 units.
-- **Our self-imposed cap**: `scheduler_v2.MAX_UPLOADS_PER_DAY = 100` (full + short combined).
-  Check usage with `python scheduler_v2.py --status`; counter in `.yt_uploads.json`.
-- Measure the real ceiling with `python quota_probe.py [max]` — uploads tiny **private** test
-  videos until `quotaExceeded`, reports the count, then deletes them all. Run it when you don't
-  need the rest of that day's budget.
+### ✅ ANSWER: ~100 uploads/day, and FULL + SHORT share that one limit
+Measured on 2026-09-12 by running `quota_probe.py` until it failed:
+**99 uploads succeeded, then the API returned**
+```
+400 uploadLimitExceeded — "The user has exceeded the number of videos they may upload."
+```
+That is **YouTube's own per-channel daily upload limit**, NOT the API quota.
+- **Full videos and Shorts count against the SAME limit** — it is one pool, not one each.
+- Practical max ≈ **100 uploads/day** → at 2 uploads per track (full + Short) that is
+  **~50 tracks/day**.
+- The counter is a rolling ~24 h window (resets at midnight Pacific).
+
+### API quota was NOT the binding limit
+- `videos.insert` = **1,600 units EACH**. Default Google quota = 10,000 units/day → 6 uploads.
+- This project's API quota is **raised** — 99 uploads consumed ~158,400 units with no
+  `quotaExceeded`. Historically we have uploaded **118 videos in one day** (2026-07-23).
+- So the ceiling you hit in practice is YouTube's ~100/day channel limit, not the API quota.
+
+### Our settings
+- `scheduler_v2.MAX_UPLOADS_PER_DAY = 96` (full + short combined) — a small safety margin
+  under the observed ~99-100 platform limit. Check with `python scheduler_v2.py --status`;
+  counter in `.yt_uploads.json`.
+- `python quota_probe.py [max]` re-measures by uploading tiny **private** test videos until it
+  fails, then deleting them all. Run it when you don't need that day's budget.
 
 ### Running the maximum
 - Each track = up to **2 YouTube uploads** (full + Short) + 4 social posts.
-- `python scheduler_v2.py --now 50` → up to 50 tracks (~100 uploads), respecting the cap.
+- `python scheduler_v2.py --now 48` → 48 tracks ≈ 96 uploads (at the cap).
 - Other API costs: title rename = 50, thumbnail = 50, search = 100, delete = 50, list = 1.
   Budget these AFTER uploads; never spend the pool on renames first.
 

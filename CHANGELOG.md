@@ -663,3 +663,26 @@ Drum and Bass Oh For a Thousand Tongues.
 ### Running the max
 - Each track = 2 YouTube uploads (full + Short) + 4 social posts.
 - `python scheduler_v2.py --now 50` → up to 50 tracks (~100 uploads/day).
+
+## v5.97.24 — MEASURED: YouTube allows ~100 uploads/day (fulls + shorts share it) (2026-09-12)
+
+Ran `quota_probe.py` to the limit on a Saturday (no scheduled posts, quota resets before Monday).
+
+### Result — the definitive answer
+- **99 test uploads succeeded**, then the API returned:
+  `400 uploadLimitExceeded — "The user has exceeded the number of videos they may upload."`
+- That is **YouTube's per-channel daily upload limit**, NOT the API quota.
+- **Full videos and Shorts count against the SAME ~100/day limit.**
+  → practical max ≈ **100 uploads/day** = **~50 tracks/day** at 2 uploads per track.
+- Rolling ~24 h window; resets at midnight Pacific Time.
+
+### API quota is NOT the binding constraint
+- 99 uploads = ~158,400 units consumed with **no** `quotaExceeded` — the project's API quota
+  is raised (default 10,000 would have stopped us at 6). Historic best: 118 uploads in one day.
+- So the real ceiling is the ~100/day platform limit.
+
+### Changes
+- `scheduler_v2.MAX_UPLOADS_PER_DAY` = **96** (safety margin under the observed 99-100).
+- `quota_probe.py` now distinguishes `uploadLimitExceeded` (platform) from `quotaExceeded` (API)
+  and reports which one it hit.
+- All probe test videos were private and **deleted**.

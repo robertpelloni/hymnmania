@@ -59,13 +59,16 @@ def main():
                 print(f"  upload {i:3d}: OK  ({i * 1600:,} units)  {vid}")
             except Exception as e:
                 msg = str(e)
-                if "quotaExceeded" in msg or "quota" in msg.lower():
-                    print(f"\n*** QUOTA EXHAUSTED after {i - 1} uploads "
-                          f"(~{(i - 1) * 1600:,} units) ***")
-                    print(f"    Actual daily limit is ~{(i - 1) * 1600:,}+ units "
-                          f"({i - 1} uploads today).")
+                if "uploadLimitExceeded" in msg:
+                    print(f"\n*** YOUTUBE UPLOAD LIMIT HIT after {i - 1} successful uploads ***")
+                    print("    This is YouTube's PLATFORM limit (uploadLimitExceeded), not API quota.")
+                    print(f"    => this channel can upload ~{i - 1} videos per day (full + shorts combined).")
                     break
-                print(f"  upload {i:3d}: other error: {msg[:110]}")
+                if "quotaExceeded" in msg:
+                    print(f"\n*** API QUOTA EXHAUSTED after {i - 1} uploads "
+                          f"(~{(i - 1) * 1600:,} units) ***")
+                    break
+                print(f"  upload {i:3d}: other error: {msg[:130]}")
                 time.sleep(2)
     finally:
         print(f"\ncleaning up {len(uploaded)} test video(s)...")

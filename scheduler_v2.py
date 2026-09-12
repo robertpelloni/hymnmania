@@ -36,7 +36,7 @@ QUALITY_THRESHOLD = 1000
 # This project has historically done 118 uploads in a day (2026-07-23) with a single
 # OAuth project, so its quota has clearly been increased. We still cap ourselves to
 # stay well clear of the limit; set to 0 for unlimited.
-MAX_UPLOADS_PER_DAY = 100     # full + shorts combined
+MAX_UPLOADS_PER_DAY = 96      # full + shorts combined (measured platform limit ~99-100)
 YT_UPLOAD_COST = 1600         # units per videos.insert
 UPLOAD_COUNTER = None         # set below
 

@@ -139,3 +139,4 @@ test_beat.mp4
 # Scheduler runtime state
 .scheduler_log.json
 logs/
+.yt_upload_limit.json
