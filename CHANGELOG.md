@@ -701,3 +701,32 @@ Follow-up to v5.97.24, answering "can we technically post 100 fulls/day even wit
 - Added `api_quota_probe.py` (reference only): it cannot force `quotaExceeded` because
   `search.list` is rate-limited (~100-125 calls) before quota runs out — documented in the
   script, which is why the exact API ceiling stays unknown (≥158,400 units).
+
+## v5.97.26 — Magnific clips refreshed + 11-genre promo sprint + tomorrow's plan (2026-09-13)
+
+### Magnific clip pool refreshed (36 new videos)
+- Logged into Magnific as harryrealtyexec@gmail.com (password had changed 2026->2027).
+- Found project `HYMNMANIA-Resurrecting Beats` (1db04dc8-dd62-4a74-91c8-7e9bcd94be81).
+- Pulled the project's assets via its own API (`/app/api/projects/folders/{id}/files`)
+  and downloaded **all 36 video-generator clips created 2026-09-12** into
+  `pipeline_output/magnific_videos/`.
+- **Deduplicated the folder: 198 files -> 156 unique** (42 redundant copies removed —
+  `(1)` duplicates plus different filenames with byte-identical content).
+- Verified by composing a beat video using ONLY the 36 new clips (rendered fine).
+
+### Sprint extended to all 11 genres
+- Added the 3 missing genres to `gen_only.py` / `promo_sprint.py`:
+  `japanese_hardcore_techno`, `detroit_techno`, `detroit_house`.
+- Target is now **113 hymns x 11 genres = 1,243 covers**, all free during the v6 promo.
+- Observed **copyright block rate ~40%** (higher than the 15% first estimated) —
+  the well-known choruses get fingerprinted, obscure ones pass.
+
+### Reminder + plan
+- `NEXT_MOVE.md` — tomorrow's decision tree (check sprint, restart if unfinished,
+  then capture/compose/post the banked clips for free).
+- Windows task **"HymnMania Next Move Reminder"** fires **2026-09-14 09:00** (msg box + log).
+
+### Measured: speed variants vs genre variants
+- Genre change = radically different sound; speed change = same melody, re-timed
+  (Gabba 0.5x = 157s@199bpm vs 1.0x = 180s@117bpm); re-run = stochastic new arrangement.
+- Decision: spend the free window on **breadth (genres)**, defer speeds until after the promo.

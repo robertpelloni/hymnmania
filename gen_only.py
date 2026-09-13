@@ -17,6 +17,9 @@ GENRE_DESC = {
     "drum_and_bass": "drum and bass, fast 174 BPM breakbeats, rolling sub-bass, reese bass swells, chopped breaks, high-energy drum work",
     "gabba": "gabba hardcore, relentlessly distorted kick drums at 190 BPM, saturated low end, aggressive rave atmosphere",
     "hardstyle": "hardstyle trance, pounding distorted kicks at 150 BPM, supersaw leads, euphoric melodies, festival-ready energy",
+    "japanese_hardcore_techno": "japanese hardcore techno, hyperactive 180 BPM distorted kick, kawaii rave supersaw leads, rapid-fire stabs, relentless Tokyo night energy",
+    "detroit_techno": "detroit techno, minimal mechanical 130 BPM groove, analog synth stabs, industrial percussion, cold futuristic atmosphere, Motor City machine funk",
+    "detroit_house": "detroit house, warm analog chords, soulful 122 BPM four-on-the-floor, lush strings, classic deep groove, vintage vinyl warmth",
 }
 
 def main():
