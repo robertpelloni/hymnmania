@@ -730,3 +730,33 @@ Follow-up to v5.97.24, answering "can we technically post 100 fulls/day even wit
 - Genre change = radically different sound; speed change = same melody, re-timed
   (Gabba 0.5x = 157s@199bpm vs 1.0x = 180s@117bpm); re-run = stochastic new arrangement.
 - Decision: spend the free window on **breadth (genres)**, defer speeds until after the promo.
+
+## v5.97.27 — PROMO SPRINT COMPLETE: 1,487 free clips banked (2026-09-14)
+
+### Result
+| | |
+|---|---|
+| Round 1 (113 hymns x 11 genres, first pass) | **1,301 clips** |
+| Round 2 (re-runs of the 66 usable hymns) | **186 clips** |
+| **TOTAL BANKED** | **1,487 clips** |
+| Usable hymns | 66 (44 blocked by ACRCloud = 39%) |
+| Credits spent | ~55-80 (only the tail after the promo boundary) |
+| Value captured | ~7,430 credits ≈ 74% of a month's allowance |
+
+### Timeline
+- Promo: v6 credit-free, ended 2026-09-14 ~11:00 EDT (timer `1d19h03m` at 2026-09-12 15:55).
+- Detected the boundary at 11:02 (credits 9,950 → 9,895, running_jobs_cost 25) and
+  **stopped the sprint immediately** — only the final minute or two was billed.
+
+### Artifacts
+- `.promo_sprint.json` (round 1), `.promo_sprint_r2.json` (round 2),
+  `.promo_sprint_r1_backup.json` (backup)
+- `promo_sprint.py` now supports `--round=N` (seeds uploads from round 1, skips blocked hymns).
+
+### Added this round
+- 3 genres to `gen_only.py`: japanese_hardcore_techno, detroit_techno, detroit_house (now 11 total).
+- `NEXT_MOVE.md` updated with final results + next actions.
+
+### WARNING
+`promo_sprint.py` costs 10 credits/generation outside a promo window — only run it
+when Suno announces credit-free creation again.

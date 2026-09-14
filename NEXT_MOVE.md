@@ -4,7 +4,7 @@ _Written: 2026-09-13 17:45 EDT · Reminder fires 2026-09-14 09:00_
 
 ---
 
-## 🔴 URGENT: the Suno free-credit window closes ~11:00 AM EDT tomorrow
+## ✅ DONE: the free-credit window CLOSED 2026-09-14 ~11:00 EDT (sprint completed)
 
 **v6 generation is CREDIT-FREE right now.** Timer was `1d 19h 03m` at 2026-09-12 15:55 EDT
 → **ends ≈ 2026-09-14 11:00 EDT**.
@@ -95,3 +95,35 @@ Come And Sing Praises · Do, Lord · Down In My Heart · Everything's Alright ·
 Father I Adore You · Friends · Give Me Oil In My Lamp · Hallelu Hallelu · …
 
 **Pattern: the well-known choruses get fingerprinted; obscure ones pass.**
+
+
+---
+
+# ✅ RESULTS — sprint finished 2026-09-14 ~11:00 EDT
+
+| | |
+|---|---|
+| Round 1 (11 genres, first pass) | **1301 clips** |
+| Round 2 (re-runs, different songs) | **186 clips** |
+| **TOTAL BANKED** | **1487 clips** |
+| Usable hymns | 66 |
+| Blocked (fingerprint) | 44 (39%) |
+| Credits spent | ~55-80 (promo ran to its edge) |
+| Value captured | ~7,430 credits ≈ 74% of a month |
+
+State files:
+- `.promo_sprint.json`      — round 1 (uploads + 11 genres each)
+- `.promo_sprint_r2.json`   — round 2 (second pass per hymn)
+- `.promo_sprint_r1_backup.json` — backup
+
+## NEXT ACTIONS (in order)
+1. **Capture** the banked covers — free (MediaRecorder, no credits):
+   `python cap_cycle.py <cover_clip_id> "generated/<Hymn>_<genre>_A_cover.mp3"`
+2. **Compose** beat videos — picks up the 36 new Magnific clips automatically:
+   `python -c "import quick_composer as qc; qc.compose('generated/....mp3','<Hymn>','<Genre>')"`
+3. **Post** — scheduler (Mon-Fri 15:00) or `python scheduler_v2.py --now N`
+4. **Monthly engine** — 10,000 credits ÷ ~10/generation = ~1,000 generations =
+   ~2,000 clips = **~600 postable covers/month** after the 39% gate.
+
+**Never re-run `promo_sprint.py` outside a promo window** — it now costs 10 credits
+per generation. Use `--round=N` only when generation is free again.
