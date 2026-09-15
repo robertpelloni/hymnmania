@@ -42,10 +42,10 @@ def main():
         page.wait_for_timeout(9000)
         # open More menu
         try:
-            page.focus('button[aria-label="More menu contents"]')
+            page.focus('button[aria-label="More options"], button[aria-label="More menu contents"]')
             page.keyboard.press("Enter")
         except Exception:
-            page.evaluate("document.querySelector('button[aria-label=\\\"More menu contents\\\"]')?.click()")
+            page.evaluate("(document.querySelector('button[aria-label=\\\"More options\\\"]') || document.querySelector('button[aria-label=\\\"More menu contents\\\"]'))?.click()")
         page.wait_for_timeout(3000)
         # hover Remix to open submenu, then click Cover
         rpos = page.evaluate("""

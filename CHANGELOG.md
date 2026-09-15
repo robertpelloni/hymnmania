@@ -760,3 +760,46 @@ Follow-up to v5.97.24, answering "can we technically post 100 fulls/day even wit
 ### WARNING
 `promo_sprint.py` costs 10 credits/generation outside a promo window — only run it
 when Suno announces credit-free creation again.
+
+## v5.97.28 — CRITICAL: Suno ignores genre BPM; tempo-matched psytrance fix (2026-09-15)
+
+### The bug (user-reported: "doesn't sound like psytrance")
+Measured 39 captured covers against their genre's tempo range:
+
+| Genre | In range | Off |
+|---|---|---|
+| psytrance | 4 | **23** |
+| dubstep | 0 | 2 |
+| gabba | 0 | 2 |
+| drum_and_bass | 0 | 1 |
+| synthwave | 0 | 2 |
+| deep_house | 2 | 0 |
+
+**Root cause: Suno follows the REFERENCE AUDIO's tempo, not the BPM written in the genre
+description.** Our sine renders are at the hymn's natural tempo (~96-130 BPM), so a
+"145 BPM psytrance" prompt produced ~103 BPM tracks.
+
+### The fix (verified)
+The relationship is LINEAR: `cover_bpm = natural_bpm x speed`.
+1. Measure the hymn's natural cover tempo from its existing 1.0x cover (kick-band onsets —
+   beat-trackers give octave errors: a 152 BPM psytrance kick reads as 99).
+2. `speed = TARGET_BPM / natural_bpm` (target 145).
+3. Re-render the MIDI sine at that speed → upload → generate psytrance → capture.
+
+**Verified:**
+- Adventist Youth @ 1.408x → **143.6 kick BPM** (was 103) ✅
+- Are You A Christian @ 1.465x → **152.0 kick BPM** ✅
+
+### Also fixed
+- **Suno renamed the three-dot menu** from `aria-label="More menu contents"` to
+  **`"More options"`** — this silently broke the Remix→Cover flow. `gen_only.py` now
+  accepts both labels.
+- New `gen_psytrance_tempo.py` — batch tempo-corrects psytrance for all 66 hymns
+  (~10 credits each), with kick-BPM verification.
+
+### Scheduler changes
+- **6 tracks/day = 6 fulls + 6 shorts** (12 YouTube uploads; cap is 96).
+- **Socials unchanged at 1 track/day** (FB feed + TikTok + FB Reel + IG) to stay
+  spam-safe.
+- **2:1 psytrance ordering** (`PSYTRANCE_RATIO = 2`) — the queue interleaves so
+  2 of every 3 tracks are psytrance.

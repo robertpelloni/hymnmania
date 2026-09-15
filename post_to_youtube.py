@@ -79,6 +79,30 @@ def detect(fn):
         if key in fl:
             title, author, year, classical = t, a, y, c
             break
+    if not title:
+        # AUTO-FALLBACK: derive a clean title from the filename so newly captured
+        # hymns (from the promo sprint / MIDI pool) work without manual registration.
+        base = fn
+        for suf in ("_beatsynced.mp4", "_beatloop.mp4", ".mp4", ".mp3"):
+            base = base.replace(suf, "")
+        base = re.sub(r"[_ ]+(cover|full|v2|magnific)$", "", base, flags=re.I)   # ... _cover
+        base = re.sub(r"[_ ]+(with[_ ]+)?tag$", "", base, flags=re.I)            # ... _tag / _with_Tag
+        base = re.sub(r"[_ ]+([AB])$", "", base)                               # ... _A/_B
+        for k2, _g in GENRES:                                                    # genre token
+            base = re.sub(r"[_ ]?" + re.escape(k2).replace(r"\ ", "[_ ]?") + r"[_ ]?", " ", base, flags=re.I)
+        # speed token is now at the end (genre has been removed)
+        base = re.sub(r"[_ ]+(0?[0-9](\.[0-9])?x|[0-9]{2}x|unknown|half|double|triple)[_ ]*$",
+                      "", base, flags=re.I)
+        base = re.sub(r"[_ ]+(with[_ ]+)?tag[_ ]*$", "", base, flags=re.I)  # now-trim 'with Tag'
+        base = re.sub(r"[_ ]+(with)$", "", base, flags=re.I)               # orphan 'with' 
+        base = re.sub(r"[_ ]+(tag)$", "", base, flags=re.I)                     # trailing 'with Tag'
+        base = re.sub(r"_s_?", "'s ", base)                                     # He_s_Able -> He's Able
+        base = base.replace("_", " ").strip(" -_'")
+        base = re.sub(r"\s+", " ", base).strip()
+        if base:
+            title = base if any(c.islower() for c in base) else base.title()
+            title = title[0].upper() + title[1:]
+            author, year, classical = "Traditional", "2026", False
     genre = None
     fl2 = "".join(ch for ch in fl if ch not in " _-()")
     # Japanese Hardcore Techno must be checked BEFORE hardcore/gabba

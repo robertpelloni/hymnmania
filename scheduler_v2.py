@@ -38,6 +38,20 @@ QUALITY_THRESHOLD = 1000
 # stay well clear of the limit; set to 0 for unlimited.
 MAX_UPLOADS_PER_DAY = 96      # full + shorts combined (measured platform limit ~99-100)
 YT_UPLOAD_COST = 1600         # units per videos.insert
+
+# Daily posting volume: each track = 1 full video + 1 Short (= 2 YouTube uploads)
+# plus a Facebook feed post, TikTok, Facebook Reel and Instagram Reel.
+# 6 tracks => 6 fulls + 6 shorts = 12 uploads (well under the ~96/100 cap).
+TRACKS_PER_RUN = 6
+
+# YouTube gets the volume (6 fulls + 6 shorts); the OTHER platforms stay at their
+# previous cadence (ONE post per platform per day) to avoid spam heuristics.
+# The first track of each run is the one that also goes to FB feed / TikTok / FB Reel / IG.
+SOCIAL_TRACKS_PER_DAY = 1
+
+# Genre mix: psytrance is the channel identity, so 2 of every 3 tracks should be
+# psytrance (verified in-tempo - see gen_psytrance_tempo.py).
+PSYTRANCE_RATIO = 2      # psytrance per 1 non-psytrance track
 UPLOAD_COUNTER = None         # set below
 
 # Hymns REMOVED from the pool (see BLOCKED_HYMNS.md):
@@ -289,9 +303,29 @@ def get_queue(verbose=True):
                 print(f"  skip (mid-song silence {gap}s - incomplete/stitched): {b[:50]}")
             continue
         queue.append(b)
+    queue = order_for_ratio(queue)
     if verbose:
-        print(f"  queue: {len(queue)} ready track(s)")
+        import post_to_youtube as _p
+        psy = sum(1 for b in queue if "psytrance" in (_p.build_title(b) or "").lower())
+        print(f"  queue: {len(queue)} ready track(s) ({psy} psytrance)")
     return queue
+
+
+def order_for_ratio(queue, psy_ratio=PSYTRANCE_RATIO):
+    """Interleave so ~psy_ratio of every (psy_ratio+1) tracks are psytrance."""
+    import post_to_youtube as p
+    psy, other = [], []
+    for b in queue:
+        t = (p.build_title(b) or "").lower()
+        (psy if "psytrance" in t else other).append(b)
+    out, i, j = [], 0, 0
+    while i < len(psy) or j < len(other):
+        for _ in range(psy_ratio):
+            if i < len(psy):
+                out.append(psy[i]); i += 1
+        if j < len(other):
+            out.append(other[j]); j += 1
+    return out
 
 
 # ---------------------------------------------------------------- platforms
@@ -410,7 +444,7 @@ def nice_title(beat_file):
     return t or beat_file.replace("_", " ")
 
 
-def cycle_one(beat_file=None):
+def cycle_one(beat_file=None, post_socials=True):
     if beat_file is None:
         q = get_queue()
         if not q:
@@ -441,6 +475,10 @@ def cycle_one(beat_file=None):
                 yt_url = f"https://youtu.be/{vid}"
         except Exception as e:
             print(f"  {name}: FAIL {str(e)[:70]}")
+
+    if not post_socials:
+        print("  (socials skipped - YouTube only for this track)")
+        return True
 
     short = make_and_compress_short(beat_file)
     print(f"  short: {short}")
@@ -512,6 +550,10 @@ if __name__ == "__main__":
         print(f"Observed historical max: 118 uploads in one day (this project has an increase)")
         print(f"Remaining under cap   : {max(0, (MAX_UPLOADS_PER_DAY or 0) - used)}")
         print(f"Queue                 : {len(get_queue(verbose=False))} ready track(s)")
+        print(f"Daily target          : {TRACKS_PER_RUN} tracks = {TRACKS_PER_RUN} fulls + {TRACKS_PER_RUN} shorts "
+              f"({TRACKS_PER_RUN * 2} YouTube uploads)")
+        print(f"Socials (unchanged)   : {SOCIAL_TRACKS_PER_DAY} track/day to FB feed + TikTok + FB Reel + IG")
+        print(f"Genre mix             : {PSYTRANCE_RATIO}:1 psytrance-first ordering")
     elif "--test" in args:
         get_queue(verbose=False)
         q = get_queue()
@@ -523,20 +565,21 @@ if __name__ == "__main__":
         if posted_today():
             print(f"catchup: already posted today ({datetime.date.today()}) - nothing to do")
         else:
-            print(f"catchup: no post recorded today - running a cycle")
-            run_cycle(1)
+            print(f"catchup: no post recorded today - running a full cycle ({TRACKS_PER_RUN} tracks)")
+            run_cycle(TRACKS_PER_RUN)
     elif "--daemon" in args:
-        print(f"daemon: posting one track/day on weekdays at {RUN_HOUR}:00")
+        print(f"daemon: posting {TRACKS_PER_RUN} tracks/day on weekdays at {RUN_HOUR}:00")
         done_day = None
         while True:
             now = datetime.datetime.now()
             if now.weekday() < 5 and now.hour == RUN_HOUR and done_day != now.date():
-                run_cycle(1)
+                run_cycle(TRACKS_PER_RUN)
                 done_day = now.date()
             time.sleep(300)
     else:
-        count = 1
+        count = TRACKS_PER_RUN
         for a in args:
             if a.isdigit():
                 count = int(a)
+        print(f"posting {count} track(s) = up to {count * 2} YouTube uploads")
         run_cycle(count)
