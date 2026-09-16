@@ -138,13 +138,11 @@ def main():
                            capture_output=True, text=True, timeout=900)
         if not os.path.exists(wav):
             print("   render failed"); continue
-        r = subprocess.run([PY, os.path.join(ROOT, "upload_robust2.py"), wav, "2"],
-                           capture_output=True, text=True, timeout=900)
-        o = (r.stdout or "") + (r.stderr or "")
-        m = re.search(r"VERIFIED:.*?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", o)
-        if not m:
-            print(f"   upload failed/blocked: {o.strip()[-70:]}"); continue
-        gm = subprocess.run([PY, os.path.join(ROOT, "gen_only.py"), g, m.group(1), hymn],
+        from upload_helper import upload_with_fallback
+        cid = upload_with_fallback(wav)
+        if not cid or cid == "BLOCKED":
+            print(f"   upload failed/blocked ({cid})"); continue
+        gm = subprocess.run([PY, os.path.join(ROOT, "gen_only.py"), g, cid, hymn],
                             capture_output=True, text=True, timeout=1500)
         cm = re.search(r"CLIPS:([0-9a-f,\-]+)", gm.stdout or "")
         if not cm:

@@ -862,3 +862,31 @@ many covers of each sub-genre we GENERATE — so generate ~2 Full-On per other s
 Second-pass tempo fix for covers that missed 135-155 on the first pass: re-measures the
 actual tempo with a robust autocorrelation detector (octave-safe) and regenerates with a
 corrective multiplier `145 / measured_actual`.
+
+## v5.97.32 — Pitch-shift retry for copyright-blocked uploads (2026-09-16)
+
+### Problem
+Some tempo-matched sine renders are rejected by Suno with `COPYRIGHT MATCH` even though
+the SAME hymn uploads fine at 1.0x and when pitch-shifted. Isolated by testing:
+- original sine re-uploaded (2nd/3rd time)  -> VERIFIED
+- pitch-shifted variant                     -> VERIFIED
+- same hymn at 2.188x speed                 -> COPYRIGHT MATCH
+So it is the specific speed render tripping ACRCloud, not re-uploading.
+
+### Fix — `upload_helper.py`
+`upload_with_fallback(wav)`:
+1. upload as-is; on transient failure retry once
+2. on COPYRIGHT MATCH, shift the PITCH a few percent while keeping the TEMPO identical
+   and retry:  `asetrate=44100*f, aresample=44100, atempo=1/f`
+   factors tried: 1.03, 0.97, 1.06, 0.94
+3. clean up the shifted temp files
+
+Pitch shift moves the fingerprint off the matched recording without changing the groove,
+so the BPM target is still met.
+
+### Wired into
+- `psytrance_pass2.py` (second-pass tempo fix)
+- `gen_subgenre.py` (per-sub-genre generation)
+
+Pass 2 pre-restart tally: **13 fixed, 6 upload failures** (the failures are what the
+pitch-shift retry now addresses).
