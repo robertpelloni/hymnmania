@@ -890,3 +890,51 @@ so the BPM target is still met.
 
 Pass 2 pre-restart tally: **13 fixed, 6 upload failures** (the failures are what the
 pitch-shift retry now addresses).
+
+## v5.97.34 — Throttled generation + the empty-queue diagnosis (2026-09-16)
+
+### "The 3 PM scheduler did not run" — it DID run
+```
+TaskName:      \HymnMania Daily Post
+Last Run Time: 9/16/2026 3:00:00 PM    Last Result: 0    Status: Ready
+```
+It exited 0 because the queue was **genuinely empty**. Breakdown of all 171 beat videos:
+```
+already on channel : 158      classical : 6
+blocked hymn       : 4        posted per log : 1
+=> genuinely postable: 0
+```
+317 titles already exist on the channel. The pipeline had **published everything it had**.
+
+### Are we being flagged? No.
+| Test | Result |
+|---|---|
+| plain unmodified sine | VERIFIED |
+| Adventist Youth @1.2x (never used) | VERIFIED |
+| Adventist Youth @1.55x (never used) | VERIFIED |
+| Adventist Youth Full-On @1.379x | COPYRIGHT MATCH (earlier) |
+| ...same job re-run | **done** |
+
+The COPYRIGHT MATCH rejections are **TRANSIENT**, not systematic. The pitch-shift fallback
+is kept as a bonus retry, not a load-bearing fix.
+
+### New: suno_throttle.py — uploads spread over 24 h
+- 3 uploads per run, 75 s gap, **daily cap 36**
+- Windows task **"HymnMania Suno Throttle"**: every 2 h (12 runs/day x 3 = 36/day)
+- Windows task **"HymnMania Compose"**: every 2 h at :10 past, composes 6 covers
+- State: `.upload_queue.json` (576 jobs), `.throttle_state.json`
+- Job states: pending / retry / parked (after 3 tries) / done
+
+The compose step is the missing link: the scheduler only posts from
+`pipeline_output/beat_videos/`, so a captured cover must be composed first.
+
+### Fixed
+- `compose_pending.py` now skips `BLOCKED_HYMNS` and classical (classical must be matched
+  against the TITLE, not the genre — these leaks carry a psytrance genre).
+
+### First results
+- Adventist Youth / Full-On -> composed 132 s
+- Are You A Christian / Full-On -> composed 162 s
+- scheduler queue back to **2 postable tracks** (was 0)
+- NOTE: `Are_You_A_Christian_psytrance` (non-Full-On) was rejected by the quality gate at
+  centroid 709.7 — some captures still come out degraded.

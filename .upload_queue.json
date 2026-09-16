@@ -15,9 +15,9 @@
   "speed": 1.434,
   "target": 142,
   "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "status": "done",
+  "tries": 1,
+  "clip": "8d3fd092-5897-4f77-b098-73a683ff32b8"
  },
  {
   "hymn": "Are You Ready For Jesus To Come",

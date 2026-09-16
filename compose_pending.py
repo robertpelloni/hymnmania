@@ -35,11 +35,21 @@ def pending():
             # rebuild if the source cover is NEWER than the beat video (stale output)
             if os.path.getmtime(beat) >= os.path.getmtime(src):
                 continue
+        # skip hymns removed from the pool (Suno-blocked / degraded) and classical
+        bkey = f.lower().replace("_", "").replace("-", "").replace(" ", "")
+        try:
+            from scheduler_v2 import BLOCKED_HYMNS, EXCLUDE_CLASSICAL
+        except Exception:
+            BLOCKED_HYMNS, EXCLUDE_CLASSICAL = set(), False
+        if any(k in bkey for k in BLOCKED_HYMNS):
+            continue
         try:
             t, a, y, cls, g, sp, var = p.detect(f)
         except Exception:
             continue
         if not t or not g:
+            continue
+        if EXCLUDE_CLASSICAL and "classical" in (t or "").lower():
             continue
         out.append((f, t, g))
     return out
