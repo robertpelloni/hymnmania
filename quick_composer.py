@@ -93,10 +93,22 @@ def generate_thumbnail(video_path, hymn, genre, out_name):
     except: pass
     return None
 
-def compose(audio_fp, hymn, genre_tag, add_branding=True):
+def compose(audio_fp, hymn, genre_tag, add_branding=True, force=False):
+    """force=True rebuilds even if the output already exists.
+
+    NOTE (2026-09-15): this used to silently return the existing file, which meant a
+    REGENERATED cover (e.g. tempo-corrected psytrance) never produced a new beat video -
+    the stale one kept the old audio. Always pass force=True when the source changed.
+    """
     base = os.path.splitext(os.path.basename(audio_fp))[0]
     out_fp = os.path.join(OUT_DIR, f"{base}_beatsynced.mp4")
-    if os.path.exists(out_fp): return out_fp
+    if os.path.exists(out_fp) and not force:
+        return out_fp
+    if force and os.path.exists(out_fp):
+        try:
+            os.remove(out_fp)
+        except Exception:
+            pass
     
     # Use ffprobe/ffmpeg duration (librosa mis-reads VBR MP3s from Suno)
     audio_dur = get_duration(audio_fp)

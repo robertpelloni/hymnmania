@@ -803,3 +803,31 @@ The relationship is LINEAR: `cover_bpm = natural_bpm x speed`.
   spam-safe.
 - **2:1 psytrance ordering** (`PSYTRANCE_RATIO = 2`) — the queue interleaves so
   2 of every 3 tracks are psytrance.
+
+## v5.97.29 — THIRD BUG FOUND: composer silently reused stale beat videos (2026-09-15)
+
+### The bug (why the psytrance still sounded wrong after the tempo fix)
+`quick_composer.compose()` had:
+```python
+out_fp = ...
+if os.path.exists(out_fp): return out_fp     # <-- silently skips!
+```
+So after regenerating a tempo-corrected cover, recomposing returned the **OLD beat video**
+with the **old audio** (Adventist Youth beat video was Sep 14 14:18 while the corrected
+cover was Sep 15 15:08). The user heard the uncorrected 103 BPM track.
+
+### Fix
+- `compose(..., force=False)` — new parameter; deletes and rebuilds when `force=True`.
+- `compose_pending.py` now rebuilds when the cover is **newer** than the beat video
+  (mtime comparison) and passes `force=True`.
+
+### Verified after rebuild
+- beat video duration 124.5s (= 122s source + 2.5s intro delay) ✓
+- source audio aligned at exactly +2.5s (source@30s → video@32.52s) ✓
+- kick BPM **143.6** (was 103) ✓
+- rms 0.178 vs 0.182, centroid 2490 vs 2710 Hz — spectral profile matches the source ✓
+
+### The three bugs fixed today (all user-reported symptom: "doesn't sound like psytrance")
+1. Suno follows the reference tempo, not the prompt BPM → tempo-match the sine render
+2. Suno renamed the menu button ("More menu contents" → "More options") → cover flow broke
+3. Composer skipped existing outputs → stale audio reused

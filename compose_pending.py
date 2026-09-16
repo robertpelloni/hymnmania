@@ -32,7 +32,9 @@ def pending():
             continue
         beat = os.path.join(BEATS, f[:-4] + "_beatsynced.mp4")
         if os.path.exists(beat) and os.path.getsize(beat) > 1_000_000:
-            continue
+            # rebuild if the source cover is NEWER than the beat video (stale output)
+            if os.path.getmtime(beat) >= os.path.getmtime(src):
+                continue
         try:
             t, a, y, cls, g, sp, var = p.detect(f)
         except Exception:
@@ -64,7 +66,7 @@ def main():
         t0 = time.time()
         print(f"[{i}/{len(work)}] {title} / {genre}", flush=True)
         try:
-            out = qc.compose(os.path.join(GEN, f), title, genre)
+            out = qc.compose(os.path.join(GEN, f), title, genre, force=True)
             sz = os.path.getsize(out) // 1048576 if out and os.path.exists(out) else 0
             print(f"   -> {os.path.basename(out) if out else 'FAILED'} ({sz}MB, {time.time()-t0:.0f}s)", flush=True)
             if sz > 1:

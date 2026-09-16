@@ -1,0 +1,2 @@
+file '/c/Users/jakeg/robertpelloni/hymnmania/_s1.mp4'
+file '/c/Users/jakeg/robertpelloni/hymnmania/_s2.mp4'
