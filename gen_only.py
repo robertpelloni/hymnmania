@@ -12,7 +12,7 @@ GENRE_DESC = {
     "deep_house": "deep house, warm analog chords, rolling syncopated bassline, four-on-the-floor kick at 122 BPM, hypnotic groove, soulful late-night warehouse feel",
     "synthwave": "synthwave, warm analog polysynths, pulsing sidechained bassline, 100-110 BPM neon-drenched retro-future groove, 1980s nostalgia",
     "psytrance": "full-on psytrance, driving 142 BPM, bright euphoric melodies, punchy rolling bassline, cinematic sci-fi leads, energetic morning dancefloor",
-    "psytrance_fullon": "full-on psytrance, 142 BPM, high-energy morning dancefloor, bright euphoric melodies, punchy rolling bassline, cinematic sci-fi sound effects, festival main stage",
+    "psytrance_fullon": "full-on psytrance, 142 BPM, deep heavy sub-bass, punchy kick drum on every beat, rolling 16th-note bassline filling the gaps between kicks, hypnotic acid lead line, driving dancefloor groove, bass-heavy mix, festival main stage",
     "goa_trance": "goa trance, 135 BPM, complex melodic acid lines, warm organic analog synthesizers, layered hypnotic arpeggios, eastern-influenced psychedelic melodies, classic 1990s Goa energy",
     "psytrance_progressive": "progressive psytrance, 132 BPM, slower cleaner hypnotic groove, steady rolling bassline, deep spacious pads, gradual build-ups, daytime festival set",
     "psytrance_dark": "darkpsy, 150 BPM, fast aggressive nocturnal rolling bass, eerie chaotic sci-fi soundscapes, dissonant acid leads, menacing deep atmosphere, night-time dancing",

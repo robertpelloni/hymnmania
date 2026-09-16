@@ -158,6 +158,16 @@ def run(n=BATCH):
                            capture_output=True, text=True, timeout=900)
         except subprocess.TimeoutExpired:
             print("   capture timed out")
+        if os.path.exists(out):
+            # Genre EQ: without this the capture stays melody-forward and bright, which is
+            # why a "Full-On psytrance" cover did not sound like psytrance. Mastered in
+            # place (low end 20% -> 45%, highs 42% -> 20% on the measured sample).
+            try:
+                from master_cover import master
+                master(out, out, g)
+                print("   mastered (genre EQ)")
+            except Exception as e:
+                print(f"   mastering skipped: {e}")
         j["status"] = "done" if os.path.exists(out) else "captured_failed"
         j["tries"] = j.get("tries", 0) + 1
         did += 1

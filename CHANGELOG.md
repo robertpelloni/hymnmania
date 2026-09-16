@@ -938,3 +938,41 @@ The compose step is the missing link: the scheduler only posts from
 - scheduler queue back to **2 postable tracks** (was 0)
 - NOTE: `Are_You_A_Christian_psytrance` (non-Full-On) was rejected by the quality gate at
   centroid 709.7 — some captures still come out degraded.
+
+## v5.97.35 — "Doesn't sound like Full-On psytrance" — fixed (2026-09-16)
+
+### User feedback
+The posted Full-On cover did not sound like Full-On psytrance.
+
+### Diagnosis (measured, not guessed)
+```
+tempo (kick-band) : 144 BPM   <- CORRECT, dead-on Full-On 140-145
+energy distribution:
+  sub <60        3.1%     mids 250-2k  35.4%
+  kick 60-120    6.1%     highs >2k    49.2%   <- HALF the energy is treble
+  bass 120-250   6.1%
+```
+Real psytrance is kick-and-bass driven (low end should dominate). Ours was a thin,
+melody-forward, bright mix — the sine hymn's character was taking over.
+
+### Cause 1: the prompt
+`psytrance_fullon` asked for "bright euphoric melodies" + "cinematic sci-fi sound effects"
+- literally instructions to put energy in the treble.
+Rewritten to: "deep heavy sub-bass, punchy kick drum on every beat, rolling 16th-note
+bassline filling the gaps between kicks, hypnotic acid lead line, bass-heavy mix".
+Effect: low end 15.4% -> 20.0%, highs 49.2% -> 42.4%. Better, still thin.
+
+### Cause 2: Cover mode inherits the reference's tone
+Suno's Cover flow preserves the sine's melodic character, so the melody keeps dominating
+regardless of prompt. Fix = **genre EQ mastering** (`master_cover.py`):
+- boost 55/90/120 Hz (sub, kick, rolling bass), cut 3k/7k/11k (bright melody + FX)
+- gentle `alimiter=limit=0.95` so the added low end does not clip
+- curves applied per genre (every psytrance sub-genre shares the psytrance curve)
+
+### Result
+```
+low end : 15.4% -> 44.1%      highs >2k : 49.2% -> 20.2%      centroid 3154 -> 1308
+verdict : bass-driven psytrance
+```
+Wired into `suno_throttle.py` (mastered in place right after capture).
+Sample to listen to: `LISTEN_fullon_AdventistYouth.mp3`

@@ -25,9 +25,9 @@
   "speed": 1.101,
   "target": 142,
   "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "status": "done",
+  "tries": 1,
+  "clip": "2499b97e-6098-4e70-ad18-25aec3175aba"
  },
  {
   "hymn": "As For Me",
@@ -35,9 +35,9 @@
   "speed": 1.101,
   "target": 142,
   "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "status": "done",
+  "tries": 1,
+  "clip": "778b28d9-4419-4ba6-9420-0606e2db87fe"
  },
  {
   "hymn": "Behold What Manner Of Love 1 John 3 1",
@@ -45,9 +45,9 @@
   "speed": 1.044,
   "target": 142,
   "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "status": "done",
+  "tries": 1,
+  "clip": "a5cd18d9-0f94-4310-8752-bb41e7257105"
  },
  {
   "hymn": "Can The World See Jesus In You",
