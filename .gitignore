@@ -140,3 +140,8 @@ test_beat.mp4
 .scheduler_log.json
 logs/
 .yt_upload_limit.json
+_s1.mp4
+_s2.mp4
+_a.aac
+_list.txt
+_out.mp4
