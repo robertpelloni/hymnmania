@@ -436,10 +436,21 @@ def post_instagram(short_path, title, genre, yt):
 
 
 def ensure_browser(port=SOCIAL_PORT, profile=r"C:\Users\jakeg\edge-cdp-profile"):
-    """Launch the browser for the social logins if CDP is not already up."""
+    """Launch the browser for the social logins if CDP is not already up.
+
+    Also prunes stale tabs: every social run leaves tabs behind, and at 237 tabs the
+    browser answers /json/version but `connect_over_cdp` times out after 180 s, which
+    silently breaks every TikTok/FB/IG post (hit on 2026-09-16).
+    """
     import urllib.request
     try:
         urllib.request.urlopen(f"http://127.0.0.1:{port}/json/version", timeout=4)
+        # browser is up - make sure it is not clogged
+        try:
+            from cleanup_tabs import clean
+            clean(port, verbose=False)
+        except Exception:
+            pass
         return True
     except Exception:
         pass

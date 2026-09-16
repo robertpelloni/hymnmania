@@ -976,3 +976,25 @@ verdict : bass-driven psytrance
 ```
 Wired into `suno_throttle.py` (mastered in place right after capture).
 Sample to listen to: `LISTEN_fullon_AdventistYouth.mp3`
+
+## v5.97.36 — tab accumulation broke the socials (root cause found)
+
+### Symptom
+Every TikTok / Facebook Reel / Instagram post failed with:
+`BrowserType.connect_over_cdp: Timeout 180000ms exceeded`
+even though `http://127.0.0.1:9222/json/version` answered normally.
+
+### Cause
+**237 open tabs / 81 msedge processes.** Every social run leaves its tabs behind, and past
+a few dozen the browser answers the version endpoint but can no longer be driven. The
+YouTube uploads (API based) kept working, which is why only the socials broke.
+
+### Fix
+- `cleanup_tabs.py` — closes stale tabs, keeps 2 pages. Social browser only: pruning 9333
+  too hard left it unreachable, and `cap_cycle.py` manages its own tabs.
+- `scheduler_v2.ensure_browser()` now calls `clean(port)` whenever the browser is already
+  up, so the scheduler self-heals before every social post.
+
+### Verified
+- after cleanup: 9222 `51 -> 4` entries; TikTok, FB Reel and IG all posted successfully
+- 9333 relaunched via `launch_dedicated_browser.py` and confirmed UP
