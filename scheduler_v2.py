@@ -51,7 +51,12 @@ SOCIAL_TRACKS_PER_DAY = 1
 
 # Genre mix: psytrance is the channel identity, so 2 of every 3 tracks should be
 # psytrance (verified in-tempo - see gen_psytrance_tempo.py).
-PSYTRANCE_RATIO = 2      # psytrance per 1 non-psytrance track
+PSYTRANCE_RATIO = 2      # psytrance-family tracks per 1 non-psy track
+FULLON_RATIO = 2         # Full-On tracks per 1 other psy sub-genre
+
+# the psytrance family (matched against the built title)
+PSY_FAMILY = ("full-on", "goa trance", "progressive psytrance", "psytrance",
+              "darkpsy", "forest psy", "hi-tech", "psychill", "zenonesque")
 UPLOAD_COUNTER = None         # set below
 
 # Hymns REMOVED from the pool (see BLOCKED_HYMNS.md):
@@ -311,20 +316,41 @@ def get_queue(verbose=True):
     return queue
 
 
-def order_for_ratio(queue, psy_ratio=PSYTRANCE_RATIO):
-    """Interleave so ~psy_ratio of every (psy_ratio+1) tracks are psytrance."""
+def order_for_ratio(queue, psy_ratio=PSYTRANCE_RATIO, fullon_ratio=FULLON_RATIO):
+    """Two-level weighting of the posting queue:
+       1. psytrance family : other genres        = psy_ratio   : 1
+       2. inside the family: Full-On : other psy = fullon_ratio : 1
+    """
     import post_to_youtube as p
-    psy, other = [], []
+    psy_full, psy_other, other = [], [], []
     for b in queue:
         t = (p.build_title(b) or "").lower()
-        (psy if "psytrance" in t else other).append(b)
-    out, i, j = [], 0, 0
-    while i < len(psy) or j < len(other):
+        if "full-on" in t:
+            psy_full.append(b)
+        elif any(k in t for k in PSY_FAMILY):
+            psy_other.append(b)
+        else:
+            other.append(b)
+
+    # level 2 - Full-On vs the rest of the family
+    psy, i, j = [], 0, 0
+    while i < len(psy_full) or j < len(psy_other):
+        for _ in range(fullon_ratio):
+            if i < len(psy_full):
+                psy.append(psy_full[i]); i += 1
+        if j < len(psy_other):
+            psy.append(psy_other[j]); j += 1
+    psy.extend(psy_full[i:]); psy.extend(psy_other[j:])
+
+    # level 1 - the family vs everything else
+    out, k, m = [], 0, 0
+    while k < len(psy) or m < len(other):
         for _ in range(psy_ratio):
-            if i < len(psy):
-                out.append(psy[i]); i += 1
-        if j < len(other):
-            out.append(other[j]); j += 1
+            if k < len(psy):
+                out.append(psy[k]); k += 1
+        if m < len(other):
+            out.append(other[m]); m += 1
+    out.extend(psy[k:]); out.extend(other[m:])
     return out
 
 
@@ -553,7 +579,7 @@ if __name__ == "__main__":
         print(f"Daily target          : {TRACKS_PER_RUN} tracks = {TRACKS_PER_RUN} fulls + {TRACKS_PER_RUN} shorts "
               f"({TRACKS_PER_RUN * 2} YouTube uploads)")
         print(f"Socials (unchanged)   : {SOCIAL_TRACKS_PER_DAY} track/day to FB feed + TikTok + FB Reel + IG")
-        print(f"Genre mix             : {PSYTRANCE_RATIO}:1 psytrance-first ordering")
+        print(f"Genre mix             : psy family {PSYTRANCE_RATIO}:1 vs others; inside it, Full-On {FULLON_RATIO}:1")
     elif "--test" in args:
         get_queue(verbose=False)
         q = get_queue()

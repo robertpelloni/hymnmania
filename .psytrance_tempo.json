@@ -245,10 +245,11 @@
  },
  "I Want To Be Ready": {
   "natural_bpm": 112,
-  "speed": 1.295,
+  "speed": 0.873,
   "upload": "49b882c7-adfb-4006-b464-7623011e2213",
   "clip": "7da8c442-9264-4b6a-8e62-e33e06164a87",
-  "final_bpm": 136
+  "final_bpm": 136,
+  "pass": 2
  },
  "I Will Make You Fishers Of Men": {
   "natural_bpm": 129,

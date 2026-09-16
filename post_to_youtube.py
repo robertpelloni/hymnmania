@@ -50,6 +50,24 @@ PIECES = [
 ]
 
 GENRES = [
+    # --- psytrance family (specific sub-genres BEFORE the generic entry) ---
+    ("psytrancefullon", "Full-On Psytrance"),
+    ("fullon", "Full-On Psytrance"),
+    ("psytranceprogressive", "Progressive Psytrance"),
+    ("psytranceprog", "Progressive Psytrance"),
+    ("goatrance", "Goa Trance"),
+    ("goa", "Goa Trance"),
+    ("psytrancedark", "Darkpsy"),
+    ("darkpsy", "Darkpsy"),
+    ("psytranceforest", "Forest Psy"),
+    ("forestpsy", "Forest Psy"),
+    ("psytrancehitech", "Hi-Tech Psytrance"),
+    ("hitech", "Hi-Tech Psytrance"),
+    ("psytrancepsychill", "Psychill"),
+    ("psychill", "Psychill"),
+    ("psybient", "Psychill"),
+    ("psytrancezenonesque", "Zenonesque"),
+    ("zenonesque", "Zenonesque"),
     ("psytrance", "Psytrance"), ("gabba", "Gabba"), ("hardcore", "Gabba"),
     ("dubstep", "Dubstep"), ("brostep", "Dubstep"),
     ("deephouse", "Deep House"), ("deep house", "Deep House"),

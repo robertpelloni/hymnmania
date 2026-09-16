@@ -831,3 +831,34 @@ cover was Sep 15 15:08). The user heard the uncorrected 103 BPM track.
 1. Suno follows the reference tempo, not the prompt BPM → tempo-match the sine render
 2. Suno renamed the menu button ("More menu contents" → "More options") → cover flow broke
 3. Composer skipped existing outputs → stale audio reused
+
+## v5.97.30 — 8 psytrance sub-genres + two-level weighting (2026-09-16)
+
+### All 8 psytrance sub-genres added (per user spec)
+| Sub-genre | BPM | Range | Weight |
+|---|---|---|---|
+| **Full-On** | 142 | 140-145 | **2x** (flagship) |
+| Goa Trance | 135 | 130-140 | 1x |
+| Progressive Psytrance | 132 | 128-138 | 1x |
+| Darkpsy | 150 | 145-155 | 1x |
+| Forest Psy | 143 | 138-148 | 1x |
+| Hi-Tech | 165 | 150-180 | 1x |
+| Psychill (Psybient) | 105 | 95-120 | 1x |
+| Zenonesque | 130 | 125-135 | 1x |
+
+- Added to `gen_only.py` (19 genres total) with distinct prompts.
+- `psytrance_subgenres.json` — BPM targets, ranges, weights (editable).
+- `post_to_youtube.detect()` recognises all 8 (specific tokens BEFORE the generic
+  "psytrance"; note the token is `psytrancedark`, not `psytransedark`).
+
+### Two-level queue weighting (`scheduler_v2.order_for_ratio`)
+1. psytrance family : other genres = 2 : 1
+2. inside the family: Full-On : other sub-genres = 2 : 1
+
+NOTE: the weighting controls POSTING PRIORITY/ordering. The actual ratio comes from how
+many covers of each sub-genre we GENERATE — so generate ~2 Full-On per other sub-genre.
+
+### psytrance_pass2.py
+Second-pass tempo fix for covers that missed 135-155 on the first pass: re-measures the
+actual tempo with a robust autocorrelation detector (octave-safe) and regenerates with a
+corrective multiplier `145 / measured_actual`.
