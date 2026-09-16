@@ -116,10 +116,11 @@
  },
  "God Is So Good": {
   "natural_bpm": 108,
-  "speed": 1.343,
+  "speed": 2.188,
   "upload": "02d548f1-8833-4206-b4c4-409ff0d9264a",
   "clip": "a6460683-bde8-4987-b2cc-727d514a310e",
-  "final_bpm": 105
+  "final_bpm": 112,
+  "pass": 2
  },
  "God s Love Is Wonderful": {
   "natural_bpm": 129
@@ -261,10 +262,10 @@
  },
  "I Want To Be Ready": {
   "natural_bpm": 112,
-  "speed": 0.873,
+  "speed": 0.589,
   "upload": "49b882c7-adfb-4006-b464-7623011e2213",
   "clip": "7da8c442-9264-4b6a-8e62-e33e06164a87",
-  "final_bpm": 136,
+  "final_bpm": 86,
   "pass": 2
  },
  "I Will Make You Fishers Of Men": {

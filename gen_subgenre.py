@@ -148,8 +148,12 @@ def main():
         if not cm:
             print("   generation failed"); continue
         clip = cm.group(1).split(",")[0]
-        subprocess.run([PY, os.path.join(ROOT, "cap_cycle.py"), clip, out],
-                       capture_output=True, text=True, timeout=1500)
+        try:
+            subprocess.run([PY, os.path.join(ROOT, "cap_cycle.py"), clip, out],
+                           capture_output=True, text=True, timeout=900)
+        except subprocess.TimeoutExpired:
+            print("   capture timed out - skipping this one", flush=True)
+            continue
         if os.path.exists(out):
             b = tempo(out)
             lo, hi = sg[g]["range"]

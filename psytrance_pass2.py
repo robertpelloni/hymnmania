@@ -113,8 +113,12 @@ def main():
         if not gm:
             print("   generation failed"); continue
         clip = gm.group(1).split(",")[0]
-        subprocess.run([PY, os.path.join(ROOT, "cap_cycle.py"), clip, cov],
-                       capture_output=True, text=True, timeout=1500)
+        try:
+            subprocess.run([PY, os.path.join(ROOT, "cap_cycle.py"), clip, cov],
+                           capture_output=True, text=True, timeout=900)
+        except subprocess.TimeoutExpired:
+            print("   capture timed out - skipping this one", flush=True)
+            continue
         b = tempo(cov)
         st.setdefault(hymn, {})["speed"] = new_speed
         st[hymn]["final_bpm"] = b
