@@ -1,5762 +1,738 @@
 [
  {
   "hymn": "Adventist Youth",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 103,
   "speed": 1.379,
-  "target": 142,
-  "label": "Full-On",
-  "status": "done",
-  "tries": 1,
-  "clip": "ed61ed8f-4ed6-43e1-8fa6-602521388a97"
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Are You A Christian",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 99,
   "speed": 1.434,
-  "target": 142,
-  "label": "Full-On",
-  "status": "done",
-  "tries": 1,
-  "clip": "8d3fd092-5897-4f77-b098-73a683ff32b8"
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Are You Ready For Jesus To Come",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "done",
-  "tries": 1,
-  "clip": "2499b97e-6098-4e70-ad18-25aec3175aba"
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "As For Me",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "done",
-  "tries": 1,
-  "clip": "778b28d9-4419-4ba6-9420-0606e2db87fe"
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Behold What Manner Of Love 1 John 3 1",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "done",
-  "tries": 1,
-  "clip": "a5cd18d9-0f94-4310-8752-bb41e7257105"
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Can The World See Jesus In You",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Christ The Joy Of Loving Hearts",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 108,
   "speed": 1.315,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Do You Know My Jesus",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 96,
   "speed": 1.479,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Echo Chorus",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Emmanuel",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 99,
   "speed": 1.434,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Every Day With Jesus",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 112,
   "speed": 1.268,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Every Moment Of Every Day",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 112,
   "speed": 1.268,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Everybody Ought To Know",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 117,
   "speed": 1.214,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Far Beyond The Sun",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 102,
   "speed": 1.392,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Father We Love You",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Father, We Love You",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Follow Me",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 108,
   "speed": 1.315,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "For God So Loved The World",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "For God So Loved The World with Tag",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "God Is So Good",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 108,
   "speed": 1.315,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "God s Love Is Wonderful",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "God's Love Is Wonderful",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Great Are You Lord",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Great Are You, Lord",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Ha la la la la",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 161,
   "speed": 0.882,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Ha-la-la-la-la",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 161,
   "speed": 0.882,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Happiness Is The Lord",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 123,
   "speed": 1.154,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "He Lives",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "He s Able",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 112,
   "speed": 1.268,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "He's Able",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 99,
   "speed": 1.434,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "He's Got The Whole World",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 117,
   "speed": 1.214,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "How Majestic Is Your Name",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "Humble Thyself",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 72,
   "speed": 1.972,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {
+   "psytrance_fullon": {
+    "clip": null,
+    "status": "done"
+   }
+  },
+  "status": "pending"
  },
  {
   "hymn": "I Have Decided To Follow Jesus",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 96,
   "speed": 1.479,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Just Keep Trusting My Lord",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 103,
   "speed": 1.379,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Just Keep Trusting My Lord with Tag",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 108,
   "speed": 1.315,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Know The Lord Has Made A Way",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 144,
   "speed": 0.986,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Know The Lord Has Made A Way Tag",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 144,
   "speed": 0.986,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Shall Not Be Moved",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Shall See The King",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Want To Be Ready",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 112,
   "speed": 1.268,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Will Make You Fishers Of Men",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Will Serve Thee",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I Will Sing Of The Mercies Of The Lord Psalm 89 1",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 77,
   "speed": 1.844,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I'll Share My Faith",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I'm So Happy",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I've Found The Way",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 126,
   "speed": 1.127,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "I've Got Love Like An Ocean",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 108,
   "speed": 1.315,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "If You Know The Lord",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "If You Want Joy",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 108,
   "speed": 1.315,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "In Moments Like These",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 112,
   "speed": 1.268,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "In My Heart There Rings A Melody",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 112,
   "speed": 1.268,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "In The Name Of Jesus",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "In The Name Of Jesus with Yesterday, Today, Forever",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 117,
   "speed": 1.214,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "It's About Grace",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 117,
   "speed": 1.214,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "It's the Sabbath",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "Jesus Is The Joy Of Living",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "Jesus, Name Above All Names",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 89,
   "speed": 1.596,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "Joy Is The Flag",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 172,
   "speed": 0.826,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "Just To Know Him",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 108,
   "speed": 1.315,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "Let's Sing A Happy Song",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "Lord, Be Glorified",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 99,
   "speed": 1.434,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "Love Is In Your Hand",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "Love Is Something",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 185,
   "speed": 0.768,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "Maranatha",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 108,
   "speed": 1.315,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "My Lord Knows The Way",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 103,
   "speed": 1.379,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "My Peace",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 152,
   "speed": 0.934,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "New Life In Christ",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 129,
   "speed": 1.101,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "book1-prelude01",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 96,
   "speed": 1.479,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "book1-prelude03",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 117,
   "speed": 1.214,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "book1-prelude06",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 136,
   "speed": 1.044,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  },
  {
   "hymn": "osterreichische-bundeshymne",
-  "genre": "psytrance_fullon",
+  "natural_bpm": 172,
   "speed": 0.826,
-  "target": 142,
-  "label": "Full-On",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Adventist Youth",
-  "genre": "goa_trance",
-  "speed": 1.311,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Adventist Youth",
-  "genre": "psytrance_progressive",
-  "speed": 1.282,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Adventist Youth",
-  "genre": "psytrance_dark",
-  "speed": 1.456,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Adventist Youth",
-  "genre": "psytrance_forest",
-  "speed": 1.388,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Adventist Youth",
-  "genre": "psytrance_hitech",
-  "speed": 1.602,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Adventist Youth",
-  "genre": "psytrance_psychill",
-  "speed": 1.019,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Adventist Youth",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.262,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You A Christian",
-  "genre": "goa_trance",
-  "speed": 1.364,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You A Christian",
-  "genre": "psytrance_progressive",
-  "speed": 1.333,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You A Christian",
-  "genre": "psytrance_dark",
-  "speed": 1.515,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You A Christian",
-  "genre": "psytrance_forest",
-  "speed": 1.444,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You A Christian",
-  "genre": "psytrance_hitech",
-  "speed": 1.667,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You A Christian",
-  "genre": "psytrance_psychill",
-  "speed": 1.061,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You A Christian",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.313,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You Ready For Jesus To Come",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You Ready For Jesus To Come",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You Ready For Jesus To Come",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You Ready For Jesus To Come",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You Ready For Jesus To Come",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You Ready For Jesus To Come",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Are You Ready For Jesus To Come",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "As For Me",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "As For Me",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "As For Me",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "As For Me",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "As For Me",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "As For Me",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "As For Me",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Behold What Manner Of Love 1 John 3 1",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Behold What Manner Of Love 1 John 3 1",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Behold What Manner Of Love 1 John 3 1",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Behold What Manner Of Love 1 John 3 1",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Behold What Manner Of Love 1 John 3 1",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Behold What Manner Of Love 1 John 3 1",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Behold What Manner Of Love 1 John 3 1",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Can The World See Jesus In You",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Can The World See Jesus In You",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Can The World See Jesus In You",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Can The World See Jesus In You",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Can The World See Jesus In You",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Can The World See Jesus In You",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Can The World See Jesus In You",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Christ The Joy Of Loving Hearts",
-  "genre": "goa_trance",
-  "speed": 1.25,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Christ The Joy Of Loving Hearts",
-  "genre": "psytrance_progressive",
-  "speed": 1.222,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Christ The Joy Of Loving Hearts",
-  "genre": "psytrance_dark",
-  "speed": 1.389,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Christ The Joy Of Loving Hearts",
-  "genre": "psytrance_forest",
-  "speed": 1.324,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Christ The Joy Of Loving Hearts",
-  "genre": "psytrance_hitech",
-  "speed": 1.528,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Christ The Joy Of Loving Hearts",
-  "genre": "psytrance_psychill",
-  "speed": 0.972,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Christ The Joy Of Loving Hearts",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.204,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Do You Know My Jesus",
-  "genre": "goa_trance",
-  "speed": 1.406,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Do You Know My Jesus",
-  "genre": "psytrance_progressive",
-  "speed": 1.375,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Do You Know My Jesus",
-  "genre": "psytrance_dark",
-  "speed": 1.562,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Do You Know My Jesus",
-  "genre": "psytrance_forest",
-  "speed": 1.49,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Do You Know My Jesus",
-  "genre": "psytrance_hitech",
-  "speed": 1.719,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Do You Know My Jesus",
-  "genre": "psytrance_psychill",
-  "speed": 1.094,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Do You Know My Jesus",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.354,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Echo Chorus",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Echo Chorus",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Echo Chorus",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Echo Chorus",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Echo Chorus",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Echo Chorus",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Echo Chorus",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Emmanuel",
-  "genre": "goa_trance",
-  "speed": 1.364,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Emmanuel",
-  "genre": "psytrance_progressive",
-  "speed": 1.333,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Emmanuel",
-  "genre": "psytrance_dark",
-  "speed": 1.515,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Emmanuel",
-  "genre": "psytrance_forest",
-  "speed": 1.444,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Emmanuel",
-  "genre": "psytrance_hitech",
-  "speed": 1.667,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Emmanuel",
-  "genre": "psytrance_psychill",
-  "speed": 1.061,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Emmanuel",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.313,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Day With Jesus",
-  "genre": "goa_trance",
-  "speed": 1.205,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Day With Jesus",
-  "genre": "psytrance_progressive",
-  "speed": 1.179,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Day With Jesus",
-  "genre": "psytrance_dark",
-  "speed": 1.339,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Day With Jesus",
-  "genre": "psytrance_forest",
-  "speed": 1.277,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Day With Jesus",
-  "genre": "psytrance_hitech",
-  "speed": 1.473,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Day With Jesus",
-  "genre": "psytrance_psychill",
-  "speed": 0.938,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Day With Jesus",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.161,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Moment Of Every Day",
-  "genre": "goa_trance",
-  "speed": 1.205,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Moment Of Every Day",
-  "genre": "psytrance_progressive",
-  "speed": 1.179,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Moment Of Every Day",
-  "genre": "psytrance_dark",
-  "speed": 1.339,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Moment Of Every Day",
-  "genre": "psytrance_forest",
-  "speed": 1.277,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Moment Of Every Day",
-  "genre": "psytrance_hitech",
-  "speed": 1.473,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Moment Of Every Day",
-  "genre": "psytrance_psychill",
-  "speed": 0.938,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Every Moment Of Every Day",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.161,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Everybody Ought To Know",
-  "genre": "goa_trance",
-  "speed": 1.154,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Everybody Ought To Know",
-  "genre": "psytrance_progressive",
-  "speed": 1.128,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Everybody Ought To Know",
-  "genre": "psytrance_dark",
-  "speed": 1.282,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Everybody Ought To Know",
-  "genre": "psytrance_forest",
-  "speed": 1.222,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Everybody Ought To Know",
-  "genre": "psytrance_hitech",
-  "speed": 1.41,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Everybody Ought To Know",
-  "genre": "psytrance_psychill",
-  "speed": 0.897,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Everybody Ought To Know",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.111,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Far Beyond The Sun",
-  "genre": "goa_trance",
-  "speed": 1.324,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Far Beyond The Sun",
-  "genre": "psytrance_progressive",
-  "speed": 1.294,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Far Beyond The Sun",
-  "genre": "psytrance_dark",
-  "speed": 1.471,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Far Beyond The Sun",
-  "genre": "psytrance_forest",
-  "speed": 1.402,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Far Beyond The Sun",
-  "genre": "psytrance_hitech",
-  "speed": 1.618,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Far Beyond The Sun",
-  "genre": "psytrance_psychill",
-  "speed": 1.029,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Far Beyond The Sun",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.275,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father We Love You",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father We Love You",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father We Love You",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father We Love You",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father We Love You",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father We Love You",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father We Love You",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father, We Love You",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father, We Love You",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father, We Love You",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father, We Love You",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father, We Love You",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father, We Love You",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Father, We Love You",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Follow Me",
-  "genre": "goa_trance",
-  "speed": 1.25,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Follow Me",
-  "genre": "psytrance_progressive",
-  "speed": 1.222,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Follow Me",
-  "genre": "psytrance_dark",
-  "speed": 1.389,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Follow Me",
-  "genre": "psytrance_forest",
-  "speed": 1.324,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Follow Me",
-  "genre": "psytrance_hitech",
-  "speed": 1.528,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Follow Me",
-  "genre": "psytrance_psychill",
-  "speed": 0.972,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Follow Me",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.204,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World with Tag",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World with Tag",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World with Tag",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World with Tag",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World with Tag",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World with Tag",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "For God So Loved The World with Tag",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God Is So Good",
-  "genre": "goa_trance",
-  "speed": 1.25,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God Is So Good",
-  "genre": "psytrance_progressive",
-  "speed": 1.222,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God Is So Good",
-  "genre": "psytrance_dark",
-  "speed": 1.389,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God Is So Good",
-  "genre": "psytrance_forest",
-  "speed": 1.324,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God Is So Good",
-  "genre": "psytrance_hitech",
-  "speed": 1.528,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God Is So Good",
-  "genre": "psytrance_psychill",
-  "speed": 0.972,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God Is So Good",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.204,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God s Love Is Wonderful",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God s Love Is Wonderful",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God s Love Is Wonderful",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God s Love Is Wonderful",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God s Love Is Wonderful",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God s Love Is Wonderful",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God s Love Is Wonderful",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God's Love Is Wonderful",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God's Love Is Wonderful",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God's Love Is Wonderful",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God's Love Is Wonderful",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God's Love Is Wonderful",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God's Love Is Wonderful",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "God's Love Is Wonderful",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You Lord",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You Lord",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You Lord",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You Lord",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You Lord",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You Lord",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You Lord",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You, Lord",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You, Lord",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You, Lord",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You, Lord",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You, Lord",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You, Lord",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Great Are You, Lord",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha la la la la",
-  "genre": "goa_trance",
-  "speed": 0.839,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha la la la la",
-  "genre": "psytrance_progressive",
-  "speed": 0.82,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha la la la la",
-  "genre": "psytrance_dark",
-  "speed": 0.932,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha la la la la",
-  "genre": "psytrance_forest",
-  "speed": 0.888,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha la la la la",
-  "genre": "psytrance_hitech",
-  "speed": 1.025,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha la la la la",
-  "genre": "psytrance_psychill",
-  "speed": 0.652,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha la la la la",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.807,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha-la-la-la-la",
-  "genre": "goa_trance",
-  "speed": 0.839,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha-la-la-la-la",
-  "genre": "psytrance_progressive",
-  "speed": 0.82,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha-la-la-la-la",
-  "genre": "psytrance_dark",
-  "speed": 0.932,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha-la-la-la-la",
-  "genre": "psytrance_forest",
-  "speed": 0.888,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha-la-la-la-la",
-  "genre": "psytrance_hitech",
-  "speed": 1.025,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha-la-la-la-la",
-  "genre": "psytrance_psychill",
-  "speed": 0.652,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Ha-la-la-la-la",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.807,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Happiness Is The Lord",
-  "genre": "goa_trance",
-  "speed": 1.098,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Happiness Is The Lord",
-  "genre": "psytrance_progressive",
-  "speed": 1.073,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Happiness Is The Lord",
-  "genre": "psytrance_dark",
-  "speed": 1.22,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Happiness Is The Lord",
-  "genre": "psytrance_forest",
-  "speed": 1.163,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Happiness Is The Lord",
-  "genre": "psytrance_hitech",
-  "speed": 1.341,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Happiness Is The Lord",
-  "genre": "psytrance_psychill",
-  "speed": 0.854,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Happiness Is The Lord",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.057,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He Lives",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He Lives",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He Lives",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He Lives",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He Lives",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He Lives",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He Lives",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He s Able",
-  "genre": "goa_trance",
-  "speed": 1.205,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He s Able",
-  "genre": "psytrance_progressive",
-  "speed": 1.179,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He s Able",
-  "genre": "psytrance_dark",
-  "speed": 1.339,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He s Able",
-  "genre": "psytrance_forest",
-  "speed": 1.277,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He s Able",
-  "genre": "psytrance_hitech",
-  "speed": 1.473,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He s Able",
-  "genre": "psytrance_psychill",
-  "speed": 0.938,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He s Able",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.161,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Able",
-  "genre": "goa_trance",
-  "speed": 1.364,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Able",
-  "genre": "psytrance_progressive",
-  "speed": 1.333,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Able",
-  "genre": "psytrance_dark",
-  "speed": 1.515,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Able",
-  "genre": "psytrance_forest",
-  "speed": 1.444,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Able",
-  "genre": "psytrance_hitech",
-  "speed": 1.667,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Able",
-  "genre": "psytrance_psychill",
-  "speed": 1.061,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Able",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.313,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Got The Whole World",
-  "genre": "goa_trance",
-  "speed": 1.154,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Got The Whole World",
-  "genre": "psytrance_progressive",
-  "speed": 1.128,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Got The Whole World",
-  "genre": "psytrance_dark",
-  "speed": 1.282,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Got The Whole World",
-  "genre": "psytrance_forest",
-  "speed": 1.222,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Got The Whole World",
-  "genre": "psytrance_hitech",
-  "speed": 1.41,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Got The Whole World",
-  "genre": "psytrance_psychill",
-  "speed": 0.897,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "He's Got The Whole World",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.111,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "How Majestic Is Your Name",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "How Majestic Is Your Name",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "How Majestic Is Your Name",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "How Majestic Is Your Name",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "How Majestic Is Your Name",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "How Majestic Is Your Name",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "How Majestic Is Your Name",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Humble Thyself",
-  "genre": "goa_trance",
-  "speed": 1.875,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Humble Thyself",
-  "genre": "psytrance_progressive",
-  "speed": 1.833,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Humble Thyself",
-  "genre": "psytrance_dark",
-  "speed": 2.083,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Humble Thyself",
-  "genre": "psytrance_forest",
-  "speed": 1.986,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Humble Thyself",
-  "genre": "psytrance_hitech",
-  "speed": 2.292,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Humble Thyself",
-  "genre": "psytrance_psychill",
-  "speed": 1.458,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Humble Thyself",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.806,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Have Decided To Follow Jesus",
-  "genre": "goa_trance",
-  "speed": 1.406,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Have Decided To Follow Jesus",
-  "genre": "psytrance_progressive",
-  "speed": 1.375,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Have Decided To Follow Jesus",
-  "genre": "psytrance_dark",
-  "speed": 1.562,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Have Decided To Follow Jesus",
-  "genre": "psytrance_forest",
-  "speed": 1.49,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Have Decided To Follow Jesus",
-  "genre": "psytrance_hitech",
-  "speed": 1.719,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Have Decided To Follow Jesus",
-  "genre": "psytrance_psychill",
-  "speed": 1.094,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Have Decided To Follow Jesus",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.354,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord",
-  "genre": "goa_trance",
-  "speed": 1.311,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord",
-  "genre": "psytrance_progressive",
-  "speed": 1.282,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord",
-  "genre": "psytrance_dark",
-  "speed": 1.456,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord",
-  "genre": "psytrance_forest",
-  "speed": 1.388,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord",
-  "genre": "psytrance_hitech",
-  "speed": 1.602,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord",
-  "genre": "psytrance_psychill",
-  "speed": 1.019,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.262,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord with Tag",
-  "genre": "goa_trance",
-  "speed": 1.25,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord with Tag",
-  "genre": "psytrance_progressive",
-  "speed": 1.222,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord with Tag",
-  "genre": "psytrance_dark",
-  "speed": 1.389,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord with Tag",
-  "genre": "psytrance_forest",
-  "speed": 1.324,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord with Tag",
-  "genre": "psytrance_hitech",
-  "speed": 1.528,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord with Tag",
-  "genre": "psytrance_psychill",
-  "speed": 0.972,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Just Keep Trusting My Lord with Tag",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.204,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way",
-  "genre": "goa_trance",
-  "speed": 0.938,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way",
-  "genre": "psytrance_progressive",
-  "speed": 0.917,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way",
-  "genre": "psytrance_dark",
-  "speed": 1.042,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way",
-  "genre": "psytrance_forest",
-  "speed": 0.993,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way",
-  "genre": "psytrance_hitech",
-  "speed": 1.146,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way",
-  "genre": "psytrance_psychill",
-  "speed": 0.729,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.903,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way Tag",
-  "genre": "goa_trance",
-  "speed": 0.938,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way Tag",
-  "genre": "psytrance_progressive",
-  "speed": 0.917,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way Tag",
-  "genre": "psytrance_dark",
-  "speed": 1.042,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way Tag",
-  "genre": "psytrance_forest",
-  "speed": 0.993,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way Tag",
-  "genre": "psytrance_hitech",
-  "speed": 1.146,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way Tag",
-  "genre": "psytrance_psychill",
-  "speed": 0.729,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Know The Lord Has Made A Way Tag",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.903,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall Not Be Moved",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall Not Be Moved",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall Not Be Moved",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall Not Be Moved",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall Not Be Moved",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall Not Be Moved",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall Not Be Moved",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall See The King",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall See The King",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall See The King",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall See The King",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall See The King",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall See The King",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Shall See The King",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Want To Be Ready",
-  "genre": "goa_trance",
-  "speed": 1.205,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Want To Be Ready",
-  "genre": "psytrance_progressive",
-  "speed": 1.179,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Want To Be Ready",
-  "genre": "psytrance_dark",
-  "speed": 1.339,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Want To Be Ready",
-  "genre": "psytrance_forest",
-  "speed": 1.277,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Want To Be Ready",
-  "genre": "psytrance_hitech",
-  "speed": 1.473,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Want To Be Ready",
-  "genre": "psytrance_psychill",
-  "speed": 0.938,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Want To Be Ready",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.161,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Make You Fishers Of Men",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Make You Fishers Of Men",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Make You Fishers Of Men",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Make You Fishers Of Men",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Make You Fishers Of Men",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Make You Fishers Of Men",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Make You Fishers Of Men",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Serve Thee",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Serve Thee",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Serve Thee",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Serve Thee",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Serve Thee",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Serve Thee",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Serve Thee",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Sing Of The Mercies Of The Lord Psalm 89 1",
-  "genre": "goa_trance",
-  "speed": 1.753,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Sing Of The Mercies Of The Lord Psalm 89 1",
-  "genre": "psytrance_progressive",
-  "speed": 1.714,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Sing Of The Mercies Of The Lord Psalm 89 1",
-  "genre": "psytrance_dark",
-  "speed": 1.948,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Sing Of The Mercies Of The Lord Psalm 89 1",
-  "genre": "psytrance_forest",
-  "speed": 1.857,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Sing Of The Mercies Of The Lord Psalm 89 1",
-  "genre": "psytrance_hitech",
-  "speed": 2.143,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Sing Of The Mercies Of The Lord Psalm 89 1",
-  "genre": "psytrance_psychill",
-  "speed": 1.364,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I Will Sing Of The Mercies Of The Lord Psalm 89 1",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.688,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'll Share My Faith",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'll Share My Faith",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'll Share My Faith",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'll Share My Faith",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'll Share My Faith",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'll Share My Faith",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'll Share My Faith",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'm So Happy",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'm So Happy",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'm So Happy",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'm So Happy",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'm So Happy",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'm So Happy",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I'm So Happy",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Found The Way",
-  "genre": "goa_trance",
-  "speed": 1.071,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Found The Way",
-  "genre": "psytrance_progressive",
-  "speed": 1.048,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Found The Way",
-  "genre": "psytrance_dark",
-  "speed": 1.19,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Found The Way",
-  "genre": "psytrance_forest",
-  "speed": 1.135,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Found The Way",
-  "genre": "psytrance_hitech",
-  "speed": 1.31,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Found The Way",
-  "genre": "psytrance_psychill",
-  "speed": 0.833,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Found The Way",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.032,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Got Love Like An Ocean",
-  "genre": "goa_trance",
-  "speed": 1.25,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Got Love Like An Ocean",
-  "genre": "psytrance_progressive",
-  "speed": 1.222,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Got Love Like An Ocean",
-  "genre": "psytrance_dark",
-  "speed": 1.389,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Got Love Like An Ocean",
-  "genre": "psytrance_forest",
-  "speed": 1.324,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Got Love Like An Ocean",
-  "genre": "psytrance_hitech",
-  "speed": 1.528,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Got Love Like An Ocean",
-  "genre": "psytrance_psychill",
-  "speed": 0.972,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "I've Got Love Like An Ocean",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.204,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Know The Lord",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Know The Lord",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Know The Lord",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Know The Lord",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Know The Lord",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Know The Lord",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Know The Lord",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Want Joy",
-  "genre": "goa_trance",
-  "speed": 1.25,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Want Joy",
-  "genre": "psytrance_progressive",
-  "speed": 1.222,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Want Joy",
-  "genre": "psytrance_dark",
-  "speed": 1.389,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Want Joy",
-  "genre": "psytrance_forest",
-  "speed": 1.324,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Want Joy",
-  "genre": "psytrance_hitech",
-  "speed": 1.528,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Want Joy",
-  "genre": "psytrance_psychill",
-  "speed": 0.972,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "If You Want Joy",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.204,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In Moments Like These",
-  "genre": "goa_trance",
-  "speed": 1.205,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In Moments Like These",
-  "genre": "psytrance_progressive",
-  "speed": 1.179,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In Moments Like These",
-  "genre": "psytrance_dark",
-  "speed": 1.339,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In Moments Like These",
-  "genre": "psytrance_forest",
-  "speed": 1.277,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In Moments Like These",
-  "genre": "psytrance_hitech",
-  "speed": 1.473,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In Moments Like These",
-  "genre": "psytrance_psychill",
-  "speed": 0.938,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In Moments Like These",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.161,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In My Heart There Rings A Melody",
-  "genre": "goa_trance",
-  "speed": 1.205,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In My Heart There Rings A Melody",
-  "genre": "psytrance_progressive",
-  "speed": 1.179,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In My Heart There Rings A Melody",
-  "genre": "psytrance_dark",
-  "speed": 1.339,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In My Heart There Rings A Melody",
-  "genre": "psytrance_forest",
-  "speed": 1.277,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In My Heart There Rings A Melody",
-  "genre": "psytrance_hitech",
-  "speed": 1.473,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In My Heart There Rings A Melody",
-  "genre": "psytrance_psychill",
-  "speed": 0.938,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In My Heart There Rings A Melody",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.161,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus with Yesterday, Today, Forever",
-  "genre": "goa_trance",
-  "speed": 1.154,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus with Yesterday, Today, Forever",
-  "genre": "psytrance_progressive",
-  "speed": 1.128,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus with Yesterday, Today, Forever",
-  "genre": "psytrance_dark",
-  "speed": 1.282,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus with Yesterday, Today, Forever",
-  "genre": "psytrance_forest",
-  "speed": 1.222,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus with Yesterday, Today, Forever",
-  "genre": "psytrance_hitech",
-  "speed": 1.41,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus with Yesterday, Today, Forever",
-  "genre": "psytrance_psychill",
-  "speed": 0.897,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "In The Name Of Jesus with Yesterday, Today, Forever",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.111,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's About Grace",
-  "genre": "goa_trance",
-  "speed": 1.154,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's About Grace",
-  "genre": "psytrance_progressive",
-  "speed": 1.128,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's About Grace",
-  "genre": "psytrance_dark",
-  "speed": 1.282,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's About Grace",
-  "genre": "psytrance_forest",
-  "speed": 1.222,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's About Grace",
-  "genre": "psytrance_hitech",
-  "speed": 1.41,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's About Grace",
-  "genre": "psytrance_psychill",
-  "speed": 0.897,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's About Grace",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.111,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's the Sabbath",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's the Sabbath",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's the Sabbath",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's the Sabbath",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's the Sabbath",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's the Sabbath",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "It's the Sabbath",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus Is The Joy Of Living",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus Is The Joy Of Living",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus Is The Joy Of Living",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus Is The Joy Of Living",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus Is The Joy Of Living",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus Is The Joy Of Living",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus Is The Joy Of Living",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus, Name Above All Names",
-  "genre": "goa_trance",
-  "speed": 1.517,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus, Name Above All Names",
-  "genre": "psytrance_progressive",
-  "speed": 1.483,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus, Name Above All Names",
-  "genre": "psytrance_dark",
-  "speed": 1.685,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus, Name Above All Names",
-  "genre": "psytrance_forest",
-  "speed": 1.607,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus, Name Above All Names",
-  "genre": "psytrance_hitech",
-  "speed": 1.854,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus, Name Above All Names",
-  "genre": "psytrance_psychill",
-  "speed": 1.18,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Jesus, Name Above All Names",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.461,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Joy Is The Flag",
-  "genre": "goa_trance",
-  "speed": 0.785,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Joy Is The Flag",
-  "genre": "psytrance_progressive",
-  "speed": 0.767,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Joy Is The Flag",
-  "genre": "psytrance_dark",
-  "speed": 0.872,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Joy Is The Flag",
-  "genre": "psytrance_forest",
-  "speed": 0.831,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Joy Is The Flag",
-  "genre": "psytrance_hitech",
-  "speed": 0.959,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Joy Is The Flag",
-  "genre": "psytrance_psychill",
-  "speed": 0.61,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Joy Is The Flag",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.756,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Just To Know Him",
-  "genre": "goa_trance",
-  "speed": 1.25,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Just To Know Him",
-  "genre": "psytrance_progressive",
-  "speed": 1.222,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Just To Know Him",
-  "genre": "psytrance_dark",
-  "speed": 1.389,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Just To Know Him",
-  "genre": "psytrance_forest",
-  "speed": 1.324,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Just To Know Him",
-  "genre": "psytrance_hitech",
-  "speed": 1.528,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Just To Know Him",
-  "genre": "psytrance_psychill",
-  "speed": 0.972,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Just To Know Him",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.204,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Let's Sing A Happy Song",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Let's Sing A Happy Song",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Let's Sing A Happy Song",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Let's Sing A Happy Song",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Let's Sing A Happy Song",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Let's Sing A Happy Song",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Let's Sing A Happy Song",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Lord, Be Glorified",
-  "genre": "goa_trance",
-  "speed": 1.364,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Lord, Be Glorified",
-  "genre": "psytrance_progressive",
-  "speed": 1.333,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Lord, Be Glorified",
-  "genre": "psytrance_dark",
-  "speed": 1.515,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Lord, Be Glorified",
-  "genre": "psytrance_forest",
-  "speed": 1.444,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Lord, Be Glorified",
-  "genre": "psytrance_hitech",
-  "speed": 1.667,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Lord, Be Glorified",
-  "genre": "psytrance_psychill",
-  "speed": 1.061,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Lord, Be Glorified",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.313,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is In Your Hand",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is In Your Hand",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is In Your Hand",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is In Your Hand",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is In Your Hand",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is In Your Hand",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is In Your Hand",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is Something",
-  "genre": "goa_trance",
-  "speed": 0.73,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is Something",
-  "genre": "psytrance_progressive",
-  "speed": 0.714,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is Something",
-  "genre": "psytrance_dark",
-  "speed": 0.811,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is Something",
-  "genre": "psytrance_forest",
-  "speed": 0.773,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is Something",
-  "genre": "psytrance_hitech",
-  "speed": 0.892,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is Something",
-  "genre": "psytrance_psychill",
-  "speed": 0.568,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Love Is Something",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.703,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Maranatha",
-  "genre": "goa_trance",
-  "speed": 1.25,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Maranatha",
-  "genre": "psytrance_progressive",
-  "speed": 1.222,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Maranatha",
-  "genre": "psytrance_dark",
-  "speed": 1.389,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Maranatha",
-  "genre": "psytrance_forest",
-  "speed": 1.324,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Maranatha",
-  "genre": "psytrance_hitech",
-  "speed": 1.528,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Maranatha",
-  "genre": "psytrance_psychill",
-  "speed": 0.972,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "Maranatha",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.204,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Lord Knows The Way",
-  "genre": "goa_trance",
-  "speed": 1.311,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Lord Knows The Way",
-  "genre": "psytrance_progressive",
-  "speed": 1.282,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Lord Knows The Way",
-  "genre": "psytrance_dark",
-  "speed": 1.456,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Lord Knows The Way",
-  "genre": "psytrance_forest",
-  "speed": 1.388,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Lord Knows The Way",
-  "genre": "psytrance_hitech",
-  "speed": 1.602,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Lord Knows The Way",
-  "genre": "psytrance_psychill",
-  "speed": 1.019,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Lord Knows The Way",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.262,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Peace",
-  "genre": "goa_trance",
-  "speed": 0.888,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Peace",
-  "genre": "psytrance_progressive",
-  "speed": 0.868,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Peace",
-  "genre": "psytrance_dark",
-  "speed": 0.987,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Peace",
-  "genre": "psytrance_forest",
-  "speed": 0.941,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Peace",
-  "genre": "psytrance_hitech",
-  "speed": 1.086,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Peace",
-  "genre": "psytrance_psychill",
-  "speed": 0.691,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "My Peace",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.855,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "New Life In Christ",
-  "genre": "goa_trance",
-  "speed": 1.047,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "New Life In Christ",
-  "genre": "psytrance_progressive",
-  "speed": 1.023,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "New Life In Christ",
-  "genre": "psytrance_dark",
-  "speed": 1.163,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "New Life In Christ",
-  "genre": "psytrance_forest",
-  "speed": 1.109,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "New Life In Christ",
-  "genre": "psytrance_hitech",
-  "speed": 1.279,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "New Life In Christ",
-  "genre": "psytrance_psychill",
-  "speed": 0.814,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "New Life In Christ",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.008,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude01",
-  "genre": "goa_trance",
-  "speed": 1.406,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude01",
-  "genre": "psytrance_progressive",
-  "speed": 1.375,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude01",
-  "genre": "psytrance_dark",
-  "speed": 1.562,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude01",
-  "genre": "psytrance_forest",
-  "speed": 1.49,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude01",
-  "genre": "psytrance_hitech",
-  "speed": 1.719,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude01",
-  "genre": "psytrance_psychill",
-  "speed": 1.094,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude01",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.354,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude03",
-  "genre": "goa_trance",
-  "speed": 1.154,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude03",
-  "genre": "psytrance_progressive",
-  "speed": 1.128,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude03",
-  "genre": "psytrance_dark",
-  "speed": 1.282,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude03",
-  "genre": "psytrance_forest",
-  "speed": 1.222,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude03",
-  "genre": "psytrance_hitech",
-  "speed": 1.41,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude03",
-  "genre": "psytrance_psychill",
-  "speed": 0.897,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude03",
-  "genre": "psytrance_zenonesque",
-  "speed": 1.111,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude06",
-  "genre": "goa_trance",
-  "speed": 0.993,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude06",
-  "genre": "psytrance_progressive",
-  "speed": 0.971,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude06",
-  "genre": "psytrance_dark",
-  "speed": 1.103,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude06",
-  "genre": "psytrance_forest",
-  "speed": 1.051,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude06",
-  "genre": "psytrance_hitech",
-  "speed": 1.213,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude06",
-  "genre": "psytrance_psychill",
-  "speed": 0.772,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "book1-prelude06",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.956,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "osterreichische-bundeshymne",
-  "genre": "goa_trance",
-  "speed": 0.785,
-  "target": 135,
-  "label": "Goa Trance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "osterreichische-bundeshymne",
-  "genre": "psytrance_progressive",
-  "speed": 0.767,
-  "target": 132,
-  "label": "Progressive Psytrance",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "osterreichische-bundeshymne",
-  "genre": "psytrance_dark",
-  "speed": 0.872,
-  "target": 150,
-  "label": "Darkpsy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "osterreichische-bundeshymne",
-  "genre": "psytrance_forest",
-  "speed": 0.831,
-  "target": 143,
-  "label": "Forest Psy",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "osterreichische-bundeshymne",
-  "genre": "psytrance_hitech",
-  "speed": 0.959,
-  "target": 165,
-  "label": "Hi-Tech",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "osterreichische-bundeshymne",
-  "genre": "psytrance_psychill",
-  "speed": 0.61,
-  "target": 105,
-  "label": "Psychill / Psybient",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
- },
- {
-  "hymn": "osterreichische-bundeshymne",
-  "genre": "psytrance_zenonesque",
-  "speed": 0.756,
-  "target": 130,
-  "label": "Zenonesque",
-  "status": "pending",
-  "tries": 0,
-  "clip": null
+  "upload_id": null,
+  "gens": {},
+  "status": "pending"
  }
 ]

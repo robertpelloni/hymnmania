@@ -998,3 +998,36 @@ YouTube uploads (API based) kept working, which is why only the socials broke.
 ### Verified
 - after cleanup: 9222 `51 -> 4` entries; TikTok, FB Reel and IG all posted successfully
 - 9333 relaunched via `launch_dedicated_browser.py` and confirmed UP
+
+## v5.97.37 — Self-match diagnosis + one-upload-many-covers + watchdog (2026-09-21)
+
+### The generation block is SELF-MATCH, not rate-limiting
+Measured pattern was decisive:
+```
+32 hymns x exactly (1 done, 7 blocked)  = every hymn's FIRST upload (Full-On) succeeded,
+                                          and ALL 7 subsequent uploads of the same hymn were blocked.
+```
+Suno's pitch-invariant ACRCloud now matches our OWN prior uploads. Uploading the same hymn
+at a different speed is rejected ("COPYRIGHT MATCH", pitch-shift does NOT evade).
+
+### Fix: one upload per hymn, many covers from it
+`suno_throttle.py` rewritten from a (hymn x sub-genre) queue to a **hymn-level** queue:
+- upload each hymn ONCE (at Full-On target speed),
+- then generate every sub-genre from that single reference via the Cover flow
+  (same tempo, different style prompt + genre EQ).
+- `upload_tries` + `blocked` status so melody-matched hymns (e.g. "He Lives") stop being
+  retried forever.
+- recovers done status from files on disk (the old queue was already overwritten).
+
+### Second blocker found: upload VERIFICATION is broken
+`Clerk` is `undefined` on suno.com now (`typeof Clerk -> undefined`) - Suno removed the
+Clerk JS SDK and moved to cookie auth (`_C_Auth`). So `upload_robust2.py`'s
+`Clerk.session.getToken()` returns null, upload succeeds ("UPLOAD OK - full song modal")
+but the clip ID is never recovered, so no cover can be generated.
+- Cookie auth to the feed API returns 400; needs the clip ID from the library page
+  (`suno.com/me/songs`) or network interception instead. OPEN.
+
+### browser_watchdog.py
+The Suno browser (9333) died silently and the throttle kept failing with confusing
+"copyright match" noise. Watchdog task **"HymnMania Browser Watchdog"** runs every 30 min,
+relaunches 9333/9222 if down, and prunes tabs on 9222.

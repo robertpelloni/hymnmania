@@ -1,20 +1,21 @@
-"""Throttled Suno upload runner - spreads uploads over 24h in small segments.
+"""Throttled Suno generation - ONE upload per hymn, MANY sub-genre covers.
 
-Suno occasionally rejects an upload with "COPYRIGHT MATCH" that succeeds on a later try,
-so hammering it in one long run both risks account flagging and wastes attempts. This
-runs a SMALL BATCH per invocation and is driven by a Windows scheduled task repeating
-through the day.
+WHY (2026-09-21): Suno's pitch-invariant ACRCloud matches our OWN prior uploads, so
+uploading the same hymn again (even at a different speed) is rejected with "COPYRIGHT
+MATCH". Proof: 32 hymns each produced exactly 1 cover (Full-On) and ALL 7 other sub-genre
+uploads of the same hymn were blocked - a clean (1 done, 7 blocked) pattern.
 
-    python suno_throttle.py --plan          # show the queue
-    python suno_throttle.py --run           # do one batch (default 3 uploads)
-    python suno_throttle.py --run --n 5     # custom batch size
-    python suno_throttle.py --rebuild       # rebuild the queue from hymns x sub-genres
+So each hymn is uploaded exactly ONCE, and every sub-genre cover is generated from that
+single reference via the Cover flow (same tempo, different style prompt + genre EQ).
+
+    python suno_throttle.py --rebuild     # rebuild hymn-level queue
     python suno_throttle.py --status
+    python suno_throttle.py --run         # process N hymns (default 1)
 
-Defaults: 3 uploads per run, every 2 h -> 12 runs/day -> 36 uploads/day.
-Each upload becomes one generation (10 credits).
+Upload speed targets the Full-On BPM (flagship, 2x weight). All sub-genres inherit that
+tempo; the prompt + mastering differentiate the sound.
 """
-import os, re, sys, json, time, random, subprocess
+import os, re, sys, json, time, subprocess
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -28,9 +29,8 @@ STATE = os.path.join(ROOT, ".throttle_state.json")
 TEMPO = os.path.join(ROOT, ".psytrance_tempo.json")
 SUB = os.path.join(ROOT, "psytrance_subgenres.json")
 
-BATCH = 3               # uploads per invocation
-GAP = 75                # seconds between uploads inside a batch
-DAILY_CAP = 36          # uploads/day across all runs
+HYMNS_PER_RUN = 1
+FULLON_TARGET = 142
 
 
 def jload(p, d):
@@ -61,133 +61,147 @@ def midi_for(hymn):
     return None
 
 
+def subgenres():
+    return {k: v for k, v in jload(SUB, {}).items() if not k.startswith("_")}
+
+
 def rebuild():
-    """Build every (hymn, sub-genre) job and work out the speed needed per job."""
-    sg = {k: v for k, v in jload(SUB, {}).items() if not k.startswith("_")}
+    """Hymn-level queue: one entry per hymn, all sub-genres generated from one upload."""
+    sg = subgenres()
     tstate = jload(TEMPO, {})
     hymns = [h for h, v in tstate.items() if v.get("natural_bpm") and midi_for(h)]
+    # group OLD (hymn x genre) jobs by hymn so we can migrate every already-done cover
+    old_by_hymn = {}
+    for j in jload(QUEUE, []):
+        old_by_hymn.setdefault(j.get("hymn"), []).append(j)
     jobs = []
     for h in hymns:
         nat = tstate[h]["natural_bpm"]
-        for g, meta in sg.items():
-            out = os.path.join(GEN, f"{safe(h)}_10x_{g}_A_cover.mp3")
-            if os.path.exists(out) and os.path.getsize(out) > 500000:
-                continue
-            speed = round(max(0.5, min(3.0, meta["bpm"] / nat)), 3)
-            jobs.append({"hymn": h, "genre": g, "speed": speed,
-                         "target": meta["bpm"], "label": meta["label"],
-                         "status": "pending", "tries": 0, "clip": None})
-    # Full-On first (2x weight), then the rest
-    jobs.sort(key=lambda j: (-sg[j["genre"]]["weight"], j["hymn"]))
+        speed = round(max(0.5, min(3.0, FULLON_TARGET / nat)), 3)
+        gens = {}
+        upload_id = None
+        for oj in old_by_hymn.get(h, []):
+            g = oj.get("genre")
+            if oj.get("upload_id"):
+                upload_id = oj["upload_id"]
+            if g and oj.get("status") == "done":
+                gens[g] = {"clip": oj.get("clip"), "status": "done"}
+        # recover done status from files on disk (the old queue was already overwritten
+        # by an earlier --rebuild, so the state is gone but the covers still exist)
+        for g in sg:
+            if g not in gens and os.path.exists(os.path.join(GEN, f"{safe(h)}_10x_{g}_A_cover.mp3")):
+                gens[g] = {"clip": None, "status": "done"}
+        jobs.append({"hymn": h, "natural_bpm": nat, "speed": speed,
+                     "upload_id": upload_id, "gens": gens, "status": "pending"})
+    jobs.sort(key=lambda j: j["hymn"])
     jsave(QUEUE, jobs)
-    print(f"queue rebuilt: {len(jobs)} jobs ({len(hymns)} hymns x {len(sg)} sub-genres)")
+    print(f"queue rebuilt: {len(jobs)} hymns x {len(sg)} sub-genres "
+          f"(1 upload + {len(sg)} covers each)")
     return jobs
+
+
+def _covers_left(job):
+    sg = subgenres()
+    return [g for g in sg if not job.get("gens", {}).get(g, {}).get("status") == "done"]
 
 
 def status():
     q = jload(QUEUE, [])
-    st = jload(STATE, {})
-    today = time.strftime("%Y-%m-%d")
-    done_today = st.get("days", {}).get(today, 0)
-    from collections import Counter
-    c = Counter(j.get("status", "pending") for j in q)
-    print(f"queue total     : {len(q)}")
-    for k, v in sorted(c.items()):
-        print(f"   {k:10s}: {v}")
-    print(f"uploads today   : {done_today}/{DAILY_CAP}")
-    print(f"covers produced : {len([j for j in q if j.get('status')=='done'])}")
+    sg = subgenres()
+    uploaded = sum(1 for j in q if j.get("upload_id"))
+    covers = sum(1 for j in q for g in j.get("gens", {}) if j["gens"][g].get("status") == "done")
+    print(f"hymns in queue : {len(q)}")
+    print(f"uploaded       : {uploaded}")
+    print(f"covers done    : {covers}  (target {len(q)*len(sg)})")
+    print(f"sub-genres     : {', '.join(sg)}")
 
 
-def run(n=BATCH):
+def _upload(hymn, speed, midi):
+    wav = os.path.join(ROOT, "mp3_input", f"_thr_{safe(hymn)}.wav")
+    if not (os.path.exists(wav) and os.path.getsize(wav) > 100000):
+        subprocess.run([PY, RENDER, "--midi", midi, "--wav", wav, "--speed", str(speed)],
+                       capture_output=True, text=True, timeout=900)
+    if not os.path.exists(wav):
+        return None
+    from upload_helper import upload_with_fallback
+    cid = upload_with_fallback(wav)
+    if not cid or cid == "BLOCKED":
+        return None
+    return cid
+
+
+def run(n=HYMNS_PER_RUN):
     q = jload(QUEUE, [])
-    st = jload(STATE, {})
     if not q:
-        print("queue empty - run --rebuild")
-        return
-    today = time.strftime("%Y-%m-%d")
-    st.setdefault("days", {})
-    done_today = st["days"].get(today, 0)
-    if done_today >= DAILY_CAP:
-        print(f"daily cap reached ({done_today}/{DAILY_CAP}) - skipping")
-        return
-    n = min(n, DAILY_CAP - done_today)
-
-    pending = [j for j in q if j.get("status") in (None, "pending", "retry")]
-    print(f"batch: {n} of {len(pending)} pending (uploads today {done_today}/{DAILY_CAP})")
-    did = 0
-    for j in pending:
-        if did >= n:
-            break
-        hymn, g, speed = j["hymn"], j["genre"], j["speed"]
-        print(f"\n[{did+1}/{n}] {hymn} / {j['label']} (target {j['target']} BPM, speed {speed}x)",
-              flush=True)
-        midi = midi_for(hymn)
-        wav = os.path.join(ROOT, "mp3_input", f"_thr_{safe(hymn)}_{g}.wav")
-        if not (os.path.exists(wav) and os.path.getsize(wav) > 100000):
-            r = subprocess.run([PY, RENDER, "--midi", midi, "--wav", wav, "--speed", str(speed)],
-                               capture_output=True, text=True, timeout=900)
-            if not os.path.exists(wav):
-                print("   render failed"); j["status"] = "retry"; j["tries"] += 1; continue
-
-        from upload_helper import upload_with_fallback
-        cid = upload_with_fallback(wav)
-        if not cid or cid == "BLOCKED":
-            j["status"] = "retry"
-            j["tries"] = j.get("tries", 0) + 1
-            # after 3 failed tries, park it so we move on
-            if j["tries"] >= 3:
-                j["status"] = "parked"
-                print("   parked after 3 tries")
-            else:
-                print("   will retry next run")
+        print("queue empty - run --rebuild"); return
+    sg = subgenres()
+    todo = [j for j in q if _covers_left(j)]
+    # fresh hymns first (0 gens -> need upload + all 8 covers); partial hymns after
+    todo.sort(key=lambda j: len(j.get("gens", {})))
+    n = min(n, len(todo))
+    print(f"processing {n} hymn(s) of {len(todo)} with work left")
+    for j in todo[:n]:
+        hymn = j["hymn"]
+        print(f"\n=== {hymn} (speed {j['speed']}x -> target {FULLON_TARGET} BPM) ===", flush=True)
+        # 1) ensure the hymn is uploaded (ONCE)
+        if not j.get("upload_id"):
+            midi = midi_for(hymn)
+            if not midi:
+                print("  no midi"); continue
+            print("  uploading...", flush=True)
+            uid = _upload(hymn, j["speed"], midi)
+            if not uid:
+                j["upload_tries"] = j.get("upload_tries", 0) + 1
+                if j["upload_tries"] >= 3:
+                    j["status"] = "blocked"
+                    print("  BLOCKED after 3 upload tries (melody/self-match) - parking")
+                else:
+                    print(f"  upload FAILED (try {j['upload_tries']}) - will retry later")
+                jsave(QUEUE, q)
+                continue
+            j["upload_id"] = uid
+            print(f"  uploaded: {uid}")
             jsave(QUEUE, q)
-            time.sleep(GAP)
-            continue
-
-        gm = subprocess.run([PY, os.path.join(ROOT, "gen_only.py"), g, cid, hymn],
-                            capture_output=True, text=True, timeout=1800)
-        m = re.search(r"CLIPS:([0-9a-f,\-]+)", gm.stdout or "")
-        if not m:
-            print("   generation failed"); j["status"] = "retry"; j["tries"] += 1
-            jsave(QUEUE, q); continue
-        clip = m.group(1).split(",")[0]
-        j["clip"] = clip
-        out = os.path.join(GEN, f"{safe(hymn)}_10x_{g}_A_cover.mp3")
-        try:
-            subprocess.run([PY, os.path.join(ROOT, "cap_cycle.py"), clip, out],
-                           capture_output=True, text=True, timeout=900)
-        except subprocess.TimeoutExpired:
-            print("   capture timed out")
-        if os.path.exists(out):
-            # Genre EQ: without this the capture stays melody-forward and bright, which is
-            # why a "Full-On psytrance" cover did not sound like psytrance. Mastered in
-            # place (low end 20% -> 45%, highs 42% -> 20% on the measured sample).
+            time.sleep(30)
+        # 2) generate + capture each remaining sub-genre
+        for g in _covers_left(j):
+            out = os.path.join(GEN, f"{safe(hymn)}_10x_{g}_A_cover.mp3")
+            print(f"  [{g}] generating...", flush=True)
+            gm = subprocess.run([PY, os.path.join(ROOT, "gen_only.py"), g, j["upload_id"], hymn],
+                                capture_output=True, text=True, timeout=1800)
+            m = re.search(r"CLIPS:([0-9a-f,\-]+)", gm.stdout or "")
+            if not m:
+                print(f"    generation failed"); continue
+            clip = m.group(1).split(",")[0]
             try:
-                from master_cover import master
-                master(out, out, g)
-                print("   mastered (genre EQ)")
-            except Exception as e:
-                print(f"   mastering skipped: {e}")
-        j["status"] = "done" if os.path.exists(out) else "captured_failed"
-        j["tries"] = j.get("tries", 0) + 1
-        did += 1
-        st["days"][today] = st["days"].get(today, 0) + 1
-        jsave(QUEUE, q); jsave(STATE, st)
-        print(f"   -> {j['status']}  (uploads today {st['days'][today]}/{DAILY_CAP})", flush=True)
-        if did < n:
-            time.sleep(GAP)
-    jsave(QUEUE, q); jsave(STATE, st)
-    print(f"\nbatch done: {did} processed, {st['days'][today]}/{DAILY_CAP} uploads today")
+                subprocess.run([PY, os.path.join(ROOT, "cap_cycle.py"), clip, out],
+                               capture_output=True, text=True, timeout=900)
+            except subprocess.TimeoutExpired:
+                print("    capture timed out"); continue
+            if os.path.exists(out):
+                try:
+                    from master_cover import master
+                    master(out, out, g)
+                except Exception as e:
+                    print(f"    mastering skipped: {e}")
+                j.setdefault("gens", {})[g] = {"clip": clip, "status": "done"}
+                jsave(QUEUE, q)
+                print(f"    -> {os.path.basename(out)}", flush=True)
+            else:
+                print("    capture failed")
+            time.sleep(15)
+    jsave(QUEUE, q)
+    print("\ndone.")
 
 
 def main():
     a = sys.argv[1:]
     if "--rebuild" in a:
         rebuild(); return
-    if "--plan" in a or "--status" in a:
+    if "--status" in a:
         status(); return
     if "--run" in a:
-        n = BATCH
+        n = HYMNS_PER_RUN
         if "--n" in a:
             n = int(a[a.index("--n") + 1])
         run(n); return

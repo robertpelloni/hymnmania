@@ -46,18 +46,38 @@ def curve_for(genre):
 
 
 def master(in_fp, out_fp=None, genre=None):
-    """Apply the genre EQ curve. Returns the output path (or the input if it failed)."""
+    """Apply the genre EQ curve. Returns the output path (or the input if it failed).
+
+    NOTE: ffmpeg CANNOT read and write the same path - it silently no-ops, leaving the
+    file untouched while still exiting looking successful. That made every in-place
+    "mastered" call a no-op (caught 2026-09-17). So when in==out we render to a temp file
+    and atomically replace the original.
+    """
+    same_file = out_fp is None or os.path.abspath(in_fp) == os.path.abspath(out_fp)
     if out_fp is None:
         base, ext = os.path.splitext(in_fp)
         out_fp = f"{base}_mastered{ext}"
+        same_file = False
+    target = out_fp + ".tmp.mp3" if same_file else out_fp
+
     chain = ",".join(f"equalizer=f={f}:t=q:w={q}:g={g}" for f, q, g in curve_for(genre))
     # gentle limiter so the extra low end does not clip
     chain += ",alimiter=limit=0.95"
     r = subprocess.run([FFM, "-y", "-loglevel", "error", "-i", in_fp, "-af", chain,
-                        "-b:a", "320k", out_fp], capture_output=True)
-    if os.path.exists(out_fp) and os.path.getsize(out_fp) > 100_000:
-        return out_fp
-    return in_fp
+                        "-b:a", "320k", target], capture_output=True)
+    if not (os.path.exists(target) and os.path.getsize(target) > 100_000):
+        if os.path.exists(target) and same_file:
+            try:
+                os.remove(target)
+            except OSError:
+                pass
+        return in_fp
+    if same_file:
+        try:
+            os.replace(target, in_fp)
+        except OSError:
+            return in_fp
+    return out_fp
 
 
 if __name__ == "__main__":

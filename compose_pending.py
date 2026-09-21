@@ -67,6 +67,11 @@ def main():
         if a.isdigit():
             n = int(a)
     work = pending()
+    # --shard N/M  -> this process takes every Mth item starting at N (parallel rebuilds)
+    if "--shard" in args:
+        s = args[args.index("--shard") + 1]
+        i, m = (int(x) for x in s.split("/"))
+        work = [w for j, w in enumerate(work) if j % m == i]
     if n:
         work = work[:n]
     print(f"composing {len(work)} beat video(s)")
