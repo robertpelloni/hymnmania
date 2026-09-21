@@ -1031,3 +1031,28 @@ but the clip ID is never recovered, so no cover can be generated.
 The Suno browser (9333) died silently and the throttle kept failing with confusing
 "copyright match" noise. Watchdog task **"HymnMania Browser Watchdog"** runs every 30 min,
 relaunches 9333/9222 if down, and prunes tabs on 9222.
+
+## v5.97.38 — Upload verification fixed (JWT via __session, feed/v3) (2026-09-21)
+
+### Root cause
+Suno removed the Clerk JS SDK (`typeof Clerk == undefined`) and moved to cookie auth.
+`upload_robust2.py` got the token via `Clerk.session.getToken()` -> always null -> the
+upload succeeded but the clip ID was never recovered, so no cover could be generated.
+
+### Fix (three changes to upload_robust2.py)
+1. **Token**: read the API JWT from the `__session` cookie (sent as `Authorization: Bearer`).
+   NOTE: `__client` alone returns 401 — `__session` is the real JWT, so the cookie order matters.
+2. **Endpoint**: the feed endpoint is now `POST /api/feed/v3` (was `GET /api/feed/?limit=`).
+3. **Poll**: the clip can take >12s to register, so verification polls the feed up to 8x.
+
+Also: Suno's upload UI changed "Add audio" button -> an "Audio" tab that reveals a
+"Drop here for inspiration" panel; the upload now clicks the Audio tab (with the old
+"Add audio" kept as a fallback).
+
+### Verified end-to-end
+```
+UPLOAD OK - full song modal
+VERIFIED: _test_I_Just_Keep_Trusting_My_Lord e4bd08d8-b821-4925-975b-7a6131da479f
+gen_only.py -> cover clicked -> Create ...  (generation running)
+```
+Also confirmed `b.close()` on a CDP connection does NOT kill the shared browser.

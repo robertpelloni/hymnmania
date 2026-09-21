@@ -25,7 +25,7 @@ def main():
                 page.wait_for_timeout(8000)
                 # click Add audio
                 try:
-                    page.evaluate("Array.from(document.querySelectorAll('button')).find(x=>x.innerText.includes('Add audio'))?.click()")
+                    page.evaluate("(()=>{var b=Array.from(document.querySelectorAll('button')).find(x=>x.innerText.includes('Add audio'));if(b){b.click();return}var t=Array.from(document.querySelectorAll('button')).find(x=>x.innerText.trim()==='Audio');if(t){t.click();return}})()")
                 except Exception:
                     pass
                 page.wait_for_timeout(4000)
@@ -60,7 +60,7 @@ def main():
                             page.wait_for_timeout(4000)
                         # re-trigger add audio + file
                         try:
-                            page.evaluate("Array.from(document.querySelectorAll('button')).find(x=>x.innerText.includes('Add audio'))?.click()")
+                            page.evaluate("(()=>{var b=Array.from(document.querySelectorAll('button')).find(x=>x.innerText.includes('Add audio'));if(b){b.click();return}var t=Array.from(document.querySelectorAll('button')).find(x=>x.innerText.trim()==='Audio');if(t){t.click();return}})()")
                             page.wait_for_timeout(2000)
                             n2 = page.evaluate("document.querySelectorAll('input[type=file]').length")
                             for j in range(n2):
@@ -92,24 +92,36 @@ def main():
                 if outcome == "copyright":
                     break  # no point retrying same file
                 if outcome == "ok":
-                    # verify in feed
+                    # verify via the page's own JWT. Suno removed the Clerk JS SDK
+                    # (typeof Clerk == undefined), so the token now lives in the __session
+                    # cookie and is sent as 'Authorization: Bearer <jwt>'.
                     time.sleep(12)
+                    tok = None
                     try:
-                        tok = page.evaluate("async()=>{try{return await Clerk.session.getToken()}catch(e){return null}}")
+                        _cookies = {c["name"]: c["value"] for c in b.contexts[0].cookies()}
+                        # __session is the real API JWT (200); __client alone returns 401
+                        tok = (_cookies.get("__session") or _cookies.get("__session_Jnxw-muT")
+                               or _cookies.get("__client"))
                     except Exception:
                         tok = None
                     if tok:
                         hdr = {"Authorization": "Bearer " + str(tok)}
-                        for pg in range(0, 6):
-                            r = requests.get(SUNO + "/api/feed/?limit=50&page=" + str(pg), headers=hdr, timeout=20)
-                            if r.status_code != 200:
+                        found = False
+                        for _ in range(8):
+                            try:
+                                r = requests.post(SUNO + "/api/feed/v3", headers=hdr, json={"page": 0}, timeout=20)
+                                if r.status_code == 200:
+                                    clips = r.json() if isinstance(r.json(), list) else r.json().get("clips", [])
+                                    for c in clips:
+                                        if stem in str(c.get("title", "")).lower():
+                                            print("VERIFIED: " + str(c.get("title")) + " " + str(c.get("id")), flush=True)
+                                            found = True
+                                            break
+                            except Exception as e:
+                                print("verify err: " + str(e)[:60], flush=True)
+                            if found:
                                 break
-                            clips = r.json() if isinstance(r.json(), list) else r.json().get("clips", [])
-                            for c in clips:
-                                if stem in str(c.get("title", "")).lower() and c.get("model_name") == "chirp-chirp":
-                                    print("VERIFIED: " + str(c.get("title")) + " " + str(c.get("id")), flush=True)
-                            if len(clips) < 50:
-                                break
+                            time.sleep(6)
                     print("upload confirmed (or timed out verifying)", flush=True)
                     break
             except Exception as e:
