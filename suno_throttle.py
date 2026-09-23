@@ -135,7 +135,7 @@ def run(n=HYMNS_PER_RUN):
     if not q:
         print("queue empty - run --rebuild"); return
     sg = subgenres()
-    todo = [j for j in q if _covers_left(j)]
+    todo = [j for j in q if _covers_left(j) and j.get("status") != "blocked"]
     # fresh hymns first (0 gens -> need upload + all 8 covers); partial hymns after
     todo.sort(key=lambda j: len(j.get("gens", {})))
     n = min(n, len(todo))
