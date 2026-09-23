@@ -110,30 +110,35 @@ def main():
         trig = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
         page.evaluate("(()=>{var b=Array.from(document.querySelectorAll('button')).find(x=>x.offsetParent&&((x.getAttribute('aria-label')||'').toLowerCase().includes('create'))&&!/create new workspace/i.test(x.innerText||''));if(b){b.click();return 'ok'}return 'nf'})()")
         print("Create at", trig, flush=True)
-        # poll for NEW cover clips (chirp-*)
-        tok = page.evaluate("async()=>{try{return await Clerk.session.getToken()}catch(e){return null}}")
+        # poll for NEW cover clips (chirp-*) via the page's own JWT (Clerk SDK is gone)
+        try:
+            _cookies = {c["name"]: c["value"] for c in b.contexts[0].cookies()}
+            tok = _cookies.get("__session") or _cookies.get("__session_Jnxw-muT")
+        except Exception:
+            tok = None
         hdr = {"Authorization": "Bearer " + str(tok)}
-        want = desc[:20]
         found_ids = []
-        for _ in range(50):
-            time.sleep(5)
-            r = requests.get(SUNO + "/api/feed/?limit=15", headers=hdr, timeout=20)
-            if r.status_code == 200:
-                for c in (r.json() or []):
-                    mn = c.get("model_name", "")
-                    if not (mn.startswith("chirp-") and mn != "chirp-chirp"):
-                        continue
-                    md = c.get("metadata", {})
-                    if md.get("cover_clip_id") != upload_id:
-                        continue
-                    cr = c.get("created_at", "")
-                    if cr >= trig[:-5] and c.get("status") == "complete":
-                        cid = c["id"]
-                        if cid not in found_ids:
-                            found_ids.append(cid)
-                            print("NEW CLIP:", cid, mn, cr, flush=True)
-                if len(found_ids) >= 2:
-                    break
+        if tok:
+            for _ in range(50):
+                time.sleep(5)
+                try:
+                    r = requests.post(SUNO + "/api/feed/v3", headers=hdr, json={"page": 0}, timeout=20)
+                except Exception:
+                    continue
+                if r.status_code == 200:
+                    clips = r.json() if isinstance(r.json(), list) else r.json().get("clips", [])
+                    for c in clips:
+                        mn = c.get("model_name", "")
+                        if not (mn.startswith("chirp-") and mn != "chirp-chirp"):
+                            continue
+                        cr = c.get("created_at", "")
+                        if cr >= trig and c.get("status") == "complete":
+                            cid = c["id"]
+                            if cid not in found_ids:
+                                found_ids.append(cid)
+                                print("NEW CLIP:", cid, mn, cr, flush=True)
+                    if len(found_ids) >= 2:
+                        break
         print("CLIPS:" + ",".join(found_ids), flush=True)
         b.close()
 

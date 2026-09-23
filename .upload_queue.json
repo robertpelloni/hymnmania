@@ -3,7 +3,7 @@
   "hymn": "Adventist Youth",
   "natural_bpm": 103,
   "speed": 1.379,
-  "upload_id": null,
+  "upload_id": "1e5cd86f-7a25-48e5-ad5a-043c76f5d62c",
   "gens": {
    "psytrance_fullon": {
     "clip": null,
@@ -357,7 +357,7 @@
   "upload_id": null,
   "gens": {},
   "status": "blocked",
-  "upload_tries": 9
+  "upload_tries": 22
  },
  {
   "hymn": "He s Able",
@@ -428,7 +428,7 @@
   "hymn": "I Have Decided To Follow Jesus",
   "natural_bpm": 96,
   "speed": 1.479,
-  "upload_id": null,
+  "upload_id": "968b9636-547a-4e5f-9ccd-bffdf237cd9f",
   "gens": {},
   "status": "pending"
  },

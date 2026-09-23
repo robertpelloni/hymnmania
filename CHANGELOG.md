@@ -1056,3 +1056,28 @@ VERIFIED: _test_I_Just_Keep_Trusting_My_Lord e4bd08d8-b821-4925-975b-7a6131da479
 gen_only.py -> cover clicked -> Create ...  (generation running)
 ```
 Also confirmed `b.close()` on a CDP connection does NOT kill the shared browser.
+
+## v5.97.39 — monitoring: generation blocked at the Cover flow (UI changed again) (2026-09-23)
+
+### Fixed while monitoring
+- `suno_throttle.py`: skip `blocked` hymns so it stops looping on melody-matched hymns
+  (e.g. "He Lives"). Verified it now uploads a fresh hymn and proceeds.
+- `gen_only.py`: token + endpoint fixed (JWT via __session cookie, POST /api/feed/v3) -
+  the same Clerk-removal fix as upload_robust2.py.
+
+### NEW BLOCKER found: the Cover flow UI changed
+The whole generation chain is now:
+  upload (works) -> verify (works) -> **Cover generation (BROKEN)**
+
+The "More options" menu no longer has "Remix -> Cover". It now shows:
+  **Create | Studio | Edit | Edit displayed lyrics**
+
+- `Create` navigates to `https://suno.com/create` with a blank "Drop here for inspiration"
+  panel (it does NOT pre-load the song as a cover reference).
+- The create panel is now INLINE and the submit button is **"Generate"** (not "Create").
+- `metadata.cover_clip_id` no longer exists in the feed clip metadata.
+
+### Next step (gen_only.py rewrite)
+Trace the new cover mechanism: likely under **Studio** (or `Create` needs a follow-up click
+to attach the song as reference), then set the style description and click **Generate**.
+Posting is unaffected (29 tracks queued, ~5 days).
