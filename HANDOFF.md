@@ -1,95 +1,92 @@
 # HANDOFF — Session Summary
 
-## Session: 2026-07-29 — Repository Synchronization & Intelligent Merge (v5.97.5)
+## Session: 2026-08-05 — Comprehensive Repository Refresh (v5.97.8)
 
 ### What Was Accomplished
 
-#### 1. Repository Synchronization
+#### 1. Recursive Submodule Cascade
+- **L2** (`hymnmania_src`): Pulled `9ec99de` → `acd0fa1` to match parent
+- **L1** (`ableton`): Amended nested submodule pointer; 3 commits ahead of remote (push blocked)
+- **Parent**: Gitlink updated to `6668ee0`
 
-- **Force-push reconciliation**: Remote `origin/main` was force-pushed ahead of local. Created backup branch `backup/pre-sync-20260729-004935` to preserve local state, then hard-reset to `origin/main` at commit `d38f2b0` (v5.97.4).
-- **Local state preserved**: All original commits (2e2161f, c3c462e, 518b384, etc.) saved in backup branch.
-- **Remote history**: New history includes merges from `feat/v137` (Studio Reversal), `jules` (session docs), and commits v5.97.0 through v5.97.4 covering classical pipeline, YouTube/Facebook/Instagram templates, and daily scheduler.
+#### 2. Branch Reconciliation — All Clear
 
-#### 2. Documentation Restored & Updated
+| Repository | Feature Branches | Status |
+|-----------|-----------------|--------|
+| Parent | `backup/pre-sync-*` (safety only) | 📦 Preserved |
+| L1 Ableton | `feat/vertical-video-generation` | 🔵 Ancestor of main |
+| L1 Ableton | `jules-1235...` | 🔵 Ancestor of main |
+| L1 Ableton | `jules-6626...` | 🔵 Ancestor of main |
 
-The force-push dropped 8 documentation files. All restored from backup and updated:
+**0 forward merges, 0 reverse merges** — all branches fully consumed.
 
-| File | Status |
-|------|--------|
-| `CHANGELOG.md` | Restored + entries for v5.96.0–v5.97.5 added |
-| `ROADMAP.md` | Restored + Phase 4/5 updated with FB/IG/classical/Studio Reversal |
-| `TODO.md` | Restored + updated with current tasks |
-| `README.md` | Restored + updated with social links and v5.97.5 structure |
-| `VISION.md` | Restored + updated with 5 core pillars |
-| `IDEAS.md` | Restored + new ideas added |
-| `MEMORY.md` | Restored + social media posting section added |
-| `DEPLOY.md` | Restored + updated with all pipeline commands and social accounts |
+#### 3. .gitignore Audit
+- Databases (`*.db`): ✅ All 4 tracked (classical_midis, classicalmania, tormentnexus, borg)
+- Session files (`*-session.json`): ✅ Tracked
+- AI memory (`.pi/`, `.tormentnexus/`): ✅ Tracked
+- Documentation (`*.md`, `VERSION`): ✅ Tracked
+- `.jules/`, `.memory/`: ⚠️ Match pattern but directories don't exist on disk
 
-#### 3. Version Bump
+#### 4. Build Verification
 
-- **VERSION**: `5.97.4` → `5.97.5`
-- **AGENTS.md**: Version tag updated to `5.97.5`, date to `2026-07-29`
+| Check | Result |
+|-------|--------|
+| TypeScript `tsc --noEmit` | ✅ 0 errors |
+| Python `scripts/` (6 files) | ✅ All compile clean |
+| Python root (10 files) | ✅ All compile clean |
 
-#### 4. Branch Status
+### Current State
 
-| Branch | Commit | Notes |
-|--------|--------|-------|
-| `main` (local) | `d38f2b0` | Synced with `origin/main` |
-| `origin/main` | `d38f2b0` | Latest remote |
-| `origin/master` | `d38f2b0` | Points to same commit |
-| `backup/pre-sync-20260729-004935` | `2e2161f` | Pre-sync safety backup |
-| Feature branches | None | `feat/v137` and `jules` already merged into main |
+```
+hymnmania (PARENT)          [v5.97.8] ✅ clean, pushed
+  │                         remote: github.com/robertpelloni/hymnmania.git
+  │
+  └─ ableton_psytrance...   [6668ee0] ⚠️ 3 ahead (push blocked - creds)
+       │                    remote: github.com/robertpelloni/ableton_psytrance_hymn_creator
+       │
+       └─ hymnmania_src     [acd0fa1] ✅ tracking origin/main
+            │                remote: github.com/robertpelloni/hymnmania.git
+            │
+            └─ ableton_...  [CIRCULAR] 🔴 Uninitialized (fetchRecurseSubmodules=false)
+```
 
-#### 5. Submodule Status
-
-- `submodules/ableton_psytrance_hymn_creator` at commit `3256ef6` (part of remote history)
-- **Note**: Submodule remote currently points to `https://github.com/robertpelloni/hymnmania.git` (same as parent repo) — may need correction to actual `ableton_psytrance_hymn_creator` repo
-
-### Current Project State
-
-#### Active Scripts (Post-Sync)
+### Active Pipeline Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `youtube_update_descriptions.py` | YouTube description updates with templates |
-| `rename_youtube_titles.py` | Standard YouTube title renaming |
-| `daily_scheduler.py` | Facebook/Instagram auto-poster |
-| `facebook_poster.py` | Facebook CDP posting |
-| `quick_composer.py` | FFmpeg beat video composer |
-| `demo_gen.py` | Demo generation |
-| `scripts/health_check.py` | Connectivity check |
-| `scripts/package_outputs.py` | Output packaging |
+| `quick_composer.py` | Beat videos: crossfade + thumbnails + intro/outro |
+| `full_hymn_pipeline.py` | 15 hymns × 11 genres × 5 speeds |
+| `tiktok_poster.py` | TikTok 9:16 vertical + CDP upload |
+| `scheduler_bot.py` | Weekly Mon-Fri auto-poster |
+| `post_all_platforms.py` | Unified YT + Shorts + TikTok |
+| `daily_scheduler.py` | Facebook poster |
+| `youtube_update_descriptions.py` | YT description template |
+| `rename_youtube_titles.py` | Standard title format |
 
-#### Social Templates (from AGENTS.md)
+### Platform Status
 
-- **YouTube**: Standard title format `[Genre] Hymn 2026 Remix: [Title] ([Author], [Year]) | [Speed] [Variant]`
-- **YouTube Description**: Includes Artist: Resurrecting Beats ft. [Author], genre, social links, mission statement, science of psytrance section
-- **Facebook**: Bare YouTube URL → wait for preview → selectAll + replace with full template → post. Double newlines between sections.
-- **Instagram**: Same template as Facebook with bio-link CTA. Credentials: `resurrectingbeats@gmail.com`
+| Platform | Count/Status | Notes |
+|----------|-------------|-------|
+| YouTube | 700+ videos | API uploads ✅ |
+| YouTube Shorts | 1 test | Batch converter needed |
+| YouTube Community | Blocked | 500 sub minimum |
+| Facebook | 50+ posts | CDP ✅ |
+| TikTok | Ready | Needs @resurrecting.beat login |
+| Instagram | Creds saved | No automator yet |
 
-#### Pipeline Statistics
+### Outstanding Issues
 
-- **400+** YouTube videos on channel
-- **11 genres** across hymns and classical pieces
-- **11,479 hymns** in database with ~33K MIDI files
-- **Facebook + Instagram** automated posting workflow operational
-
-### Credentials Reference
-
-| Service | Credential | Location |
-|---------|-----------|----------|
-| YouTube OAuth | Refreshable token | `token.json` |
-| Facebook | CDP via Edge port 9222 | Profile `edge-cdp-profile` |
-| Instagram | resurrectingbeats@gmail.com / Temppass0! | `.secrets.json` |
-| Magnific API | Key in `~/.env` | `MAGNIFIC_API_KEY` |
-| Suno | Logged into suno.com in Edge | Browser session |
+| Issue | Severity | Detail |
+|-------|----------|--------|
+| L1 push blocked | Medium | `candlestixxx` can't push to `robertpelloni/ableton_psytrance_hymn_creator` |
+| TikTok login | Medium | Edge CDP logged into @hypernexusllc, not @resurrecting.beat |
+| L3 circular | Low | Mitigated, uninitialized |
 
 ### Next Steps
 
-1. **Verify pipeline health**: Run `scripts/health_check.py` to confirm all services accessible
-2. **Check YouTube token**: Verify `token.json` still valid for uploads
-3. **Test Facebook posting**: Run `daily_scheduler.py` with a test post
-4. **Verify Magnific credits**: Check API credits remaining
-5. **TikTok integration**: Set up API access for cross-platform posting
-6. **Generate more content**: Batch create classical covers for all 11 genres
-7. **Fix submodule remote**: Consider correcting `ableton_psytrance_hymn_creator` remote URL if misconfigured
+1. Fix TikTok CDP login to @resurrecting.beat
+2. Batch convert existing videos to YouTube Shorts (9:16)
+3. Run `full_hymn_pipeline.py` for batch generation
+4. Fix ableton submodule push credentials
+5. Reach 500 YouTube subscribers for Community tab
+6. Check Magnific credits in `~/.env`

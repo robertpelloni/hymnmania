@@ -146,7 +146,7 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 🎵 Stream/Download {song_title}: Coming Soon
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness"""
+#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness"""
     
     return desc
 
@@ -167,6 +167,8 @@ def update_all():
         items = resp.get("items", [])
         
         for item in items:
+            if "snippet" not in item:
+                continue
             vid = item["id"]["videoId"]
             title = item["snippet"]["title"]
             old_desc = item["snippet"]["description"]

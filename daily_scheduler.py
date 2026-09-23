@@ -8,7 +8,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 POSTED_LOG = os.path.join(ROOT, ".social_posted.json")
 
 FIXED_HASHTAGS = """
-#ResurrectingBeats #Hymnmania #ChristianPsytrance #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness"""
+#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness"""
 
 HOOKS = {
     "Psytrance": "Prepare your mind and spirit for a high-frequency journey through sacred geometry and neon cathedrals!",

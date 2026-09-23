@@ -130,18 +130,28 @@ def truncate_title(new_title):
     return new_title
 
 
-def build_correct_title(title):
+def build_correct_title(title, description=""):
     orig = title.lower()
 
-    # Check if already correctly formatted
-    if (
-        ("hymn 2026 remix:" in orig and " | " in orig)
-        or ("classical remix" in orig and " | " in orig)
-        or ("electronic remix" in orig and " | " in orig)
-    ):
+    # Already correct
+    if "hymn 2026 remix:" in orig and " | " in orig and not orig.startswith("electronic "):
         return None
-
+    if "classical remix" in orig and " | " in orig and not orig.startswith("electronic "):
+        return None
     genre = detect_genre(orig)
+    
+    # If title has no genre, try extracting from description
+    if not genre and description:
+        desc_lower = description.lower()
+        if "genre:" in desc_lower:
+            genre_line = desc_lower.split("genre:")[1].split(chr(10))[0].strip()
+            # Parse "Psytrance / Electronic Worship" -> "Psytrance"
+            genre = genre_line.split(" / ")[0].strip().title()
+    
+    # Fallback placeholder if genre still unknown
+    if not genre:
+        genre = "[EDM LSDance]"
+    
     speed = detect_speed(orig)
     variant = detect_variant(orig)
 
@@ -149,7 +159,7 @@ def build_correct_title(title):
     for key, (name, author, year) in CLASSICAL.items():
         if key in orig:
             if not genre:
-                genre = "Electronic"
+                genre = "[EDM LSDance]"
             return truncate_title(
                 f"{genre} Classical Remix - {name} ({author}, {year}) | {speed}{variant}"
             )
@@ -157,7 +167,7 @@ def build_correct_title(title):
     for key, (name, author, year) in HYMNS.items():
         if key in orig:
             if not genre:
-                genre = "Electronic"
+                genre = "[EDM LSDance]"
             return truncate_title(
                 f"{genre} Hymn 2026 Remix: {name} ({author}, {year}) | {speed}{variant}"
             )
@@ -165,7 +175,7 @@ def build_correct_title(title):
     # Neon Valse
     if "neon valse" in orig:
         if not genre:
-            genre = "Electronic"
+            genre = "[EDM LSDance]"
         return truncate_title(
             f"{genre} Electronic Remix - Neon Valse (Original, 2026) | {speed}{variant}"
         )
@@ -194,8 +204,9 @@ def rename_all():
                 continue
             vid = item["id"]["videoId"]
             title = item["snippet"]["title"]
+            desc = item["snippet"].get("description", "")
 
-            new_title = build_correct_title(title)
+            new_title = build_correct_title(title, desc)
             if new_title is None:
                 continue
 
