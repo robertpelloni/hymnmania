@@ -82,6 +82,23 @@ hymnmania (PARENT)          [v5.97.8] ✅ clean, pushed
 | TikTok login | Medium | Edge CDP logged into @hypernexusllc, not @resurrecting.beat |
 | L3 circular | Low | Mitigated, uninitialized |
 
+### Channel Stats
+
+- **400+** YouTube videos on channel
+- **11 genres** across hymns and classical pieces
+- **11,479 hymns** in database with ~33K MIDI files
+- **Facebook + Instagram** automated posting workflow operational
+
+### Credentials Reference
+
+| Service | Credential | Location |
+|---------|-----------|----------|
+| YouTube OAuth | Refreshable token | `token.json` |
+| Facebook | CDP via Edge port 9222 | Profile `edge-cdp-profile` |
+| Instagram | resurrectingbeats@gmail.com / Temppass0! | `.secrets.json` |
+| Magnific API | Key in `~/.env` | `MAGNIFIC_API_KEY` |
+| Suno | Logged into suno.com in Edge | Browser session |
+
 ### Next Steps
 
 1. Fix TikTok CDP login to @resurrecting.beat
