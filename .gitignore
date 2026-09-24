@@ -105,3 +105,12 @@ token_gemini.json
 !HANDOFF.md
 !AGENTS.md
 !VERSION
+# Credentials (never commit)
+.social_config/bluesky_accounts.json
+.social_config/bluesky_config.json
+.social_config/bluesky_robertpelloni.json
+.social_config/fb_state.json
+.social_config/linkedin_config.json
+.social_config/twitter_config.json
+.social_config/youtube_token.json
+.tiktok_state.json
