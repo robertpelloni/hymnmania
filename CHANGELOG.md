@@ -1081,3 +1081,33 @@ The "More options" menu no longer has "Remix -> Cover". It now shows:
 Trace the new cover mechanism: likely under **Studio** (or `Create` needs a follow-up click
 to attach the song as reference), then set the style description and click **Generate**.
 Posting is unaffected (29 tracks queued, ~5 days).
+
+## v5.97.40 — robust JWT auth; cover flow is a hard blocker (2026-09-23)
+
+### Fixed: the API token was fragile
+The `__session` cookie LOOKED like the JWT and worked once, but it rotates independently
+from the real API token. Verified: `__session` cookie -> 401, while the `Authorization:
+Bearer <jwt>` the page sends on its own studio-api requests -> 200.
+- Added `suno_auth.py` `get_jwt(page)` which captures the live Authorization header.
+- `upload_robust2.py` and `gen_only.py` now use it (no more cookie guessing).
+
+### Hard blocker: Suno removed the "Remix -> Cover" flow
+The cover mechanism is GONE from the UI. The song's "More options" menu now shows:
+`Create | Studio | Edit | Edit displayed lyrics` (no Remix, no Cover, no Extend).
+
+Traced and ruled out:
+- `Create` -> /create with a BLANK "Drop here for inspiration" panel. It does NOT attach
+  the song as a reference. `Generate` then submits nothing (no /api/generate request), so
+  no cover is produced.
+- `Studio` -> /studio (a new DAW editor: projects, "Edit in Studio", "start from one of
+  your songs") - not the simple cover flow.
+- No "Remix"/"Cover"/"Extend" button exists anywhere on the song page.
+
+### Impact
+- Posting: unaffected (queue still has content).
+- Generation: upload + verify now work robustly, but the final COVER step is blocked
+  until the new cover mechanism is identified (likely inside Studio or a renamed feature).
+
+### Next investigation
+`Studio` -> "Edit in Studio" -> look for cover/extend/remix actions inside the DAW editor,
+or capture the /api/generate request body that a REAL cover produces to learn the API shape.

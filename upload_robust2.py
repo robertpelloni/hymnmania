@@ -98,10 +98,10 @@ def main():
                     time.sleep(12)
                     tok = None
                     try:
-                        _cookies = {c["name"]: c["value"] for c in b.contexts[0].cookies()}
-                        # __session is the real API JWT (200); __client alone returns 401
-                        tok = (_cookies.get("__session") or _cookies.get("__session_Jnxw-muT")
-                               or _cookies.get("__client"))
+                        from suno_auth import get_jwt
+                        # the real API JWT is the Authorization header the page sends,
+                        # NOT the __session cookie (that rotates and returns 401)
+                        tok = get_jwt(page, navigate=False)
                     except Exception:
                         tok = None
                     if tok:
