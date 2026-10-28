@@ -105,6 +105,46 @@ token_gemini.json
 !HANDOFF.md
 !AGENTS.md
 !VERSION
+# Media outputs (large, regenerable)
+generated/
+mp3_input/
+pipeline_output/
+demo_output/
+demo_input/
+*.mp3
+*.mp4
+*.wav
+*.m4a
+*.webm
+*.raw
+*.mid
+
+# Session artifacts
+.yt_uploads.json
+.feed_covers.json
+.short_vids.json
+.regen_list.json
+.unposted_covers.json
+regen_log.txt
+regen_progress.txt
+suno_*.png
+test_beat.mp4
+
+# Edge CDP profiles (secrets — browser sessions)
+.edge-cdp-data/
+.dedicated-edge-profile/
+.suno-iso-profile/
+
+# Scheduler runtime state
+.scheduler_log.json
+logs/
+.yt_upload_limit.json
+_s1.mp4
+_s2.mp4
+_a.aac
+_list.txt
+_out.mp4
+
 # Credentials (never commit)
 .social_config/bluesky_accounts.json
 .social_config/bluesky_config.json
