@@ -36,6 +36,14 @@ HYMNS = {
     "clair": ("Clair de Lune", "Claude Debussy", "1905"),
     "amazing grace": ("Amazing Grace", "John Newton", "1779"),
     "how great": ("How Great Thou Art", "Carl Boberg", "1885"),
+    # New hymns (2026 batch)
+    "jesus comes with power": ("Jesus Comes With Power", "Traditional", "2026"),
+    "just over the mountains": ("Just Over The Mountains", "Traditional", "2026"),
+    "o happy day": ("O Happy Day", "Philip Doddridge", "1755"),
+    "when love shines in": ("When Love Shines In", "Traditional", "2026"),
+    "god is so good": ("God Is So Good", "Traditional", "2026"),
+    "oh god our help": ("Oh God Our Help", "Isaac Watts", "1719"),
+    "i have decided": ("I Have Decided To Follow Jesus", "Traditional", "2026"),
 }
 
 GENRE_KEYWORDS = {
@@ -87,6 +95,38 @@ def get_variant(title_lower):
     if "3.0x" in title_lower or "30x" in title_lower:
         return "Triple Speed (3.0x)"
     return "Original Mix"
+
+# Hashtag bank (draw from these, NEVER exceed 15 combined per post)
+CORE_TAGS = ["#EDM", "#ResurrectingBeats", "#Hymnmania", "#SpiritualEDM", "#Art", "#Dance", "#LOVE", "#ElectronicMusic2026"]
+PSYTRANCE_TAGS = ["#Psytrance", "#PsychedelicTrance", "#PsytranceFamily"]
+SECONDARY_TAGS = ["#WorshipMusic", "#MentalHealthAwareness", "#UNITY"]
+HASHTAG_BANK = [
+    "#StudyMusic", "#GamingMusic", "#WorkoutMusic", "#TrippyVisuals", "#PsychedelicVisuals",
+    "#BassMusic", "#EDMProducer", "#PsytranceProducer", "#MusicProduction", "#FLStudioEDM",
+    "#AbletonLive", "#DJSet", "#TrackPreview", "#Ajja", "#PsychedelicMusic",
+    "#PsytranceWorld", "#PsytranceCulture", "#PsytranceArt", "#PsytranceCommunity",
+    "#Zenonesque", "#HiTechPsytrance", "#MelodicEDM", "#ProgressiveTrance", "#DanceLiveLoveArtLife",
+    "#Trance", "#House", "#BPM", "#Creativity", "#SpiritualEnlightenment", "#Spirituality",
+]
+
+
+def build_hashtags(genre_name):
+    """Build <=15 hashtags. Always includes Psytrance (1-3) + dedicated genre."""
+    tags = list(CORE_TAGS)  # 8 core tags
+    tags.extend(PSYTRANCE_TAGS[:2])  # always 2 psytrance tags
+    # Dedicated genre tag (if not already psytrance)
+    genre_tag = f"#{genre_name.replace(' ', '')}"
+    if genre_tag not in tags:
+        tags.append(genre_tag)
+    tags.extend(SECONDARY_TAGS)  # 3 secondary
+    # Fill remaining with bank tags to reach 15
+    for bank_tag in HASHTAG_BANK:
+        if len(tags) >= 15:
+            break
+        if bank_tag not in tags:
+            tags.append(bank_tag)
+    return " ".join(tags[:15])
+
 
 def build_description(title):
     tl = title.lower()
@@ -146,7 +186,7 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
 🎵 Stream/Download {song_title}: Coming Soon
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#ResurrectingBeats #Hymnmania #SpiritualEDM #Psytrance #ElectronicMusic #WorshipMusic #MusicTherapy #MentalHealthAwareness"""
+{build_hashtags(genre_name)}"""
     
     return desc
 
