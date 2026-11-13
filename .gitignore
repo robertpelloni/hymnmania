@@ -76,10 +76,26 @@ __hssrc.bin
 decrypt_files.py
 sb-ssr-production-auth-token.*
 ssr_bucket.*
-hymn_remaker/bin/ffmpeg.exe
-hymn_remaker/bin/ffprobe.exe
-token_gemini.json
+hymn_remaker/bin/
+hymn_remaker/fluidsynth.zip
+hymn_remaker/fluidsynth_download/
+hymn_remaker/soundfonts/
+hymn_remaker/input/_midi/
+hymn_remaker/input/input.zip
+projectm_bin/
+classical_scraper/
+archive/
+token_*.json
 .secrets.json
+magnific_cookies.json
+magnific_api_calls.json
+magnific_*.png
+magnific_files.json
+magnific_search_results.json
+magnific_video_urls.json
+tiktok_*.png
+*.bak
+*.local-backup
 #Secrets
 
 # === EXPLICIT UN-IGNORE: Track all AI session, memory, and documentation ===
@@ -87,6 +103,7 @@ token_gemini.json
 !.memory/
 !.pi/
 !.tormentnexus/
+!.hypernexus/
 !.borg*
 !*-session.json
 !*_startup_marker
@@ -105,6 +122,15 @@ token_gemini.json
 !HANDOFF.md
 !AGENTS.md
 !VERSION
+!VERSION.md
+!SUBMODULE_INVENTORY.md
+!NEXT_MOVE.md
+!BLOCKED_HYMNS.md
+!HYMNS_POOL.md
+!CLASSICAL_PIECES.md
+!.zernio_posted.json
+!.youtube_uploaded_titles.json
+!youtube_channels.json
 # Media outputs (large, regenerable)
 generated/
 mp3_input/
@@ -146,11 +172,5 @@ _list.txt
 _out.mp4
 
 # Credentials (never commit)
-.social_config/bluesky_accounts.json
-.social_config/bluesky_config.json
-.social_config/bluesky_robertpelloni.json
-.social_config/fb_state.json
-.social_config/linkedin_config.json
-.social_config/twitter_config.json
-.social_config/youtube_token.json
+.social_config/
 .tiktok_state.json

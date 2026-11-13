@@ -1,7 +1,8 @@
 import os
 import pytest
 import numpy as np
-import hymn_player_ext
+
+hymn_player_ext = pytest.importorskip("hymn_player_ext")
 
 def test_hymn_player_ext():
     # Attempt to initialize

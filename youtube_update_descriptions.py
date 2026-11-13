@@ -10,12 +10,20 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
-with open("token.json") as f:
-    data = json.load(f)
-creds = Credentials.from_authorized_user_info(data, ["https://www.googleapis.com/auth/youtube"])
-if not creds.valid:
-    creds.refresh(Request())
-yt = build("youtube", "v3", credentials=creds)
+_yt_client = None
+
+
+def get_yt():
+    """Lazily initialize the authenticated YouTube API v3 client when needed."""
+    global _yt_client
+    if _yt_client is None:
+        with open("token.json") as f:
+            data = json.load(f)
+        creds = Credentials.from_authorized_user_info(data, ["https://www.googleapis.com/auth/youtube"])
+        if not creds.valid:
+            creds.refresh(Request())
+        _yt_client = build("youtube", "v3", credentials=creds)
+    return _yt_client
 
 # Hymn metadata
 HYMNS = {
@@ -191,6 +199,7 @@ TikTok: https://www.tiktok.com/@resurrecting.beat?_r=1&_t=ZP-98NBjRbePx0
     return desc
 
 def update_all():
+    yt = get_yt()
     updated = 0
     page_token = None
     

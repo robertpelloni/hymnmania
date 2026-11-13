@@ -6,7 +6,8 @@ import subprocess, sys, os, json, time, urllib.request
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 from playwright.sync_api import sync_playwright
 
-EDGE_PATH = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+_EDGE_X86 = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+EDGE_PATH = _EDGE_X86 if os.path.exists(_EDGE_X86) else r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
 SHARED_PORT = 9222
 DEDICATED_PORT = 9333
 DEDICATED_PROFILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".dedicated-edge-profile")
@@ -53,9 +54,13 @@ def set_cookies(port, cookies):
                 }])
             except Exception:
                 pass
-        page.goto("https://suno.com/create", wait_until="domcontentloaded", timeout=30000)
-        page.wait_for_timeout(5000)
-        tok = page.evaluate("async()=>{try{return await Clerk.session.getToken()}catch(e){return null}}")
+        try:
+            from suno_auth import get_jwt
+            tok = get_jwt(page, navigate=True, timeout_s=15)
+        except Exception:
+            tok = None
+        if not tok:
+            tok = page.evaluate("async()=>{try{return await Clerk.session.getToken()}catch(e){return null}}")
         print("suno token after cookie inject:", "YES" if tok else "NO")
         b.close()
 

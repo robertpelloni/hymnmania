@@ -1,4 +1,33 @@
-# HANDOFF — v5.97.9 (2026-09-01)
+# HANDOFF — v5.97.41 (2026-11-12)
+
+## Session Summary — Repository Synchronization & Intelligent Merge (`v5.97.41`)
+
+### 1. Completed Merges & Submodule Reconciliation
+- **Root `robertpelloni/hymnmania` (`main` & `master` unified)**:
+  - Verified `fork: false` (`parent: null`) and GitHub `default_branch: "main"`; set `origin/HEAD -> origin/main`.
+  - Fast-forwarded local `main` from `8eba872` (`+180` commits) to `origin/main` (`0219502`).
+  - Forward-merged `master` (`be45b31`, including `origin/backup/wip-leader-sync-20261107` `2a7416a` with 12 `.tormentnexus/handoffs/*.json` files) into `main`, resolving the `submodules/ableton_psytrance_hymn_creator` gitlink conflict in favor of the newer cycle-free pin.
+  - Audited all historical PR refs (`PR #2`–`#19`): all `robertpelloni` PRs are ancestors of `main`; closed `PR #17` was verified as an external fork (`Dimensionalplane/TurntUpToddler` / `TUT` rebrand, closed `2026-07-03`) and excluded.
+- **L1 Submodule `submodules/ableton_psytrance_hymn_creator` (`v1.18.5` — `522f7bc6f186611c0e442b0c30e53082da9dc676`)**:
+  - Fast-forwarded `main` from `296b7a3` to `origin/main` (`0268265`), preserving `update = none` on `hymnmania_src` (`L2`, aligned to pinned commit `cc236980`) to break mutual submodule recursion.
+  - Verified all 3 remote feature branches (`feat/vertical-video-generation-3432640621787520051`, `jules-12359894311656669020-972f5851`, `jules-6626364804574846888-8b827c28`) have `0` unmerged commits.
+  - Retained `src/integrators/headless_suno.ts` (`HeadlessSuno`) from `7188cb6` as an optional secondary CDP fallback in `src/integrators/ai_bridge.ts` alongside the primary `udio_automation.py` integration.
+  - Removed leftover merge-reject artifacts (`src/pipeline.ts.patch`, `src/pipeline.ts.rej`).
+  - Fixed Windows `python` vs `python3` `spawnSync` fallback and null-safe `stderr` handling in `src/analysis/midi_parser.ts` and `src/integrators/ai_bridge.ts`; configured `jest.config.js` to ignore `dist/` and `hymnmania_src/`.
+  - Verified `npm run build` (`tsc`, exit 0) and `npm test` (Jest `3/3` passed), committed `v1.18.5`, and pushed to `origin/main`.
+
+### 2. Newly Tracked Features, Portability & Security Hardening
+- **Tracked Pi-session tools & non-sensitive state**: Committed `scripts/zernio_upload.py`, `scripts/zernio_batch_upload.py`, `scripts/zernio_tiktok_batch.py`, `social_media_mirror.py`, `.zernio_posted.json`, `.youtube_uploaded_titles.json`, and `youtube_channels.json`.
+- **Portable batch & Python runners**: Updated `run_scheduler.bat`, `run_scheduler_backup.bat`, `run_compose.bat`, `run_suno_throttle.bat`, `run_watchdog.bat`, `_open_edge.bat`, and `remind_next_move.bat` to use `%~dp0` and `%USERPROFILE%\edge-cdp-profile`, added root `build.bat` and `start.bat`, and added portable `ffmpeg` / Edge / `suno_auth.get_jwt` fallbacks in `scheduler_v2.py`, `browser_watchdog.py`, and `launch_dedicated_browser.py`.
+- **`.gitignore` hardening**: Protected `token_*.json`, `.social_config/`, and `magnific_cookies.json` while preserving all local built binaries on disk and explicitly tracking `.tormentnexus/`, `.hypernexus/`, `.pi/`, `.jules/`, `.memory/`, databases, and project documentation (`SUBMODULE_INVENTORY.md`, `VERSION.md`).
+
+### 3. Current Operational Status (`v5.97.41`)
+- **Banked covers**: `1,487` Suno cover clips across `66` hymns in `.promo_sprint.json` / `.promo_sprint_r2.json` ready for `cap_cycle.py` → `compose_pending.py` → `scheduler_v2.py`.
+- **Open Suno UI investigation (`v5.97.40`)**: Suno auth is fixed via `suno_auth.get_jwt(page)` (`Authorization: Bearer` request capture), and upload/verify/capture/posting all work, while *new* cover triggering in `gen_only.py` awaits tracing Suno's new cover path inside `Studio` (since `Remix -> Cover` was removed from the song menu).
+
+---
+
+# Previous Handoff Reference — v5.97.9 (2026-09-01)
 
 ## CRITICAL LESSONS (read before running pipeline)
 

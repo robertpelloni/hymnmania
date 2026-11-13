@@ -1,0 +1,15 @@
+{
+  "resurrectingbeats": {
+    "name": "Resurrecting Beats",
+    "handle": "@ResurrectingBeats",
+    "token_file": "token_resurrectingbeats.json",
+    "content": "hymns"
+  },
+  "symphonicpsychedelic": {
+    "name": "Symphonic Psychedelic",
+    "handle": "@SymphonicPsychedelic",
+    "token_file": "token_symphonicpsychedelic.json",
+    "content": "classical",
+    "status": "ready"
+  }
+}

@@ -75,7 +75,10 @@ BLOCKED_HYMNS = {
 # never post them on the hymn channel. Their titles use the "Classical Remix" format.
 EXCLUDE_CLASSICAL = True
 
-FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
+import shutil
+_JAKEG_FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
+_LOCAL_FFM = os.path.join(ROOT, "hymn_remaker", "bin", "ffmpeg.exe")
+FFM = _JAKEG_FFM if os.path.exists(_JAKEG_FFM) else (_LOCAL_FFM if os.path.exists(_LOCAL_FFM) else (shutil.which("ffmpeg") or "ffmpeg"))
 
 
 # ---------------------------------------------------------------- logging
@@ -435,7 +438,7 @@ def post_instagram(short_path, title, genre, yt):
     return ig.post(os.path.abspath(short_path), capfile)
 
 
-def ensure_browser(port=SOCIAL_PORT, profile=r"C:\Users\jakeg\edge-cdp-profile"):
+def ensure_browser(port=SOCIAL_PORT, profile=os.path.join(os.path.expanduser("~"), "edge-cdp-profile")):
     """Launch the browser for the social logins if CDP is not already up.
 
     Also prunes stale tabs: every social run leaves tabs behind, and at 237 tabs the

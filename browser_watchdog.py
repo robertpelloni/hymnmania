@@ -12,10 +12,11 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 
 BROWSERS = {
-    9222: ("socials", r"C:\Users\jakeg\edge-cdp-profile"),
+    9222: ("socials", os.path.join(os.path.expanduser("~"), "edge-cdp-profile")),
     9333: ("Suno", os.path.join(ROOT, ".dedicated-edge-profile")),
 }
-EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+_EDGE_X86 = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+EDGE = _EDGE_X86 if os.path.exists(_EDGE_X86) else r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
 
 
 def up(port):

@@ -4,8 +4,8 @@
 
 # HymnMania — Agent Instructions
 
-> **Version: 5.97.25**
-> **Last updated: 2026-09-10**
+> **Version: 5.97.41**
+> **Last updated: 2026-11-12**
 > **Purpose: Automated hymn/classical → electronic cover music → beat-synced video → YouTube + Facebook pipeline**
 > **Status: WORKING END-TO-END — full pipe verified on a new hymn; auto-posting SCHEDULED (Mon–Fri 3 PM). Suno copyright-fingerprinting still blocks some familiar melodies.**
 

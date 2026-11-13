@@ -2,7 +2,7 @@
 
 An automation pipeline that turns classical hymns and classical pieces (MIDI) into electronic covers and beat-synced videos, then publishes them: MIDI → speed-adjusted render → Suno AI covers across multiple electronic genres → AI-visual music videos synced to the beat → upload to YouTube, Facebook, and Instagram.
 
-Version **v5.97.5** (per the previous README header). Python.
+Version **v5.97.41**. Python & TypeScript.
 
 ## What it does
 

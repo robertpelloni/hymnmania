@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.97.41 — Repository Synchronization, Branch Unification & Submodule Reconciliation (2026-11-12)
+
+> *Note: Releases `v5.97.10` through `v5.97.40` appear chronologically in the lower section of this file (`lines 500+`).*
+
+### Branch & Submodule Reconciliation
+- **Unified `main` and `master` on `robertpelloni/hymnmania`**: Fast-forwarded local `main` (+180 commits to `origin/main` `0219502`), forward-merged `master` (`be45b31`, incorporating `origin/backup/wip-leader-sync-20261107` `2a7416a` with 12 `.tormentnexus/handoffs/*.json` snapshots), aligned `origin/HEAD -> origin/main` (matching GitHub's `default_branch: "main"`), and synchronized both `main` and `master`.
+- **Reconciled L1 submodule `submodules/ableton_psytrance_hymn_creator` (`v1.18.5`, `522f7bc`)**:
+  - Fast-forwarded to `origin/main` (`0268265`), keeping `update = none` on `hymnmania_src` (`L2`, aligned to `cc236980`) to eliminate recursive clone cycles.
+  - Verified all 3 remote feature branches (`feat/vertical-video-generation-3432640621787520051`, `jules-12359894311656669020-972f5851`, `jules-6626364804574846888-8b827c28`) are merged ancestors of `main`.
+  - Retained `src/integrators/headless_suno.ts` (`HeadlessSuno`) from `7188cb6` as an optional secondary CDP fallback in `AIBridge` alongside primary `udio_automation.py`.
+  - Removed stale merge artifacts (`src/pipeline.ts.patch`, `src/pipeline.ts.rej`), fixed Windows Python `spawnSync` fallback in `midi_parser.ts` / `ai_bridge.ts`, and verified `tsc` + Jest (`3/3` tests passing).
+- **Retained Pi-session distribution tools & state**: Tracked `scripts/zernio_upload.py`, `scripts/zernio_batch_upload.py`, `scripts/zernio_tiktok_batch.py`, `social_media_mirror.py`, `.zernio_posted.json`, `.youtube_uploaded_titles.json`, and `youtube_channels.json`.
+- **Excluded external closed fork PR #17**: Verified PR #17 came from external fork `Dimensionalplane/TurntUpToddler` (`TUT` rebrand, closed `2026-07-03`), rightly excluded from `robertpelloni/hymnmania`.
+
+### Portability, Security & Scripts
+- **Batch script validation & portability**: Updated `run_scheduler.bat`, `run_scheduler_backup.bat`, `run_compose.bat`, `run_suno_throttle.bat`, `run_watchdog.bat`, `_open_edge.bat`, and `remind_next_move.bat` to use self-relocating `%~dp0` and `%USERPROFILE%\edge-cdp-profile` with full backwards compatibility; added root `build.bat` and `start.bat`.
+- **Cross-machine fallbacks**: Added portable `ffmpeg`, Edge binary, and `%USERPROFILE%` profile fallbacks in `scheduler_v2.py`, `browser_watchdog.py`, and `launch_dedicated_browser.py` (plus `suno_auth.get_jwt` verification).
+- **`.gitignore` hardening**: Protected `token_*.json`, `.social_config/`, and `magnific_cookies.json` while explicitly tracking `.tormentnexus/`, `.hypernexus/`, `.pi/`, `.jules/`, `.memory/`, databases, and project documentation (`SUBMODULE_INVENTORY.md`, `VERSION.md`, etc.).
+
 ## v5.97.9 — Suno DRM Download Fix + Pipeline Restoration + Full Pipeline Verified (2026-09-01)
 
 ### Fixed (CRITICAL)
@@ -1111,3 +1130,6 @@ Traced and ruled out:
 ### Next investigation
 `Studio` -> "Edit in Studio" -> look for cover/extend/remix actions inside the DAW editor,
 or capture the /api/generate request body that a REAL cover produces to learn the API shape.
+
+## v5.97.41 — Repository Synchronization, Branch Unification & Submodule Reconciliation (2026-11-12)
+See the full `v5.97.41` release entry at the top of `CHANGELOG.md`.
