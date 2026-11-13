@@ -2,20 +2,30 @@
 Does NOT modify anything. Uses the same logic as rename_youtube_titles.py.
 """
 
+import os
 import json
 import time
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
-with open("token.json") as f:
-    data = json.load(f)
-creds = Credentials.from_authorized_user_info(
-    data, ["https://www.googleapis.com/auth/youtube"]
-)
-if not creds.valid:
-    creds.refresh(Request())
-yt = build("youtube", "v3", credentials=creds)
+_yt_client = None
+
+
+def get_yt():
+    """Lazily initialize the YouTube API client so dry-run title parsing works offline."""
+    global _yt_client
+    if _yt_client is None:
+        from post_to_youtube import resolve_token_path
+        with open(resolve_token_path(), encoding="utf-8") as f:
+            data = json.load(f)
+        creds = Credentials.from_authorized_user_info(
+            data, ["https://www.googleapis.com/auth/youtube"]
+        )
+        if not creds.valid:
+            creds.refresh(Request())
+        _yt_client = build("youtube", "v3", credentials=creds)
+    return _yt_client
 
 # Same metadata as rename_youtube_titles.py
 HYMNS = {
@@ -102,18 +112,18 @@ def build_correct_title(title):
     for key, (name, author, year) in CLASSICAL.items():
         if key in orig:
             if not genre:
-                genre = "Electronic"
+                genre = "[EDM LSDance]"
             return f"{genre} Classical Remix - {name} ({author}, {year}) | {speed}{variant}"
     for key, (name, author, year) in HYMNS.items():
         if key in orig:
             if not genre:
-                genre = "Electronic"
+                genre = "[EDM LSDance]"
             return (
                 f"{genre} Hymn 2026 Remix: {name} ({author}, {year}) | {speed}{variant}"
             )
     if "neon valse" in orig:
         if not genre:
-            genre = "Electronic"
+            genre = "[EDM LSDance]"
         return (
             f"{genre} Electronic Remix - Neon Valse (Original, 2026) | {speed}{variant}"
         )
@@ -121,6 +131,7 @@ def build_correct_title(title):
 
 
 def list_all():
+    yt = get_yt()
     videos = []
     page_token = None
     while True:

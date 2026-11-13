@@ -6,8 +6,11 @@ Title rules: NO 'cover' anywhere. Hymns: '[Genre] Hymn 2026 Remix: [Title] ([Aut
 """
 import os, sys, json, time, re, subprocess
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
 os.environ["PATH"] = (
-    r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin"
+    os.path.join(ROOT, "hymn_remaker", "bin")
+    + os.pathsep
+    + r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin"
     + os.pathsep + os.environ.get("PATH", ""))
 
 from google.oauth2.credentials import Credentials
@@ -16,7 +19,6 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 import youtube_update_descriptions as desc_mod
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
 VDIR = os.path.join(ROOT, "pipeline_output", "beat_videos")
 
 # Canonical piece metadata: (title, author, year, is_classical)
@@ -190,8 +192,34 @@ def quality_gate(video_path):
     return True
 
 
-def get_service():
-    with open(os.path.join(ROOT, "token.json")) as f:
+def resolve_token_path(channel_key=None):
+    """Resolve YouTube OAuth token path via youtube_channels.json, HYMNMANIA_YT_CHANNEL, or fallback token files.
+
+    Why: Allows multi-channel routing (@ResurrectingBeats for hymns vs @SymphonicPsychedelic
+    for classical) from the Dashboard or scheduler without overwriting root token.json.
+    """
+    ch_key = (channel_key or os.environ.get("HYMNMANIA_YT_CHANNEL") or "").strip().lower()
+    channels_cfg = os.path.join(ROOT, "youtube_channels.json")
+    if ch_key and os.path.exists(channels_cfg):
+        try:
+            with open(channels_cfg, encoding="utf-8") as f:
+                cfg = json.load(f)
+            if ch_key in cfg and cfg[ch_key].get("token_file"):
+                cand = os.path.join(ROOT, cfg[ch_key]["token_file"])
+                if os.path.exists(cand):
+                    return cand
+        except Exception:
+            pass
+    for fname in ("token.json", "token_resurrectingbeats.json", "token_symphonicpsychedelic.json"):
+        cand = os.path.join(ROOT, fname)
+        if os.path.exists(cand):
+            return cand
+    return os.path.join(ROOT, "token.json")
+
+
+def get_service(channel_key=None):
+    token_path = resolve_token_path(channel_key)
+    with open(token_path, encoding="utf-8") as f:
         data = json.load(f)
     creds = Credentials.from_authorized_user_info(data, ["https://www.googleapis.com/auth/youtube"])
     if not creds.valid:

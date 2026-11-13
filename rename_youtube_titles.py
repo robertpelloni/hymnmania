@@ -4,20 +4,31 @@ Hymn format:  [Genre] Hymn 2026 Remix: [Title] ([Author], [Year]) | [Speed] [Var
 Classical:    [Genre] Classical Remix - [Piece] ([Composer], [Year]) | [Speed]
 """
 
+import os
 import json
 import time
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
-with open("token.json") as f:
-    data = json.load(f)
-creds = Credentials.from_authorized_user_info(
-    data, ["https://www.googleapis.com/auth/youtube"]
-)
-if not creds.valid:
-    creds.refresh(Request())
-yt = build("youtube", "v3", credentials=creds)
+ROOT = os.path.dirname(os.path.abspath(__file__))
+_yt_client = None
+
+
+def get_yt():
+    """Lazily initialize the YouTube API client so title-formatting helpers remain importable offline."""
+    global _yt_client
+    if _yt_client is None:
+        from post_to_youtube import resolve_token_path
+        with open(resolve_token_path(), encoding="utf-8") as f:
+            data = json.load(f)
+        creds = Credentials.from_authorized_user_info(
+            data, ["https://www.googleapis.com/auth/youtube"]
+        )
+        if not creds.valid:
+            creds.refresh(Request())
+        _yt_client = build("youtube", "v3", credentials=creds)
+    return _yt_client
 
 # Hymn metadata
 HYMNS = {
@@ -209,6 +220,7 @@ def build_correct_title(title, description=""):
 
 
 def rename_all():
+    yt = get_yt()
     renamed = 0
     page_token = None
 

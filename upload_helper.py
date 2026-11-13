@@ -18,7 +18,10 @@ import os, re, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
-FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
+import os as _os, shutil as _shutil
+_JAKEG_FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
+_LOCAL_FFM = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "hymn_remaker", "bin", "ffmpeg.exe")
+FFM = _JAKEG_FFM if _os.path.exists(_JAKEG_FFM) else (_LOCAL_FFM if _os.path.exists(_LOCAL_FFM) else (_shutil.which("ffmpeg") or "ffmpeg"))
 
 # alternating up/down shifts - small enough to be musically transparent
 SHIFT_FACTORS = [1.03, 0.97, 1.06, 0.94]

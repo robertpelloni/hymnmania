@@ -18,18 +18,21 @@ if os.path.exists(_env_path):
 
 from hymn_remaker import settings
 
-# Load global version
-VERSION = "1.37.0"
-try:
-    v_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "VERSION")
-    if os.path.exists(v_root):
-        with open(v_root, "r") as vf:
-            VERSION = vf.read().strip()
-except Exception:
-    pass
+# Load global version dynamically from root VERSION / VERSION.md
+VERSION = "0.0.0"
+for _vname in ("VERSION", "VERSION.md"):
+    try:
+        v_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", _vname)
+        if os.path.exists(v_root):
+            with open(v_root, "r", encoding="utf-8") as vf:
+                VERSION = vf.read().strip().splitlines()[0].strip()
+                break
+    except Exception:
+        pass
 
 st.set_page_config(page_title="Hymn Remaker UI", page_icon="🎵", layout="wide")
-st.sidebar.markdown(f"**Version: {VERSION}**")
+st.sidebar.markdown(f"**Version: v{VERSION}**")
+st.sidebar.markdown("🎹 **[Open Unified Command Console (:8083)](http://localhost:8083)**")
 st.sidebar.markdown("---")
 
 from hymn_remaker.src.midi_renderer import MidiRenderer

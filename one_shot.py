@@ -5,7 +5,10 @@ import sys, os, json, time, base64, struct, subprocess, tempfile
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 from playwright.sync_api import sync_playwright
 
-FFM = r'C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe'
+import os as _os, shutil as _shutil
+_JAKEG_FFM = r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin\ffmpeg.exe"
+_LOCAL_FFM = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "hymn_remaker", "bin", "ffmpeg.exe")
+FFM = _JAKEG_FFM if _os.path.exists(_JAKEG_FFM) else (_LOCAL_FFM if _os.path.exists(_LOCAL_FFM) else (_shutil.which("ffmpeg") or "ffmpeg"))
 GEN_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'generated')
 HYMN = 'Jesus_Comes_With_Power'
 

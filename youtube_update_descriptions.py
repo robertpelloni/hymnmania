@@ -5,19 +5,40 @@ Template spec:
   RECORD LABEL: RESURRECTING BEATS
   Full description with Mission, Science, How We Make Our Music sections.
 """
-import json, time, re
+import os, json, time, re
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
 _yt_client = None
+
+
+def _resolve_token_path():
+    ch_key = (os.environ.get("HYMNMANIA_YT_CHANNEL") or "").strip().lower()
+    channels_cfg = os.path.join(ROOT, "youtube_channels.json")
+    if ch_key and os.path.exists(channels_cfg):
+        try:
+            with open(channels_cfg, encoding="utf-8") as f:
+                cfg = json.load(f)
+            if ch_key in cfg and cfg[ch_key].get("token_file"):
+                cand = os.path.join(ROOT, cfg[ch_key]["token_file"])
+                if os.path.exists(cand):
+                    return cand
+        except Exception:
+            pass
+    for fname in ("token.json", "token_resurrectingbeats.json", "token_symphonicpsychedelic.json"):
+        cand = os.path.join(ROOT, fname)
+        if os.path.exists(cand):
+            return cand
+    return os.path.join(ROOT, "token.json")
 
 
 def get_yt():
     """Lazily initialize the authenticated YouTube API v3 client when needed."""
     global _yt_client
     if _yt_client is None:
-        with open("token.json") as f:
+        with open(_resolve_token_path(), encoding="utf-8") as f:
             data = json.load(f)
         creds = Credentials.from_authorized_user_info(data, ["https://www.googleapis.com/auth/youtube"])
         if not creds.valid:

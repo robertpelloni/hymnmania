@@ -4,7 +4,7 @@ Local-only — zero YouTube API quota. Run: python regen_beat_videos.py [--force
 import os, sys, json, time, re
 
 os.environ["PATH"] = (
-    r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin"
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "hymn_remaker", "bin") + os.pathsep + r"C:\Users\jakeg\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0.1-full_build\bin"
     + os.pathsep + os.environ.get("PATH", ""))
 
 import quick_composer as qc
